@@ -5,6 +5,14 @@
     "CyclesDAO": {
       "type": "motoko",
       "main": "src/CyclesDAO/main.mo"
+    },
+    "token": {
+      "type": "motoko",
+      "main": "src/DIP20/motoko/src/token.mo"
+    },
+    "BasicDAO": {
+       "type": "motoko",
+       "main": "src/BasicDAO/src/Main.mo"
     }
   },
   "defaults": {
