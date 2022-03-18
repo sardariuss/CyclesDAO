@@ -27,28 +27,27 @@ shared(msg) actor class CyclesDAO(_tokenDAO: Principal) {
 
     public shared(msg) func wallet_receive() {
         
-        var new_balance = ExperimentalCycles.balance();
-        var available_cycles = ExperimentalCycles.available();
+        let original_balance = ExperimentalCycles.balance();
+
+        // Accept the cycles up to the biggest threshold in the config
+        var accepted_cycles = ExperimentalCycles.accept(Nat.min(
+            ExperimentalCycles.available(), 
+            cycle_exchange_config[cycle_exchange_config.size() - 1].threshold - original_balance));
+
+        // Pay back in DAO tokens
         var tokens_to_give : Float = 0.0;
-        
+        var paid_cycles : Nat = 0;
         Iter.iterate<Types.ExchangeLevel>(cycle_exchange_config.vals(), func(level, _index) {
-            if (available_cycles > 0) {
-                let interval_left : Int = level.threshold - new_balance;
+            if (paid_cycles < accepted_cycles) {
+                let interval_left : Int = level.threshold - original_balance - paid_cycles;
                 if (interval_left > 0) {
-                    let to_accept = Nat.min(available_cycles, Int.abs(interval_left));
-                    new_balance += to_accept;
-                    tokens_to_give += level.rate_per_T * Float.fromInt(to_accept);
-                    available_cycles -= to_accept;
+                    var to_pay = Nat.min(accepted_cycles - paid_cycles, Int.abs(interval_left));
+                    tokens_to_give  += level.rate_per_T * Float.fromInt(to_pay);
+                    paid_cycles += to_pay;
                 };
             };
         });
-
-        // Accept the cycles
-        // @todo: what to do if actual cycles accepted are not the same ?
-        ignore ExperimentalCycles.accept(new_balance - ExperimentalCycles.balance());
-
-        // Give the DAO tokens
-        // @todo
+        // @todo: send the tokens pay
     };
 
     //public func configure_dao(command: Types.ConfigureDAOCommand) : async Nat{
