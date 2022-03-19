@@ -1,10 +1,10 @@
-#!ic-repl
+#!/usr/bin/ic-repl
 load "prelude.sh";
 
 // This will not be needed once replica supports custom section
-import fake = "2vxsx-fae" as "../.dfx/local/canisters/basic_dao/basic_dao.did";
+import fake = "2vxsx-fae" as "../../../.dfx/local/canisters/BasicDAO/BasicDAO.did";
 
-let wasm = file "../.dfx/local/canisters/basic_dao/basic_dao.wasm";
+let wasm = file "../../../.dfx/local/canisters/BasicDAO/BasicDAO.wasm";
 
 identity alice;
 identity bob;

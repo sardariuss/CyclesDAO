@@ -1,4 +1,4 @@
-#!ic-repl
+#!/usr/bin/ic-repl
 
 function install(wasm, args, cycle) {
   let id = call ic.provisional_create_canister_with_cycles(record { settings = null; amount = cycle });
