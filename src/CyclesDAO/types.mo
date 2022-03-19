@@ -43,10 +43,12 @@ module{
         rate_per_T: Float;
     };
 
-    public type DAOTokenError = {
-        #CanisterNotSet;
-        #CanisterNotOwned;
-        #MintError;
+    public type DAOCyclesError = {
+        #NoCyclesAdded;
+        #MaxCyclesReached;
+        #DAOTokenCanisterNull;
+        #DAOTokenCanisterNotOwned;
+        #DAOTokenCanisterMintError;
     };
 
     // Dip20 token interface

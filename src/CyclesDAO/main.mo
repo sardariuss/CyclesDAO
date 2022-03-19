@@ -1,13 +1,12 @@
 import ExperimentalCycles "mo:base/ExperimentalCycles";
-import Float "mo:base/Float";
 import Int "mo:base/Int";
-import Iter "mo:base/Iter";
 import Nat "mo:base/Nat";
 import Principal "mo:base/Principal";
 import Result "mo:base/Result";
 
 import DIP20 "../DIP20/motoko/src/token";
-import Types "./types"; 
+import Types "./types";
+import Utils "./utils";
 
 shared actor class CyclesDAO() = this {
 
@@ -21,54 +20,59 @@ shared actor class CyclesDAO() = this {
         {threshold=150_000_000_000_000; rate_per_T= 0.2;}
     ];
 
+    // To avoid burning cycles to accept only a few cycles
+    // @todo: discuss this optimization
+    private let cycle_max_margin : Nat = 1_000_000;
+
     public query func cycle_balance() : async Nat {
         return ExperimentalCycles.balance();
     };
 
-    public shared(msg) func wallet_receive() : async Result.Result<Nat, Types.DAOTokenError> {
+    public shared(msg) func wallet_receive() : async Result.Result<Nat, Types.DAOCyclesError> {
+
+        // Check if cycles are available
+        let available_cycles = ExperimentalCycles.available();
+        if (available_cycles == 0) {
+            return #err(#NoCyclesAdded);
+        };
+
+        // Check if the max cycles has been reached
+        let original_balance = ExperimentalCycles.balance();
+        let max_cycles = cycle_exchange_config[cycle_exchange_config.size() - 1].threshold;
+        // @todo: find a better way to handle margin than using abs to remove the warning  [M0155] "may trap"
+        if (original_balance > Int.abs(max_cycles - cycle_max_margin)) {
+            return #err(#MaxCyclesReached);
+        };
 
         switch(tokenDAO) {
+            // Check if the token DAO has been set
             case null {
-                return #err(#CanisterNotSet);
+                return #err(#DAOTokenCanisterNull);
             };
             case (?tokenDAO) {
                 
                 // Check if we own the token DAO canister
                 let metaData = await tokenDAO.getMetadata();
                 if (metaData.owner != Principal.fromActor(this)){
-                    return #err(#CanisterNotOwned);
+                    return #err(#DAOTokenCanisterNotOwned);
                 };
-                
-                let original_balance = ExperimentalCycles.balance();
 
-                // Accept the cycles up to the biggest threshold in the config
-                var accepted_cycles = ExperimentalCycles.accept(Nat.min(
-                    ExperimentalCycles.available(), 
-                    cycle_exchange_config[cycle_exchange_config.size() - 1].threshold - original_balance));
+                // Accept the cycles up to the maximum cycles possible
+                let accepted_cycles = ExperimentalCycles.accept(
+                    Nat.min(available_cycles, max_cycles - original_balance));
 
-                // Pay back in DAO tokens
-                var tokens_to_give : Float = 0.0;
-                var paid_cycles : Nat = 0;
-                Iter.iterate<Types.ExchangeLevel>(cycle_exchange_config.vals(), func(level, _index) {
-                    if (paid_cycles < accepted_cycles) {
-                        let interval_left : Int = level.threshold - original_balance - paid_cycles;
-                        if (interval_left > 0) {
-                            var to_pay = Nat.min(accepted_cycles - paid_cycles, Int.abs(interval_left));
-                            tokens_to_give  += level.rate_per_T * Float.fromInt(to_pay);
-                            paid_cycles += to_pay;
-                        };
-                    };
-                });
+                // Compute the amount of tokens to mint in exchange of the accepted cycles
+                let tokens_to_mint = Utils.compute_tokens_in_exchange(
+                    cycle_exchange_config, original_balance, accepted_cycles);
 
-                // @todo: maybe find a better way than float type, check if toInt act as a trunc?
-                switch (await tokenDAO.mint(msg.caller, Int.abs(Float.toInt(tokens_to_give)))){
+                switch (await tokenDAO.mint(msg.caller, tokens_to_mint)){
                     case(#Ok(tx_counter)){
                         return #ok(tx_counter);
                     };
                     case(#Err(_)){
                         // This error shall never happen in current DIP20 implementation because the only
-                        // way the mint fails is if the caller is not the owner.
-                        return #err(#MintError);
+                        // way the mint fails is if the caller is not the owner (which we checked before)
+                        return #err(#DAOTokenCanisterMintError);
                     };
                 };
             };
@@ -81,14 +85,14 @@ shared actor class CyclesDAO() = this {
     //public func execute_proposal(proposal_id: Nat) : Result<Bool, Error>{
     //};
 
-    private func set_token_dao(_tokenDAO: Principal) : async Result.Result<(), Types.DAOTokenError> {
+    public shared func set_token_dao(_tokenDAO: Principal) : async Result.Result<(), Types.DAOCyclesError> {
         let tokenDAO_ : Types.DIPInterface = actor (Principal.toText(_tokenDAO));
         let metaData = await tokenDAO_.getMetadata();
         if (metaData.owner == Principal.fromActor(this)){
             tokenDAO := ?tokenDAO_; 
             return #ok;
         } else {
-            return #err(#MintError);
+            return #err(#DAOTokenCanisterNotOwned);
         }
     };
 };
