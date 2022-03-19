@@ -43,6 +43,12 @@ module{
         rate_per_T: Float;
     };
 
+    public type DAOTokenError = {
+        #CanisterNotSet;
+        #CanisterNotOwned;
+        #MintError;
+    };
+
     // Dip20 token interface
     public type TxReceipt = {
         #Ok: Nat;
@@ -74,5 +80,6 @@ module{
         transferFrom : (Principal, Principal, Nat) -> async TxReceipt;
         allowance : (owner: Principal, spender: Principal) -> async Nat;
         getMetadata: () -> async Metadata;
+        mint : (to: Principal, value: Nat) -> async TxReceipt;
     };
 }
