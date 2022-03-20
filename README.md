@@ -1,9 +1,7 @@
 # CyclesDAO
-Attempt to solve IC-Devs' Bounty #17: A DAO for cycles: https://icdevs.org/bounties/2022/02/25/A-DAO-for-Cycles.html
+On-going implementation of IC-Devs' Bounty #17: A DAO for cycles: https://icdevs.org/bounties/2022/02/25/A-DAO-for-Cycles.html
 
 ## Prerequisites
-
-Verify the following before running this demo:
 
 * You have downloaded and installed the [DFINITY Canister SDK](https://sdk.dfinity.org).
 
