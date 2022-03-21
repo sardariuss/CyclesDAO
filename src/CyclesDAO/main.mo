@@ -79,12 +79,6 @@ shared actor class CyclesDAO() = this {
         };
     };
 
-    //public func configure_dao(command: Types.ConfigureDAOCommand) : async Nat{
-    //};
-
-    //public func execute_proposal(proposal_id: Nat) : Result<Bool, Error>{
-    //};
-
     public shared func set_token_dao(_tokenDAO: Principal) : async Result.Result<(), Types.DAOCyclesError> {
         let tokenDAO_ : Types.DIPInterface = actor (Principal.toText(_tokenDAO));
         let metaData = await tokenDAO_.getMetadata();
