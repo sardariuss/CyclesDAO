@@ -29,4 +29,14 @@ module {
         return Int.abs(Float.toInt(tokens_to_give));
     };
 
+    public func is_valid_exchange_config(cycle_exchange_config : [Types.ExchangeLevel]) : Bool {
+        var lastThreshold = 0;
+        var is_valid = true;
+        Iter.iterate<Types.ExchangeLevel>(cycle_exchange_config.vals(), func(level, _index) {
+            if (level.threshold < lastThreshold) {
+                is_valid := false;
+            };
+        });
+        return is_valid;
+    };
 };

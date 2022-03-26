@@ -1,34 +1,36 @@
 import Principal "mo:base/Principal";
+import Result "mo:base/Result";
+
+import BasicDAOTypes "../BasicDAO/src/Types";
 
 module{
 
     public type ConfigureDAOCommand = {
-        #updateMaxCycles: Nat;
         #updateMintConfig: [ExchangeLevel];
         #distributeBalance: { //sends any balance of a token/NFT to the provided principal;
-                to: Principal;
-                token_principal: Principal;
-                amount: Nat; //1 for NFT
-                id: ?{#text: Text; #nat: Nat}; //used for nfts
-                standard: Text;
+            to: Principal;
+            token_principal: Principal;
+            amount: Nat; //1 for NFT
+            id: ?{#text: Text; #nat: Nat}; //used for nfts
+            standard: Text;
         };
         #distributeCycles; //cycle through the allow list and distributes cycles to bring tokens up to the required balance
         #distributeRequestedCycles; //cycle through the request list and distributes cycles to bring tokens up to the required balance
         #configureDAOToken: {
-                principal: Principal;
+            principal: Principal;
         };
         #addAllowList: {
-                principal: Principal;
-                min_cycles: Nat;
+            principal: Principal;
+            min_cycles: Nat;
         };
         #requestTopUp: { //lets canister pull cycles
-                principal: Principal;
+            principal: Principal;
         };
         #removeAllowList: {
-                principal: Principal;
+            principal: Principal;
         };
         #configureGovernanceCanister: {
-                principal: Principal;
+            principal: Principal;
         };
     };
 
@@ -37,18 +39,17 @@ module{
         rate_per_T: Float;
     };
 
-    public type ExchangeInterval = {
-        min: Nat;
-        max: Nat;
-        rate_per_T: Float;
-    };
-
+    // @todo: review naming of errors
     public type DAOCyclesError = {
         #NoCyclesAdded;
         #MaxCyclesReached;
         #DAOTokenCanisterNull;
         #DAOTokenCanisterNotOwned;
         #DAOTokenCanisterMintError;
+        #NotAllowed;
+        #InvalidMintConfiguration;
+        #NotFound;
+        #NotEnoughCycles;
     };
 
     // Dip20 token interface
@@ -77,11 +78,27 @@ module{
         fee : Nat; // fee for update calls
     };
 
+    public type AcceptCyclesInterface = actor {
+        accept_cycles : () -> async ();
+    };
+
     public type DIPInterface = actor {
         transfer : (Principal, Nat) ->  async TxReceipt;
         transferFrom : (Principal, Principal, Nat) -> async TxReceipt;
-        allowance : (owner: Principal, spender: Principal) -> async Nat;
+        allowance : (Principal, Principal) -> async Nat;
         getMetadata: () -> async Metadata;
-        mint : (to: Principal, value: Nat) -> async TxReceipt;
+        mint : (Principal, Nat) -> async TxReceipt;
+    };
+
+    public type BasicDAOInterface = actor {
+        transfer : (BasicDAOTypes.TransferArgs) -> async Result.Result<(), Text>;
+        account_balance : () -> async BasicDAOTypes.Tokens;
+        list_accounts : () -> async [BasicDAOTypes.Account];
+        submit_proposal : (BasicDAOTypes.ProposalPayload) -> async Result.Result<Nat, Text>;
+        get_proposal : (Nat) -> async ?BasicDAOTypes.Proposal;
+        list_proposals : () -> async [BasicDAOTypes.Proposal];
+        vote : (BasicDAOTypes.VoteArgs) -> async Result.Result<BasicDAOTypes.ProposalState, Text>;
+        get_system_params : () -> async BasicDAOTypes.SystemParams;
+        update_system_params : (BasicDAOTypes.UpdateSystemParamsPayload) -> async ();
     };
 }
