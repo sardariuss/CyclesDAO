@@ -24,3 +24,86 @@ function upgrade(cid, wasm, args) {
     }
   );
 };
+
+// @todo: need a way to use fake wallets and not rely on wallets created before running this script
+identity alice "~/.config/dfx/identity/Alice/identity.pem";
+import alice_wallet = "4kxjg-7yaaa-aaaaa-aabja-cai" as "wallet.did";
+identity bob "~/.config/dfx/identity/Bob/identity.pem";
+import bob_wallet = "rwlgt-iiaaa-aaaaa-aaaaa-cai" as "wallet.did";
+
+// Create the BasicDAO canister
+import fakeBasicDAO = "2vxsx-fae" as "../../../.dfx/local/canisters/BasicDAO/BasicDAO.did";
+let argsBasicDAO = encode fakeBasicDAO.__init_args(
+  record {
+    accounts = vec { record { owner = bob; tokens = record { amount_e8s = 1_000_000_000_000 } } };
+    proposals = vec {};
+    system_params = record {
+      transfer_fee = record { amount_e8s = 10_000 };
+      proposal_vote_threshold = record { amount_e8s = 1_000_000_000 };
+      proposal_submission_deposit = record { amount_e8s = 10_000 };
+    };
+  }
+);
+let wasmBasicDAO = file "../../../.dfx/local/canisters/BasicDAO/BasicDAO.wasm";
+let basicDAO = install(wasmBasicDAO, argsBasicDAO, null);
+
+// Create the CyclesDAO canister
+import fakeCyclesDAO = "2vxsx-fae" as "../../../.dfx/local/canisters/CyclesDAO/CyclesDAO.did";
+let argsCyclesDAO = encode fakeCyclesDAO.__init_args(basicDAO);
+let wasmCyclesDAO = file "../../../.dfx/local/canisters/CyclesDAO/CyclesDAO.wasm";
+let cyclesDAO = install(wasmCyclesDAO, argsCyclesDAO, opt(0));
+
+// Verify that if cycles are added but the DAO token canister is not set, 
+// the function wallet_receive returns the error #DAOTokenCanisterNull
+let _ = call bob_wallet.wallet_call(
+  record {
+    args = encode();
+    cycles = 1_000_000;
+    method_name = "wallet_receive";
+    canister = cyclesDAO;
+  }
+);
+decode as cyclesDAO.wallet_receive _.Ok.return;
+assert _.err == variant{DAOTokenCanisterNull};
+
+// Create the TokenDAO (DIP20) canister
+import fakeDIP20 = "2vxsx-fae" as "../../../.dfx/local/canisters/token/token.did";
+let argsDIP20 = encode fakeDIP20.__init_args(
+    "Test Token Logo", "Test Token Name", "Test Token Symbol", 3, 1000000, alice, 0);
+let wasmDIP20 = file "../../../.dfx/local/canisters/token/token.wasm";
+let dip20 = install(wasmDIP20, argsDIP20, null);
+
+// Verify that setting a TokenDAO (DIP20) canister that is not owned by 
+// the CyclesDAO returns the error #DAOTokenCanisterNotOwned
+// @todo: test this through governance DAO
+// call cyclesDAO.set_token_dao(dip20);
+// assert _.err == variant{DAOTokenCanisterNotOwned};
+
+// Give the ownership of the DIP20 canister to the CyclesDAO
+// @todo: investigate why alice is the initial owner and not bob
+identity alice;
+call dip20.setOwner(cyclesDAO);
+call dip20.getMetadata();
+assert _.owner == cyclesDAO;
+
+identity bob;
+call basicDAO.submit_proposal(
+  record {
+    method = "configure_dao";
+    canister_id = cyclesDAO;
+      message = encode cyclesDAO.configure_dao(
+        variant {
+          configureDAOToken = record {
+            canister = dip20;
+        }
+      }
+    );
+  }
+);
+let proposal_id = _.ok;
+call basicDAO.vote(record { proposal_id = proposal_id; vote = variant { yes } });
+assert _.ok == variant { accepted };
+
+call basicDAO.list_proposals();
+assert _[0].state == variant { succeeded };
+

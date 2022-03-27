@@ -9,7 +9,7 @@ module{
         #updateMintConfig: [ExchangeLevel];
         #distributeBalance: { //sends any balance of a token/NFT to the provided principal;
             to: Principal;
-            token_principal: Principal;
+            token_canister: Principal;
             amount: Nat; //1 for NFT
             id: ?{#text: Text; #nat: Nat}; //used for nfts
             standard: Text;
@@ -17,20 +17,20 @@ module{
         #distributeCycles; //cycle through the allow list and distributes cycles to bring tokens up to the required balance
         #distributeRequestedCycles; //cycle through the request list and distributes cycles to bring tokens up to the required balance
         #configureDAOToken: {
-            principal: Principal;
+            canister: Principal;
         };
         #addAllowList: {
-            principal: Principal;
+            canister: Principal;
             min_cycles: Nat;
         };
         #requestTopUp: { //lets canister pull cycles
-            principal: Principal;
+            canister: Principal;
         };
         #removeAllowList: {
-            principal: Principal;
+            canister: Principal;
         };
         #configureGovernanceCanister: {
-            principal: Principal;
+            canister: Principal;
         };
     };
 

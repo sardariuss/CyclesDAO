@@ -113,7 +113,7 @@ shared actor class CyclesDAO(_governanceDAO: Principal) = this {
             };
             case(#configureDAOToken args){
                 // @todo: use try catch?
-                let _tokenDAO : Types.DIPInterface = actor (Principal.toText(args.principal));
+                let _tokenDAO : Types.DIPInterface = actor (Principal.toText(args.canister));
                 let metaData = await _tokenDAO.getMetadata();
                 if (metaData.owner != Principal.fromActor(this)){
                     return #err(#DAOTokenCanisterNotOwned);
@@ -122,12 +122,12 @@ shared actor class CyclesDAO(_governanceDAO: Principal) = this {
             };
             case(#addAllowList args){
                 // @todo: check if respect interface?
-                allow_list.put(args.principal, (args.min_cycles, false));
+                allow_list.put(args.canister, (args.min_cycles, false));
             };
             case(#requestTopUp args){
-                switch (allow_list.get(args.principal)){
+                switch (allow_list.get(args.canister)){
                     case(?canister_config){
-                        ignore allow_list.replace(args.principal, (canister_config.0, true));
+                        ignore allow_list.replace(args.canister, (canister_config.0, true));
                     };
                     case(null){
                         return #err(#NotFound);
@@ -135,12 +135,12 @@ shared actor class CyclesDAO(_governanceDAO: Principal) = this {
                 };
             };
             case(#removeAllowList args){
-                if (allow_list.remove(args.principal) == null){
+                if (allow_list.remove(args.canister) == null){
                     return #err(#NotFound);
                 };
             };
             case(#configureGovernanceCanister args){
-                governanceDAO := actor (Principal.toText(args.principal));
+                governanceDAO := actor (Principal.toText(args.canister));
             };
         };
         return #ok;
