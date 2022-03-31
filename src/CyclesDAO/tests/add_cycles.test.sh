@@ -1,6 +1,9 @@
 #!/usr/bin/ic-repl
 load "prelude.sh";
 
+// Warning: this tests requires the alice and bob wallets to be fully loaded with cycles
+// Running this test multiple types will fail because it will empty the wallets  
+
 // Verify that the original balance is null
 call cyclesDAO.cycle_balance();
 assert _ == (0 : nat);

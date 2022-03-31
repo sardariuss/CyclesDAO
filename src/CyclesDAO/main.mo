@@ -3,9 +3,10 @@ import Int "mo:base/Int";
 import Nat "mo:base/Nat";
 import Principal "mo:base/Principal";
 import Result "mo:base/Result";
+import Set "mo:base/TrieSet";
+import Trie "mo:base/Trie";
 import TrieMap "mo:base/TrieMap";
 
-import DIP20 "../DIP20/motoko/src/token";
 import Types "./types";
 import Utils "./utils";
 
@@ -22,8 +23,10 @@ shared actor class CyclesDAO(_governanceDAO: Principal) = this {
         {threshold=150_000_000_000_000; rate_per_T= 0.2;}
     ];
 
-    let allow_list : TrieMap.TrieMap<Principal, (Nat, Bool)> 
-        = TrieMap.TrieMap<Principal, (Nat, Bool)>(Principal.equal, Principal.hash);
+    let allow_list : TrieMap.TrieMap<Principal, Types.PoweringParameters> 
+        = TrieMap.TrieMap<Principal, Types.PoweringParameters>(Principal.equal, Principal.hash);
+
+    var top_up_list : Set.Set<Principal> = Set.empty();
 
     // To avoid refilling the CyclesDAO canister for only a few cycles
     // @todo: discuss this optimization
@@ -102,14 +105,14 @@ shared actor class CyclesDAO(_governanceDAO: Principal) = this {
                 // @todo: implement
             };
             case(#distributeCycles){
-                if (not (await distribute_cycles(true))){
+                if (not (await distribute_cycles())){
                     return #err(#NotEnoughCycles);
-                }
+                };
             };
             case(#distributeRequestedCycles){
-                if (not (await distribute_cycles(false))){
+                if (not (await distribute_requested_cycles())){
                     return #err(#NotEnoughCycles);
-                }
+                };
             };
             case(#configureDAOToken args){
                 // @todo: use try catch?
@@ -118,19 +121,22 @@ shared actor class CyclesDAO(_governanceDAO: Principal) = this {
                 if (metaData.owner != Principal.fromActor(this)){
                     return #err(#DAOTokenCanisterNotOwned);
                 };
-                tokenDAO := ?_tokenDAO; 
+                tokenDAO := ?_tokenDAO;
             };
             case(#addAllowList args){
-                // @todo: check if respect interface?
-                allow_list.put(args.canister, (args.min_cycles, false));
+                allow_list.put(args.canister, {
+                    min_cycles = args.min_cycles;
+                    accept_cycles = args.accept_cycles;
+                });
             };
             case(#requestTopUp args){
                 switch (allow_list.get(args.canister)){
-                    case(?canister_config){
-                        ignore allow_list.replace(args.canister, (canister_config.0, true));
-                    };
                     case(null){
                         return #err(#NotFound);
+                    };
+                    case(_){
+                        top_up_list := Set.put(
+                            top_up_list, args.canister, Principal.hash(args.canister), Principal.equal);
                     };
                 };
             };
@@ -146,21 +152,37 @@ shared actor class CyclesDAO(_governanceDAO: Principal) = this {
         return #ok;
     };
 
-    private func distribute_cycles(to_all: Bool) : async Bool {
+    private func distribute_cycles() : async Bool {
         var success = true;
-        for ((principal, (min_cycles, to_top_up)) in allow_list.entries()){
-            if (to_top_up or to_all){
-                // @todo: does it trap if the canister does not have the AcceptCyclesInterface?
-                let canister : Types.AcceptCyclesInterface = actor (Principal.toText(principal));
-                // @todo: shall the CyclesDAO canister keep a minimum amount of cycles to be operable ?
-                if (ExperimentalCycles.balance() > min_cycles)
-                {
-                    ExperimentalCycles.add(min_cycles);
-                    await canister.accept_cycles();
-                } else {
-                    success := false;
-                };
+        for ((principal, poweringParameters) in allow_list.entries()){
+            // @todo: shall the CyclesDAO canister keep a minimum amount of cycles to be operable ?
+            if (ExperimentalCycles.balance() > poweringParameters.min_cycles)
+            {
+                ExperimentalCycles.add(poweringParameters.min_cycles);
+                await poweringParameters.accept_cycles();
+            } else {
+                success := false;
             };
+        };
+        return success;
+    };
+
+    private func distribute_requested_cycles() : async Bool {
+        var success = true;
+        for ((principal, _) in Trie.iter(top_up_list)){
+            // @todo: shall the CyclesDAO canister keep a minimum amount of cycles to be operable ?
+            switch (allow_list.get(principal)){
+                case(?poweringParameters){
+                    if (ExperimentalCycles.balance() > poweringParameters.min_cycles)
+                    {
+                        ExperimentalCycles.add(poweringParameters.min_cycles);
+                        await poweringParameters.accept_cycles();
+                    } else {
+                        success := false;
+                    };
+                };
+                case(null){};
+            }
         };
         return success;
     };

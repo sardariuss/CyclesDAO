@@ -22,6 +22,7 @@ module{
         #addAllowList: {
             canister: Principal;
             min_cycles: Nat;
+            accept_cycles: shared () -> async ();
         };
         #requestTopUp: { //lets canister pull cycles
             canister: Principal;
@@ -78,8 +79,9 @@ module{
         fee : Nat; // fee for update calls
     };
 
-    public type AcceptCyclesInterface = actor {
-        accept_cycles : () -> async ();
+    public type PoweringParameters = { 
+        min_cycles: Nat;
+        accept_cycles: shared () -> async ();
     };
 
     public type DIPInterface = actor {

@@ -26,10 +26,12 @@ function upgrade(cid, wasm, args) {
 };
 
 // @todo: need a way to use fake wallets and not rely on wallets created before running this script
+// It seems like there is not way to do this in ic-repl for now. To refill the wallets to their maximum
+// number of cycles, use dfx start --clean and recreate the wallets (dfx identity get-wallet)
 identity alice "~/.config/dfx/identity/Alice/identity.pem";
-import alice_wallet = "4kxjg-7yaaa-aaaaa-aabja-cai" as "wallet.did";
+import alice_wallet = "rwlgt-iiaaa-aaaaa-aaaaa-cai" as "wallet.did";
 identity bob "~/.config/dfx/identity/Bob/identity.pem";
-import bob_wallet = "rwlgt-iiaaa-aaaaa-aaaaa-cai" as "wallet.did";
+import bob_wallet = "rrkah-fqaaa-aaaaa-aaaaq-cai" as "wallet.did";
 
 // Create the BasicDAO canister
 import fakeBasicDAO = "2vxsx-fae" as "../../../.dfx/local/canisters/BasicDAO/BasicDAO.did";
