@@ -25,13 +25,28 @@ function upgrade(cid, wasm, args) {
   );
 };
 
+function configure_dao(configureCommand) {
+    identity bob;
+    call basicDAO.submit_proposal(
+        record {
+            method = "configure_dao";
+            canister_id = cyclesDAO;
+            message = encode cyclesDAO.configure_dao(configureCommand);
+        }
+    );
+    let proposal_id = _.ok;
+    call basicDAO.vote(record { proposal_id = proposal_id; vote = variant { yes } });
+    assert _.ok == variant { accepted };
+    call basicDAO.list_proposals(); // required to pass the state from accepted to succeeded
+};
+
 // @todo: need a way to use fake wallets and not rely on wallets created before running this script
 // It seems like there is not way to do this in ic-repl for now. To refill the wallets to their maximum
 // number of cycles, use dfx start --clean and recreate the wallets (dfx identity get-wallet)
 identity alice "~/.config/dfx/identity/Alice/identity.pem";
-import alice_wallet = "rwlgt-iiaaa-aaaaa-aaaaa-cai" as "wallet.did";
+import alice_wallet = "qoctq-giaaa-aaaaa-aaaea-cai" as "wallet.did";
 identity bob "~/.config/dfx/identity/Bob/identity.pem";
-import bob_wallet = "rrkah-fqaaa-aaaaa-aaaaq-cai" as "wallet.did";
+import bob_wallet = "rwlgt-iiaaa-aaaaa-aaaaa-cai" as "wallet.did";
 
 // Create the BasicDAO canister
 import fakeBasicDAO = "2vxsx-fae" as "../../../.dfx/local/canisters/BasicDAO/BasicDAO.did";
@@ -88,24 +103,10 @@ call dip20.setOwner(cyclesDAO);
 call dip20.getMetadata();
 assert _.owner == cyclesDAO;
 
-identity bob;
-call basicDAO.submit_proposal(
-  record {
-    method = "configure_dao";
-    canister_id = cyclesDAO;
-      message = encode cyclesDAO.configure_dao(
-        variant {
-          configureDAOToken = record {
+configure_dao(
+    variant {
+        configureDAOToken = record {
             canister = dip20;
         }
-      }
-    );
-  }
+    }
 );
-let proposal_id = _.ok;
-call basicDAO.vote(record { proposal_id = proposal_id; vote = variant { yes } });
-assert _.ok == variant { accepted };
-
-call basicDAO.list_proposals();
-assert _[0].state == variant { succeeded };
-

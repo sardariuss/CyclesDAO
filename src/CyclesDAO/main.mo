@@ -167,6 +167,18 @@ shared actor class CyclesDAO(_governanceDAO: Principal) = this {
         return success;
     };
 
+    // @todo: remove, for tests purposes
+    public shared func test_distrib(poweringParameters: Types.PoweringParameters) : async Nat {
+        if (ExperimentalCycles.balance() > poweringParameters.min_cycles)
+        {
+            ExperimentalCycles.add(poweringParameters.min_cycles);
+            await poweringParameters.accept_cycles();
+            return poweringParameters.min_cycles;
+        } else {
+            return 0;
+        };
+    };
+
     private func distribute_requested_cycles() : async Bool {
         var success = true;
         for ((principal, _) in Trie.iter(top_up_list)){

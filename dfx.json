@@ -6,6 +6,10 @@
       "type": "motoko",
       "main": "src/CyclesDAO/main.mo"
     },
+    "ToPowerUp": {
+      "type": "motoko",
+      "main": "src/CyclesDAO/tests/toPowerUp.mo"
+    },
     "token": {
       "type": "motoko",
       "main": "src/DIP20/motoko/src/token.mo"
