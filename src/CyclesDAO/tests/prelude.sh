@@ -25,13 +25,13 @@ function upgrade(cid, wasm, args) {
   );
 };
 
-function configure_dao(configureCommand) {
+function configure_cycles_dao(configureCommand) {
     identity bob;
     call basicDAO.submit_proposal(
         record {
-            method = "configure_dao";
+            method = "configure";
             canister_id = cyclesDAO;
-            message = encode cyclesDAO.configure_dao(configureCommand);
+            message = encode cyclesDAO.configure(configureCommand);
         }
     );
     let proposal_id = _.ok;
@@ -44,7 +44,7 @@ function configure_dao(configureCommand) {
 // It seems like there is not way to do this in ic-repl for now. To refill the wallets to their maximum
 // number of cycles, use dfx start --clean and recreate the wallets (dfx identity get-wallet)
 identity alice "~/.config/dfx/identity/Alice/identity.pem";
-import alice_wallet = "qoctq-giaaa-aaaaa-aaaea-cai" as "wallet.did";
+import alice_wallet = "rno2w-sqaaa-aaaaa-aaacq-cai" as "wallet.did";
 identity bob "~/.config/dfx/identity/Bob/identity.pem";
 import bob_wallet = "rwlgt-iiaaa-aaaaa-aaaaa-cai" as "wallet.did";
 
@@ -71,16 +71,16 @@ let wasmCyclesDAO = file "../../../.dfx/local/canisters/CyclesDAO/CyclesDAO.wasm
 let cyclesDAO = install(wasmCyclesDAO, argsCyclesDAO, opt(0));
 
 // Verify that if cycles are added but the DAO token canister is not set, 
-// the function wallet_receive returns the error #DAOTokenCanisterNull
+// the function walletReceive returns the error #DAOTokenCanisterNull
 let _ = call bob_wallet.wallet_call(
   record {
     args = encode();
     cycles = 1_000_000;
-    method_name = "wallet_receive";
+    method_name = "walletReceive";
     canister = cyclesDAO;
   }
 );
-decode as cyclesDAO.wallet_receive _.Ok.return;
+decode as cyclesDAO.walletReceive _.Ok.return;
 assert _.err == variant{DAOTokenCanisterNull};
 
 // Create the TokenDAO (DIP20) canister
@@ -103,7 +103,7 @@ call dip20.setOwner(cyclesDAO);
 call dip20.getMetadata();
 assert _.owner == cyclesDAO;
 
-configure_dao(
+configure_cycles_dao(
     variant {
         configureDAOToken = record {
             canister = dip20;

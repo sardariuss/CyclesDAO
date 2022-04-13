@@ -7,36 +7,39 @@ import Types "./types";
 
 module {
 
-    public func compute_tokens_in_exchange(cycle_exchange_config : [Types.ExchangeLevel],
-                                           original_balance: Nat,
-                                           accepted_cycles : Nat) : Nat {
-        var tokens_to_give : Float = 0.0;
-        var paid_cycles : Nat = 0;
+  public func computeTokensInExchange(
+    cycleExchangeConfig : [Types.ExchangeLevel],
+    originalBalance: Nat,
+    acceptedCycles : Nat
+  ) : Nat {
+    var tokensToGive : Float = 0.0;
+    var paidCycles : Nat = 0;
+    Iter.iterate<Types.ExchangeLevel>(cycleExchangeConfig.vals(), func(level, _index) {
+      if (paidCycles < acceptedCycles) {
+        let intervalLeft : Int = level.threshold - originalBalance - paidCycles;
+        if (intervalLeft > 0) {
+          var toPay = Nat.min(acceptedCycles - paidCycles, Int.abs(intervalLeft));
+          tokensToGive  += level.ratePerT * Float.fromInt(toPay);
+          paidCycles += toPay;
+        };
+      };
+    });
+    assert(tokensToGive > 0);
+    // @todo: check the conversion performed by toInt and if it is what we want (trunc?)
+    return Int.abs(Float.toInt(tokensToGive));
+  };
 
-        Iter.iterate<Types.ExchangeLevel>(cycle_exchange_config.vals(), func(level, _index) {
-            if (paid_cycles < accepted_cycles) {
-                let interval_left : Int = level.threshold - original_balance - paid_cycles;
-                if (interval_left > 0) {
-                    var to_pay = Nat.min(accepted_cycles - paid_cycles, Int.abs(interval_left));
-                    tokens_to_give  += level.rate_per_T * Float.fromInt(to_pay);
-                    paid_cycles += to_pay;
-                };
-            };
-        });
+  public func isValidExchangeConfig(
+    cycleExchangeConfig : [Types.ExchangeLevel]
+  ) : Bool {
+    var lastThreshold = 0;
+    var isValid = true;
+    Iter.iterate<Types.ExchangeLevel>(cycleExchangeConfig.vals(), func(level, _index) {
+      if (level.threshold < lastThreshold) {
+        isValid := false;
+      };
+    });
+    return isValid;
+  };
 
-        assert(tokens_to_give > 0);
-        // @todo: check the conversion performed by toInt and if it is what we want (trunc?)
-        return Int.abs(Float.toInt(tokens_to_give));
-    };
-
-    public func is_valid_exchange_config(cycle_exchange_config : [Types.ExchangeLevel]) : Bool {
-        var lastThreshold = 0;
-        var is_valid = true;
-        Iter.iterate<Types.ExchangeLevel>(cycle_exchange_config.vals(), func(level, _index) {
-            if (level.threshold < lastThreshold) {
-                is_valid := false;
-            };
-        });
-        return is_valid;
-    };
 };

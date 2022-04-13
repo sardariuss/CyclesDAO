@@ -16,7 +16,7 @@ call toPowerUp3.balance();
 assert _ == (100_000_000_000_000 : nat);
 
 // Verify that the original balance is null
-call cyclesDAO.cycle_balance();
+call cyclesDAO.cyclesBalance();
 assert _ == (0 : nat);
 
 // Bob adds 10 trillon cycles to the CyclesDAO
@@ -25,25 +25,25 @@ let _ = call bob_wallet.wallet_call(
   record {
     args = encode();
     cycles = 10_000_000;
-    method_name = "wallet_receive";
+    method_name = "walletReceive";
     canister = cyclesDAO;
   }
 );
-decode as cyclesDAO.wallet_receive _.Ok.return;
+decode as cyclesDAO.walletReceive _.Ok.return;
 assert _.ok == (0 : nat);
 
-//dfx canister call CyclesDAO test_distrib "(record{min_cycles = 666_666; accept_cycles = func \"rno2w-sqaaa-aaaaa-aaacq-cai\".receive_cycles;})"
-configure_dao(
+//dfx canister call CyclesDAO test_distrib "(record{min_cycles = 666_666; accept_cycles = func \"rno2w-sqaaa-aaaaa-aaacq-cai\".receiveCycles;})"
+configure_cycles_dao(
     variant {
         addAllowList = record {
             min_cycles = 1_000_000;
             canister = toPowerUp1;
-            accept_cycles = func toPowerUp1.receive_cycles; // @todo: fix "Unexpected token"
+            accept_cycles = func toPowerUp1.receiveCycles; // @todo: fix "Unexpected token"
         }
     }
 );
 
-configure_dao(
+configure_cycles_dao(
     variant { distributeCycles }
 );
 
