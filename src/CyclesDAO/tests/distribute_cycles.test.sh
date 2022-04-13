@@ -4,16 +4,9 @@ load "prelude.sh";
 // Warning: this tests requires the alice and bob wallets to be fully loaded with cycles
 // Running this test multiple types will fail because it will empty the wallets  
 
-let wasmToPowerUp = file "../../../.dfx/local/canisters/ToPowerUp/ToPowerUp.wasm";
-let toPowerUp1 = install(wasmToPowerUp, encode(), null);
-call toPowerUp1.balance();
-assert _ == (100_000_000_000_000 : nat);
-let toPowerUp2 = install(wasmToPowerUp, encode(), null);
-call toPowerUp2.balance();
-assert _ == (100_000_000_000_000 : nat);
-let toPowerUp3 = install(wasmToPowerUp, encode(), null);
-call toPowerUp3.balance();
-assert _ == (100_000_000_000_000 : nat);
+import toPowerUp = "rno2w-sqaaa-aaaaa-aaacq-cai";
+call toPowerUp.balance();
+assert _ == (4_000_000_000_000 : nat);
 
 // Verify that the original balance is null
 call cyclesDAO.cycle_balance();
@@ -37,8 +30,8 @@ configure_dao(
     variant {
         addAllowList = record {
             min_cycles = 1_000_000;
-            canister = toPowerUp1;
-            accept_cycles = func toPowerUp1.receive_cycles; // @todo: fix "Unexpected token"
+            canister = toPowerUp;
+            accept_cycles = func "rno2w-sqaaa-aaaaa-aaacq-cai".receive_cycles;
         }
     }
 );
@@ -47,5 +40,5 @@ configure_dao(
     variant { distributeCycles }
 );
 
-call toPowerUp1.balance();
+call toPowerUp.balance();
 assert _ == (100_000_001_000_000 : nat);

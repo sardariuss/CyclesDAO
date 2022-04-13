@@ -21,8 +21,8 @@ let _ = call bob_wallet.wallet_call(
 decode as cyclesDAO.wallet_receive _.Ok.return;
 assert _.err == variant{NoCyclesAdded};
 
-// Bob adds 1 trillon cycles, verify CyclesDAO's balance is 1 trillon cycles
-// and Bob's balance is 1 trillon tokens
+// Bob adds 1 trillion cycles, verify CyclesDAO's balance is 1 trillion cycles
+// and Bob's balance is 1 trillion tokens
 identity bob;
 let _ = call bob_wallet.wallet_call(
   record {
@@ -39,8 +39,8 @@ assert _ == (1_000_000_000_000 : nat);
 call dip20.balanceOf(bob_wallet);
 assert _ == (1_000_000_000_000 : nat);
 
-// Bob adds 2 more trillon cycles, verify CyclesDAO's balance is 3 trillons
-// cycles and Bob's balance is (1 + 1*1.0 + 2*0.8 = 2.8) trillons DAO tokens
+// Bob adds 2 more trillion cycles, verify CyclesDAO's balance is 3 trillions
+// cycles and Bob's balance is (1 + 1*1.0 + 2*0.8 = 2.8) trillions DAO tokens
 identity bob;
 let _ = call bob_wallet.wallet_call(
   record {
@@ -57,8 +57,8 @@ assert _ == (3_000_000_000_000 : nat);
 call dip20.balanceOf(bob_wallet);
 assert _ == (2_800_000_000_000 : nat);
 
-// Alice adds 7 trillon cycles, verify CyclesDAO's balance is 10 trillons
-// cycles and Alice's balance is (7*0.8 = 5.6) trillons DAO tokens
+// Alice adds 7 trillion cycles, verify CyclesDAO's balance is 10 trillions
+// cycles and Alice's balance is (7*0.8 = 5.6) trillions DAO tokens
 identity alice;
 let _ = call alice_wallet.wallet_call(
   record {
@@ -75,8 +75,8 @@ assert _ == (10_000_000_000_000 : nat);
 call dip20.balanceOf(alice_wallet);
 assert _ == (5_600_000_000_000 : nat);
 
-// Alice adds 90 trillon cycles, verify CyclesDAO's balance is 100 trillons
-// cycles and Alice's balance is (5.6 + 40*0.4 + 50*0.2 = 31.6) trillons DAO tokens
+// Alice adds 90 trillion cycles, verify CyclesDAO's balance is 100 trillions
+// cycles and Alice's balance is (5.6 + 40*0.4 + 50*0.2 = 31.6) trillions DAO tokens
 identity alice;
 let _ = call alice_wallet.wallet_call(
   record {
@@ -93,8 +93,8 @@ assert _ == (100_000_000_000_000 : nat);
 call dip20.balanceOf(alice_wallet);
 assert _ == (31_600_000_000_000 : nat);
 
-// Bob adds 60 trillon cycles, verify CyclesDAO's balance is 150 trillons
-// cycles and Bob's balance is (2.8 + 50*0.2 = 12.8) trillons DAO tokens
+// Bob adds 60 trillion cycles, verify CyclesDAO's balance is 150 trillions
+// cycles and Bob's balance is (2.8 + 50*0.2 = 12.8) trillions DAO tokens
 identity bob;
 let _ = call bob_wallet.wallet_call(
   record {
