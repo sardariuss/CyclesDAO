@@ -1,7 +1,10 @@
+import Debug "mo:base/Debug";
 import Float "mo:base/Float";
 import Int "mo:base/Int";
 import Iter "mo:base/Iter";
 import Nat "mo:base/Nat";
+import Principal "mo:base/Principal";
+import Result "mo:base/Result";
 
 import Types "./types";
 
@@ -40,6 +43,79 @@ module {
       };
     });
     return isValid;
+  };
+
+  public func getToken(
+    standard: Types.TokenStandard,
+    canister: Principal,
+    owner: Principal
+  ) : async Result.Result<Types.Token, Types.DAOCyclesError> {
+    switch(standard){
+      case(#DIP20){
+        let dip20 : Types.DIPInterface = actor (Principal.toText(canister));
+        let metaData = await dip20.getMetadata();
+        if (metaData.owner != owner){
+          return #err(#DAOTokenCanisterNotOwned);
+        };
+        let token : Types.Token = {
+          standard = standard;
+          canister = canister;
+        };
+        return #ok(token);
+      };
+      case(#LEDGER){
+        // @todo: implement the LEDGER standard
+        Debug.trap("The LEDGER standard is not implemented yet!");
+      };
+      case(#DIP721){
+        // @todo: implement the DIP721 standard
+        Debug.trap("The DIP721 standard is not implemented yet!");
+      };
+      case(#EXT){
+        // @todo: implement the EXT standard
+        Debug.trap("The EXT standard is not implemented yet!");
+      };
+      case(#NFT_ORIGYN){
+        // @todo: implement the NFT_ORIGYN standard
+        Debug.trap("The NFT_ORIGYN standard is not implemented yet!");
+      };
+    }
+  };
+
+  public func mintToken(
+    token: Types.Token,
+    to: Principal, 
+    amount: Nat
+  ) : async Result.Result<Nat, Types.DAOCyclesError> {
+    switch(token.standard){
+      case(#DIP20){
+        let dip20 : Types.DIPInterface = actor (Principal.toText(token.canister));
+        switch (await dip20.mint(to, amount)){
+          case(#Ok(txCounter)){
+            return #ok(txCounter);
+          };
+          case(#Err(_)){
+            return #err(#DAOTokenCanisterMintError);
+          };
+        };
+      };
+      case(#LEDGER){
+        // @todo: implement the LEDGER standard
+        Debug.trap("The LEDGER standard is not implemented yet!");
+      };
+      case(#DIP721){
+        // @todo: implement the DIP721 standard
+        Debug.trap("The DIP721 standard is not implemented yet!");
+      };
+      case(#EXT){
+        // @todo: implement the EXT standard
+        Debug.trap("The EXT standard is not implemented yet!");
+      };
+      case(#NFT_ORIGYN){
+        // @todo: implement the NFT_ORIGYN standard
+        Debug.trap("The NFT_ORIGYN standard is not implemented yet!");
+      };
+    };
   };
 
 };

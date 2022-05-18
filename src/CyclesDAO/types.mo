@@ -22,6 +22,7 @@ module{
     // tokens up to the required balance
     #distributeRequestedCycles;
     #configureDAOToken: {
+      standard: TokenStandard;
       canister: Principal;
     };
     #addAllowList: {
@@ -44,6 +45,19 @@ module{
   public type ExchangeLevel = {
     threshold: Nat;
     ratePerT: Float;
+  };
+
+  public type Token = {
+    standard: TokenStandard;
+    canister: Principal;
+  };
+
+  public type TokenStandard = {
+    #DIP20;
+    #LEDGER;
+    #DIP721;
+    #EXT;
+    #NFT_ORIGYN;
   };
 
   // @todo: review naming of errors

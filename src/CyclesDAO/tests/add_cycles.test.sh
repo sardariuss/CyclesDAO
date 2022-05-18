@@ -1,4 +1,4 @@
-#!/usr/bin/ic-repl
+#!/usr/local/bin/ic-repl
 load "prelude.sh";
 
 // Warning: this tests requires the alice and bob wallets to be fully loaded with cycles

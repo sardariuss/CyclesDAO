@@ -1,4 +1,4 @@
-#!/usr/bin/ic-repl
+#!/usr/local/bin/ic-repl
 
 function install(wasm, args, cycle) {
   let id = call ic.provisional_create_canister_with_cycles(record { settings = null; amount = cycle });
@@ -44,7 +44,7 @@ function configure_cycles_dao(configureCommand) {
 // It seems like there is not way to do this in ic-repl for now. To refill the wallets to their maximum
 // number of cycles, use dfx start --clean and recreate the wallets (dfx identity get-wallet)
 identity alice "~/.config/dfx/identity/Alice/identity.pem";
-import alice_wallet = "rno2w-sqaaa-aaaaa-aaacq-cai" as "wallet.did";
+import alice_wallet = "renrk-eyaaa-aaaaa-aaada-cai" as "wallet.did";
 identity bob "~/.config/dfx/identity/Bob/identity.pem";
 import bob_wallet = "rwlgt-iiaaa-aaaaa-aaaaa-cai" as "wallet.did";
 

@@ -9,15 +9,15 @@ import TrieMap "mo:base/TrieMap";
 import Types "./types";
 import Utils "./utils";
 
-shared actor class CyclesDAO(governanceDAO: Principal) = this {
+shared actor class CyclesDAO(governance: Principal) = this {
 
   // Members
-  // @todo: put governanceDAO_, tokenDAO_ and cycleExchangeConfig_ as stable
+  // @todo: put as stable
 
-  private var governanceDAO_ : Types.BasicDAOInterface = 
-    actor (Principal.toText(governanceDAO));
-  
-  private var tokenDAO_ : ?Types.DIPInterface = null;
+  private var governance_ : Types.BasicDAOInterface = 
+    actor (Principal.toText(governance));
+
+  private var token_ : ?Types.Token = null;
 
   private var cycleExchangeConfig_ : [Types.ExchangeLevel] = [
     { threshold = 2_000_000_000_000; ratePerT = 1.0; },
@@ -42,13 +42,11 @@ shared actor class CyclesDAO(governanceDAO: Principal) = this {
 
   public shared(msg) func walletReceive() : 
     async Result.Result<Nat, Types.DAOCyclesError> {
-    
     // Check if cycles are available
     let availableCycles = ExperimentalCycles.available();
     if (availableCycles == 0) {
       return #err(#NoCyclesAdded);
     };
-    
     // Check if the max cycles has been reached
     let originalBalance = ExperimentalCycles.balance();
     let maxCycles = cycleExchangeConfig_[
@@ -56,31 +54,21 @@ shared actor class CyclesDAO(governanceDAO: Principal) = this {
     if (originalBalance > maxCycles) {
       return #err(#MaxCyclesReached);
     };
-
-    switch(tokenDAO_) {
-      // Check if the token DAO has been set
+    // Check if the token has been set
+    switch(token_) {
       case null {
         return #err(#DAOTokenCanisterNull);
       };
-      case (?tokenDAO_) {
-
+      case (?token_) {
         // Accept the cycles up to the maximum cycles possible
         let acceptedCycles = ExperimentalCycles.accept(
           Nat.min(availableCycles, maxCycles - originalBalance));
-
         // Compute the amount of tokens to mint in exchange 
         // of the accepted cycles
-        let tokensToMint = Utils.computeTokensInExchange(
+        let amount = Utils.computeTokensInExchange(
           cycleExchangeConfig_, originalBalance, acceptedCycles);
-
-        switch (await tokenDAO_.mint(msg.caller, tokensToMint)){
-          case(#Ok(txCounter)){
-            return #ok(txCounter);
-          };
-          case(#Err(_)){
-            return #err(#DAOTokenCanisterMintError);
-          };
-        };
+        // Mint the tokens
+        return await Utils.mintToken(token_, msg.caller, amount);
       };
     };
   };
@@ -88,9 +76,8 @@ shared actor class CyclesDAO(governanceDAO: Principal) = this {
   public shared(msg) func configure(
     command: Types.ConfigureDAOCommand
   ) : async Result.Result<(), Types.DAOCyclesError> {
-    
     // Check if the call comes from the governance DAO canister
-    if (msg.caller != Principal.fromActor(governanceDAO_)) {
+    if (msg.caller != Principal.fromActor(governance_)) {
       return #err(#NotAllowed);
     };
     // @todo: find a way to use tuple instead of "args" inside each case?
@@ -115,13 +102,15 @@ shared actor class CyclesDAO(governanceDAO: Principal) = this {
         };
       };
       case(#configureDAOToken args){
-        // @todo: use try catch?
-        let dip20 : Types.DIPInterface = actor (Principal.toText(args.canister));
-        let metaData = await dip20.getMetadata();
-        if (metaData.owner != Principal.fromActor(this)){
-          return #err(#DAOTokenCanisterNotOwned);
+        switch(await Utils.getToken(args.standard, args.canister, Principal.fromActor(this))){
+          case(#ok(token)){
+            token_ := ?token;
+          };
+          case(#err(error)){
+            token_ := null;
+            return #err(error);
+          };
         };
-        tokenDAO_ := ?dip20;
       };
       case(#addAllowList args){
         allowList_.put(args.canister, {
@@ -150,7 +139,7 @@ shared actor class CyclesDAO(governanceDAO: Principal) = this {
         };
       };
       case(#configureGovernanceCanister args){
-        governanceDAO_ := actor (Principal.toText(args.canister));
+        governance_ := actor (Principal.toText(args.canister));
       };
     };
     return #ok;
