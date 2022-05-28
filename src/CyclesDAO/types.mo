@@ -1,20 +1,23 @@
-import LedgerTypes   "tokens/ledger/types";
+import DIP20Types        "tokens/dip20/types";
+import EXTTypes          "tokens/ext/types";
+import LedgerTypes       "tokens/ledger/types";
+import DIP721Types       "tokens/dip721/types";
+import OrigynTypes       "tokens/origyn/types";
 
 import Principal "mo:base/Principal";
-import Result "mo:base/Result";
+import Result    "mo:base/Result";
 
 module{
 
-  // @todo: types must begin with upper case
   public type ConfigureDAOCommand = {
     #UpdateMintConfig: [ExchangeLevel];
     //sends any balance of a token/NFT to the provided principal
     #DistributeBalance: {
       to: Principal;
-      tokenCanister: Principal;
+      token_canister: Principal;
       amount: Nat; //1 for NFT
       id: ?{#text: Text; #nat: Nat}; //used for nfts
-      standard: Text;
+      standard: TokenStandard;
     };
     // cycle through the allow list and distributes cycles to bring 
     // tokens up to the required balance
@@ -22,14 +25,14 @@ module{
     // cycle through the request list and distributes cycles to bring
     // tokens up to the required balance
     #DistributeRequestedCycles;
-    #configureDAOToken: {
+    #ConfigureDAOToken: {
       standard: TokenStandard;
       canister: Principal;
     };
     #AddAllowList: {
       canister: Principal;
-      minCycles: Nat;
-      acceptCycles: shared () -> async ();
+      min_cycles: Nat;
+      accept_cycles: shared () -> async ();
     };
     //lets canister pull cycles
     #RequestTopUp: {
@@ -45,7 +48,7 @@ module{
 
   public type ExchangeLevel = {
     threshold: Nat;
-    ratePerT: Float;
+    rate_per_t: Float;
   };
 
   public type TokenStandard = {
@@ -58,19 +61,19 @@ module{
 
   public type TokenInterface = {
     #DIP20 : {
-      interface: DIP20Interface;
+      interface: DIP20Types.Interface;
     };
     #LEDGER : {
       interface: LedgerTypes.Interface;
     };
     #DIP721 : {
-      interface: DIP721Interface;
+      interface: DIP721Types.Interface;
     };
     #EXT : {
-      interface: EXTInterface;
+      interface: EXTTypes.Interface;
     };
     #NFT_ORIGYN : {
-      interface: NFTOrigynInterface;
+      interface: OrigynTypes.Interface;
     };
   };
 
@@ -87,55 +90,9 @@ module{
     #NotEnoughCycles;
   };
 
-  // Dip20 token interface
-  public type TxReceipt = {
-    #Ok: Nat;
-    #Err: {
-      #InsufficientAllowance;
-      #InsufficientBalance;
-      #ErrorOperationStyle;
-      #Unauthorized;
-      #LedgerTrap;
-      #ErrorTo;
-      #Other;
-      #BlockUsed;
-      #AmountTooSmall;
-    };
-  };
-
-  public type Metadata = {
-    logo : Text; // base64 encoded logo or logo url
-    name : Text; // token name
-    symbol : Text; // token symbol
-    decimals : Nat8; // token decimal
-    totalSupply : Nat; // token total supply
-    owner : Principal; // token owner
-    fee : Nat; // fee for update calls
-  };
-
   public type PoweringParameters = { 
-    minCycles: Nat;
-    acceptCycles: shared () -> async ();
-  };
-
-  public type DIP20Interface = actor {
-    transfer : (Principal, Nat) ->  async TxReceipt;
-    transferFrom : (Principal, Principal, Nat) -> async TxReceipt;
-    allowance : (Principal, Principal) -> async Nat;
-    getMetadata: () -> async Metadata;
-    mint : (Principal, Nat) -> async TxReceipt;
-  };
-
-    // @todo: implement the DIP721 interface
-  public type DIP721Interface = actor {
-  };
-
-  // @todo: implement the EXT interface
-  public type EXTInterface = actor {
-  };
-
-  // @todo: implement the NFTORIGYN interface
-  public type NFTOrigynInterface = actor {
+    min_cycles: Nat;
+    accept_cycles: shared () -> async ();
   };
 
 }

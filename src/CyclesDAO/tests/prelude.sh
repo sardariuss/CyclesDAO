@@ -105,7 +105,7 @@ assert _.owner == cyclesDAO;
 
 configure_cycles_dao(
     variant {
-        configureDAOToken = record {
+        ConfigureDAOToken = record {
             canister = dip20;
         }
     }

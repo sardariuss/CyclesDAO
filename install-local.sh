@@ -52,4 +52,4 @@ dfx deploy ledger --argument '(record {minting_account = "'${CYCLES_DAO_ACCOUNT_
 rm src/Ledger/ledger.did
 cp src/Ledger/ledger.public.did src/Ledger/ledger.did
 
-# See CyclesDAO/tests/commands.sh for a simple scenario
+# See CyclesDAO/tests/commands.sh for a simple scenario!

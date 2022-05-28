@@ -1,5 +1,9 @@
-import LedgerTypes       "tokens/ledger/types";
 import Accounts          "tokens/ledger/accounts";
+import DIP20Types        "tokens/dip20/types";
+import EXTTypes          "tokens/ext/types";
+import LedgerTypes       "tokens/ledger/types";
+import DIP721Types       "tokens/dip721/types";
+import OrigynTypes       "tokens/origyn/types";
 import Types             "types";
 
 import Debug "mo:base/Debug";
@@ -25,14 +29,14 @@ module {
         let intervalLeft : Int = level.threshold - originalBalance - paidCycles;
         if (intervalLeft > 0) {
           var toPay = Nat.min(acceptedCycles - paidCycles, Int.abs(intervalLeft));
-          tokensToGive  += level.ratePerT * Float.fromInt(toPay);
+          tokensToGive  += level.rate_per_t * Float.fromInt(toPay);
           paidCycles += toPay;
         };
       };
     });
     assert(tokensToGive > 0);
-    // @todo: check the conversion performed by toInt and if it is what we want (trunc?)
-    return Int.abs(Float.toInt(tokensToGive));
+    // @todo: check the conversion performed by toInt and if it is what we want (i.e. trunc?)
+    Int.abs(Float.toInt(tokensToGive));
   };
 
   public func isValidExchangeConfig(
@@ -45,40 +49,86 @@ module {
         isValid := false;
       };
     });
-    return isValid;
+    isValid;
   };
 
-  public func getToken(
-    standard: Types.TokenStandard,
-    canister: Principal,
-    owner: Principal
-  ) : async Result.Result<Types.TokenInterface, Types.DAOCyclesError> {
+  public func isFungible(standard: Types.TokenInterface) : Bool {
     switch(standard){
-      case(#DIP20){
-        let dip20 : Types.DIP20Interface = actor (Principal.toText(canister));
-        let metaData = await dip20.getMetadata();
-        if (metaData.owner != owner){
-          return #err(#DAOTokenCanisterNotOwned);
-        };
-        return #ok(#DIP20({interface = dip20;}));
+      case(#DIP20(_)){
+        true;
       };
-      case(#LEDGER){
-        let ledger : LedgerTypes.Interface = actor (Principal.toText(canister));
-        return #ok(#LEDGER({interface = ledger;}))
+      case(#LEDGER(_)){
+        true;
       };
-      case(#DIP721){
-        // @todo: implement the DIP721 standard
-        Debug.trap("The DIP721 standard is not implemented yet!");
+      case(#DIP721(_)){
+        false;
       };
-      case(#EXT){
+      case(#EXT(_)){
+        true;
+      };
+      case(#NFT_ORIGYN(_)){
+        false;
+      };
+    };
+  };
+
+  public func isOwner(token: Types.TokenInterface, principal: Principal): async Bool {
+    switch(token){
+      case(#DIP20(canister)){
+        let metaData = await canister.interface.getMetadata();
+        metaData.owner == principal;
+      };
+      case(#LEDGER(canister)){
+        // There is no way to check the owner of the ledger canister
+        // Hence assume the given principal is the owner
+        true;
+      };
+      case(#DIP721(canister)){
+        // Cannot use the tokenMetadata interface of dip721 canister, because it uses
+        // a 'vec record' in Candid that cannot be used in Motoko
+        // Hence assume the given principal is the owner
+        true;
+      };
+      case(#EXT(canister)){
         // @todo: implement the EXT standard
         Debug.trap("The EXT standard is not implemented yet!");
       };
-      case(#NFT_ORIGYN){
+      case(#NFT_ORIGYN(canister)){
         // @todo: implement the NFT_ORIGYN standard
         Debug.trap("The NFT_ORIGYN standard is not implemented yet!");
       };
-    }
+    };
+   
+    
+  };
+
+  // @todo: check what happends if the canister does not have the same interface (does it traps)
+  public func getToken(
+    standard: Types.TokenStandard,
+    canister: Principal
+  ) : async Types.TokenInterface {
+    switch(standard){
+      case(#DIP20){
+        let dip20 : DIP20Types.Interface = actor (Principal.toText(canister));
+        #DIP20({interface = dip20;});
+      };
+      case(#LEDGER){
+        let ledger : LedgerTypes.Interface = actor (Principal.toText(canister));
+        #LEDGER({interface = ledger;})
+      };
+      case(#DIP721){
+        let dip721 : DIP721Types.Interface = actor (Principal.toText(canister));
+        #DIP721({interface = dip721});
+      };
+      case(#EXT){
+        let ext : EXTTypes.Interface = actor (Principal.toText(canister));
+        #EXT({interface = ext});
+      };
+      case(#NFT_ORIGYN){
+        let nft_origyn : OrigynTypes.Interface = actor (Principal.toText(canister));
+        #NFT_ORIGYN({interface = nft_origyn});
+      };
+    };
   };
 
   public func mintToken(
@@ -89,16 +139,19 @@ module {
     switch(token){
       case(#DIP20(canister)){
         switch (await canister.interface.mint(to, amount)){
-          case(#Ok(tx_counter)){
-            return #ok(tx_counter);
-          };
           case(#Err(_)){
-            return #err(#DAOTokenCanisterMintError);
+            #err(#DAOTokenCanisterMintError);
+          };
+          case(#Ok(tx_counter)){
+            #ok(tx_counter);
           };
         };
       };
       case(#LEDGER(canister)){
         switch (getAccountIdentifier(to, Principal.fromActor(canister.interface))){
+          case(null){
+            #err(#DAOTokenCanisterMintError);
+          };
           case(?account_identifier){
             switch (await canister.interface.transfer({
               memo = 0;
@@ -108,22 +161,95 @@ module {
               to = account_identifier;
               created_at_time = null; // @todo: Time.now() is an Int, weird
             })){
-              case(#Ok(block_index)){
-                return #ok(Nat64.toNat(block_index));
-              };
               case(#Err(_)){
-                return #err(#DAOTokenCanisterMintError);
+                #err(#DAOTokenCanisterMintError);
+              };
+              case(#Ok(block_index)){
+                #ok(Nat64.toNat(block_index));
               };
             };
-          };
-          case(null){
-            return #err(#DAOTokenCanisterMintError); // @todo: get a more descriptive error
           };
         };
       };
       case(#DIP721(canister)){
-        // @todo: implement the DIP721 standard
-        Debug.trap("The DIP721 standard is not implemented yet!");
+        // Minting of NFTs is not supported!
+        #err(#DAOTokenCanisterMintError);
+      };
+      case(#EXT(canister)){
+        // @todo: implement the EXT standard
+        Debug.trap("The EXT standard is not implemented yet!");
+      };
+      case(#NFT_ORIGYN(canister)){
+        // Minting of NFTs is not supported!
+        #err(#DAOTokenCanisterMintError);
+      };
+    };
+  };
+
+  public func transferToken(
+    token: Types.TokenInterface,
+    to: Principal, 
+    amount: Nat,
+    id: ?{#text: Text; #nat: Nat}
+  ) : async Result.Result<Nat, Types.DAOCyclesError> {
+    switch(token){
+      case(#DIP20(canister)){
+        switch (await canister.interface.transfer(to, amount)){
+          case(#Err(_)){
+            #err(#DAOTokenCanisterMintError);
+          };
+          case(#Ok(tx_counter)){
+            #ok(tx_counter);
+          };
+        };
+      };
+      case(#LEDGER(canister)){
+        switch (getAccountIdentifier(to, Principal.fromActor(canister.interface))){
+          case(null){
+            #err(#DAOTokenCanisterMintError);
+          };
+          case(?account_identifier){
+            switch (await canister.interface.transfer({
+              memo = 0;
+              amount = { e8s = Nat64.fromNat(amount); }; // @todo: this can trap on overflow/underflow!
+              fee = { e8s = 10_000; }; // The standard ledger fee
+              from_subaccount = null;
+              to = account_identifier;
+              created_at_time = null; // @todo: Time.now() is an Int, weird
+            })){
+              case(#Err(_)){
+                #err(#DAOTokenCanisterMintError);
+              };
+              case(#Ok(block_index)){
+                #ok(Nat64.toNat(block_index));
+              };
+            };
+          };
+        };
+      };
+      case(#DIP721(canister)){
+        switch(id){
+          case(null){
+            #err(#DAOTokenCanisterMintError);
+          };
+          case(?id){
+            switch(id){
+              case(#text(_)){
+                #err(#DAOTokenCanisterMintError);
+              };
+              case(#nat(id_nft)){
+                switch (await canister.interface.transfer(to, id_nft)){
+                  case(#Err(_)){
+                    #err(#DAOTokenCanisterMintError);
+                  };
+                  case(#Ok(tx_counter)){
+                    #ok(tx_counter);
+                  };
+                };
+              };
+            };
+          };
+        };        
       };
       case(#EXT(canister)){
         // @todo: implement the EXT standard
@@ -136,17 +262,12 @@ module {
     };
   };
 
-  public func getActor(canister: Principal) : async Types.DIP20Interface {
-    let dip20 : Types.DIP20Interface = actor (Principal.toText(canister));
-    return dip20;
-  };
-
   public func getAccountIdentifier(account: Principal, ledger: Principal) : ?Accounts.AccountIdentifier {
     let identifier = Accounts.accountIdentifier(ledger, Accounts.principalToSubaccount(account));
       if(Accounts.validateAccountIdentifier(identifier)){
-        return ?identifier;
+        ?identifier;
       } else {
-        return null;
+        null;
       };
   };
 
