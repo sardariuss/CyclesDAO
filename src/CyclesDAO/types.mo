@@ -1,8 +1,8 @@
-import DIP20Types        "tokens/dip20/types";
-import EXTTypes          "tokens/ext/types";
-import LedgerTypes       "tokens/ledger/types";
-import DIP721Types       "tokens/dip721/types";
-import OrigynTypes       "tokens/origyn/types";
+import DIP20Types        "standards/dip20/types";
+import EXTTypes          "standards/ext/types";
+import LedgerTypes       "standards/ledger/types";
+import DIP721Types       "standards/dip721/types";
+import OrigynTypes       "standards/origyn/types";
 
 import Principal "mo:base/Principal";
 import Result    "mo:base/Result";

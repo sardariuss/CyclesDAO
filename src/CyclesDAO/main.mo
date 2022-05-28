@@ -1,6 +1,6 @@
 import Types    "types";
 import Utils    "utils";
-import Accounts "tokens/ledger/accounts";
+import Accounts "standards/ledger/accounts";
 
 import Buffer "mo:base/Buffer";
 import Debug "mo:base/Debug";
