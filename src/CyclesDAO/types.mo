@@ -1,14 +1,15 @@
+import LedgerTypes   "tokens/ledger/types";
+
 import Principal "mo:base/Principal";
 import Result "mo:base/Result";
 
-import BasicDAOTypes "../BasicDAO/src/Types";
-
 module{
 
+  // @todo: types must begin with upper case
   public type ConfigureDAOCommand = {
-    #updateMintConfig: [ExchangeLevel];
+    #UpdateMintConfig: [ExchangeLevel];
     //sends any balance of a token/NFT to the provided principal
-    #distributeBalance: {
+    #DistributeBalance: {
       to: Principal;
       tokenCanister: Principal;
       amount: Nat; //1 for NFT
@@ -17,27 +18,27 @@ module{
     };
     // cycle through the allow list and distributes cycles to bring 
     // tokens up to the required balance
-    #distributeCycles; 
+    #DistributeCycles; 
     // cycle through the request list and distributes cycles to bring
     // tokens up to the required balance
-    #distributeRequestedCycles;
+    #DistributeRequestedCycles;
     #configureDAOToken: {
       standard: TokenStandard;
       canister: Principal;
     };
-    #addAllowList: {
+    #AddAllowList: {
       canister: Principal;
       minCycles: Nat;
       acceptCycles: shared () -> async ();
     };
     //lets canister pull cycles
-    #requestTopUp: {
+    #RequestTopUp: {
       canister: Principal;
     };
-    #removeAllowList: {
+    #RemoveAllowList: {
       canister: Principal;
     };
-    #configureGovernanceCanister: {
+    #ConfigureGovernanceCanister: {
       canister: Principal;
     };
   };
@@ -47,17 +48,30 @@ module{
     ratePerT: Float;
   };
 
-  public type Token = {
-    standard: TokenStandard;
-    canister: Principal;
-  };
-
   public type TokenStandard = {
     #DIP20;
     #LEDGER;
     #DIP721;
     #EXT;
     #NFT_ORIGYN;
+  };
+
+  public type TokenInterface = {
+    #DIP20 : {
+      interface: DIP20Interface;
+    };
+    #LEDGER : {
+      interface: LedgerTypes.Interface;
+    };
+    #DIP721 : {
+      interface: DIP721Interface;
+    };
+    #EXT : {
+      interface: EXTInterface;
+    };
+    #NFT_ORIGYN : {
+      interface: NFTOrigynInterface;
+    };
   };
 
   // @todo: review naming of errors
@@ -104,7 +118,7 @@ module{
     acceptCycles: shared () -> async ();
   };
 
-  public type DIPInterface = actor {
+  public type DIP20Interface = actor {
     transfer : (Principal, Nat) ->  async TxReceipt;
     transferFrom : (Principal, Principal, Nat) -> async TxReceipt;
     allowance : (Principal, Principal) -> async Nat;
@@ -112,15 +126,16 @@ module{
     mint : (Principal, Nat) -> async TxReceipt;
   };
 
-  public type BasicDAOInterface = actor {
-    transfer : (BasicDAOTypes.TransferArgs) -> async Result.Result<(), Text>;
-    account_balance : () -> async BasicDAOTypes.Tokens;
-    list_accounts : () -> async [BasicDAOTypes.Account];
-    submit_proposal : (BasicDAOTypes.ProposalPayload) -> async Result.Result<Nat, Text>;
-    get_proposal : (Nat) -> async ?BasicDAOTypes.Proposal;
-    list_proposals : () -> async [BasicDAOTypes.Proposal];
-    vote : (BasicDAOTypes.VoteArgs) -> async Result.Result<BasicDAOTypes.ProposalState, Text>;
-    get_system_params : () -> async BasicDAOTypes.SystemParams;
-    update_system_params : (BasicDAOTypes.UpdateSystemParamsPayload) -> async ();
+    // @todo: implement the DIP721 interface
+  public type DIP721Interface = actor {
   };
+
+  // @todo: implement the EXT interface
+  public type EXTInterface = actor {
+  };
+
+  // @todo: implement the NFTORIGYN interface
+  public type NFTOrigynInterface = actor {
+  };
+
 }

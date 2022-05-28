@@ -1,19 +1,24 @@
 {
   "version": 1,
   "canisters": {
-    "CyclesDAO": {
+    "ledger": {
+      "type": "custom",
+      "candid": "src/Ledger/ledger.did",
+      "wasm": "src/Ledger/ledger.wasm"
+    },
+    "cyclesDAO": {
       "type": "motoko",
       "main": "src/CyclesDAO/main.mo"
     },
-    "ToPowerUp": {
+    "toPowerUp": {
       "type": "motoko",
       "main": "src/CyclesDAO/tests/toPowerUp.mo"
     },
-    "token": {
+    "dip20": {
       "type": "motoko",
       "main": "src/DIP20/motoko/src/token.mo"
     },
-    "BasicDAO": {
+    "basicDAO": {
        "type": "motoko",
        "main": "src/BasicDAO/src/Main.mo"
     }
@@ -22,6 +27,9 @@
     "build": {
       "packtool": "",
       "args": ""
+    },
+    "replica": {
+      "subnet_type": "system"
     }
   },
   "networks": {

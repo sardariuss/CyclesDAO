@@ -1,3 +1,8 @@
+import Types    "types";
+import Utils    "utils";
+import Accounts "tokens/ledger/accounts";
+
+import Debug "mo:base/Debug";
 import ExperimentalCycles "mo:base/ExperimentalCycles";
 import Nat "mo:base/Nat";
 import Principal "mo:base/Principal";
@@ -6,18 +11,14 @@ import Set "mo:base/TrieSet";
 import Trie "mo:base/Trie";
 import TrieMap "mo:base/TrieMap";
 
-import Types "./types";
-import Utils "./utils";
-
 shared actor class CyclesDAO(governance: Principal) = this {
 
   // Members
   // @todo: put as stable
 
-  private var governance_ : Types.BasicDAOInterface = 
-    actor (Principal.toText(governance));
+  private var governance_ : Principal = governance;
 
-  private var token_ : ?Types.Token = null;
+  private var token_ : ?Types.TokenInterface = null;
 
   private var cycleExchangeConfig_ : [Types.ExchangeLevel] = [
     { threshold = 2_000_000_000_000; ratePerT = 1.0; },
@@ -77,26 +78,26 @@ shared actor class CyclesDAO(governance: Principal) = this {
     command: Types.ConfigureDAOCommand
   ) : async Result.Result<(), Types.DAOCyclesError> {
     // Check if the call comes from the governance DAO canister
-    if (msg.caller != Principal.fromActor(governance_)) {
+    if (msg.caller != governance_) {
       return #err(#NotAllowed);
     };
     // @todo: find a way to use tuple instead of "args" inside each case?
     switch (command){
-      case(#updateMintConfig args){
+      case(#UpdateMintConfig args){
         if (not Utils.isValidExchangeConfig(args)) {
           return #err(#InvalidMintConfiguration);
         };
         cycleExchangeConfig_ := args;
       };
-      case(#distributeBalance args){
+      case(#DistributeBalance args){
         // @todo: implement
       };
-      case(#distributeCycles){
+      case(#DistributeCycles){
         if (not (await distributeCycles())){
           return #err(#NotEnoughCycles);
         };
       };
-      case(#distributeRequestedCycles){
+      case(#DistributeRequestedCycles){
         if (not (await distributeRequestedCycles())){
           return #err(#NotEnoughCycles);
         };
@@ -112,13 +113,13 @@ shared actor class CyclesDAO(governance: Principal) = this {
           };
         };
       };
-      case(#addAllowList args){
+      case(#AddAllowList args){
         allowList_.put(args.canister, {
           minCycles = args.minCycles;
           acceptCycles = args.acceptCycles;
         });
       };
-      case(#requestTopUp args){
+      case(#RequestTopUp args){
         switch (allowList_.get(args.canister)){
           case(null){
             return #err(#NotFound);
@@ -133,13 +134,13 @@ shared actor class CyclesDAO(governance: Principal) = this {
           };
         };
       };
-      case(#removeAllowList args){
+      case(#RemoveAllowList args){
         if (allowList_.remove(args.canister) == null){
           return #err(#NotFound);
         };
       };
-      case(#configureGovernanceCanister args){
-        governance_ := actor (Principal.toText(args.canister));
+      case(#ConfigureGovernanceCanister args){
+        governance_ := args.canister;
       };
     };
     return #ok;
@@ -183,5 +184,16 @@ shared actor class CyclesDAO(governance: Principal) = this {
       }
     };
     return success;
+  };
+
+  // @todo: this function is specific to the ledger token, it is usefull to
+  // test but shouldn't be part of the cyclesDAO canister
+  public func getAccountIdentifier(account: Principal, ledger: Principal) : async Accounts.AccountIdentifier {
+    let identifier = Accounts.accountIdentifier(ledger, Accounts.principalToSubaccount(account));
+    if(Accounts.validateAccountIdentifier(identifier)){
+      return identifier;
+    } else {
+      Debug.trap("Could not get account identifier")
+    };
   };
 };

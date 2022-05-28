@@ -1,12 +1,15 @@
+import LedgerTypes       "tokens/ledger/types";
+import Accounts          "tokens/ledger/accounts";
+import Types             "types";
+
 import Debug "mo:base/Debug";
 import Float "mo:base/Float";
 import Int "mo:base/Int";
 import Iter "mo:base/Iter";
 import Nat "mo:base/Nat";
+import Nat64 "mo:base/Nat64";
 import Principal "mo:base/Principal";
 import Result "mo:base/Result";
-
-import Types "./types";
 
 module {
 
@@ -49,23 +52,19 @@ module {
     standard: Types.TokenStandard,
     canister: Principal,
     owner: Principal
-  ) : async Result.Result<Types.Token, Types.DAOCyclesError> {
+  ) : async Result.Result<Types.TokenInterface, Types.DAOCyclesError> {
     switch(standard){
       case(#DIP20){
-        let dip20 : Types.DIPInterface = actor (Principal.toText(canister));
+        let dip20 : Types.DIP20Interface = actor (Principal.toText(canister));
         let metaData = await dip20.getMetadata();
         if (metaData.owner != owner){
           return #err(#DAOTokenCanisterNotOwned);
         };
-        let token : Types.Token = {
-          standard = standard;
-          canister = canister;
-        };
-        return #ok(token);
+        return #ok(#DIP20({interface = dip20;}));
       };
       case(#LEDGER){
-        // @todo: implement the LEDGER standard
-        Debug.trap("The LEDGER standard is not implemented yet!");
+        let ledger : LedgerTypes.Interface = actor (Principal.toText(canister));
+        return #ok(#LEDGER({interface = ledger;}))
       };
       case(#DIP721){
         // @todo: implement the DIP721 standard
@@ -83,39 +82,72 @@ module {
   };
 
   public func mintToken(
-    token: Types.Token,
+    token: Types.TokenInterface,
     to: Principal, 
     amount: Nat
   ) : async Result.Result<Nat, Types.DAOCyclesError> {
-    switch(token.standard){
-      case(#DIP20){
-        let dip20 : Types.DIPInterface = actor (Principal.toText(token.canister));
-        switch (await dip20.mint(to, amount)){
-          case(#Ok(txCounter)){
-            return #ok(txCounter);
+    switch(token){
+      case(#DIP20(canister)){
+        switch (await canister.interface.mint(to, amount)){
+          case(#Ok(tx_counter)){
+            return #ok(tx_counter);
           };
           case(#Err(_)){
             return #err(#DAOTokenCanisterMintError);
           };
         };
       };
-      case(#LEDGER){
-        // @todo: implement the LEDGER standard
-        Debug.trap("The LEDGER standard is not implemented yet!");
+      case(#LEDGER(canister)){
+        switch (getAccountIdentifier(to, Principal.fromActor(canister.interface))){
+          case(?account_identifier){
+            switch (await canister.interface.transfer({
+              memo = 0;
+              amount = { e8s = Nat64.fromNat(amount); }; // @todo: this can trap on overflow/underflow!
+              fee = { e8s = 0; }; // fee for minting shall be 0
+              from_subaccount = null;
+              to = account_identifier;
+              created_at_time = null; // @todo: Time.now() is an Int, weird
+            })){
+              case(#Ok(block_index)){
+                return #ok(Nat64.toNat(block_index));
+              };
+              case(#Err(_)){
+                return #err(#DAOTokenCanisterMintError);
+              };
+            };
+          };
+          case(null){
+            return #err(#DAOTokenCanisterMintError); // @todo: get a more descriptive error
+          };
+        };
       };
-      case(#DIP721){
+      case(#DIP721(canister)){
         // @todo: implement the DIP721 standard
         Debug.trap("The DIP721 standard is not implemented yet!");
       };
-      case(#EXT){
+      case(#EXT(canister)){
         // @todo: implement the EXT standard
         Debug.trap("The EXT standard is not implemented yet!");
       };
-      case(#NFT_ORIGYN){
+      case(#NFT_ORIGYN(canister)){
         // @todo: implement the NFT_ORIGYN standard
         Debug.trap("The NFT_ORIGYN standard is not implemented yet!");
       };
     };
+  };
+
+  public func getActor(canister: Principal) : async Types.DIP20Interface {
+    let dip20 : Types.DIP20Interface = actor (Principal.toText(canister));
+    return dip20;
+  };
+
+  public func getAccountIdentifier(account: Principal, ledger: Principal) : ?Accounts.AccountIdentifier {
+    let identifier = Accounts.accountIdentifier(ledger, Accounts.principalToSubaccount(account));
+      if(Accounts.validateAccountIdentifier(identifier)){
+        return ?identifier;
+      } else {
+        return null;
+      };
   };
 
 };

@@ -35,7 +35,7 @@ assert _.ok == (0 : nat);
 //dfx canister call CyclesDAO test_distrib "(record{min_cycles = 666_666; accept_cycles = func \"rno2w-sqaaa-aaaaa-aaacq-cai\".receiveCycles;})"
 configure_cycles_dao(
     variant {
-        addAllowList = record {
+        AddAllowList = record {
             min_cycles = 1_000_000;
             canister = toPowerUp1;
             accept_cycles = func toPowerUp1.receiveCycles; // @todo: fix "Unexpected token"
@@ -44,7 +44,7 @@ configure_cycles_dao(
 );
 
 configure_cycles_dao(
-    variant { distributeCycles }
+    variant { DistributeCycles }
 );
 
 call toPowerUp1.balance();
