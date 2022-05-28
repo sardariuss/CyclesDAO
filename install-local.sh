@@ -30,7 +30,6 @@ dfx identity use default
 export DEFAULT_PRINCIPAL=$(dfx identity get-principal)
 export DEFAULT_WALLET_ID=$(dfx identity get-wallet)
 export DEFAULT_WALLET_ACCOUNT_ID=$(dfx ledger account-id --of-principal ${DEFAULT_WALLET_ID})
-export DEFAULT_WALLET_ACCOUNT_BLOB=$(dfx canister call cyclesDAO accountIdentifierToBlob ${DEFAULT_WALLET_ACCOUNT_ID})
 
 # Deploy CyclesDAO canister
 dfx deploy cyclesDAO --argument="(principal \"$DEFAULT_PRINCIPAL\")"

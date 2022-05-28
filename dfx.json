@@ -15,8 +15,9 @@
       "main": "src/CyclesDAO/tests/toPowerUp.mo"
     },
     "dip20": {
-      "type": "motoko",
-      "main": "src/DIP20/motoko/src/token.mo"
+      "type": "custom",
+      "candid": "src/DIP20/dip20.did",
+      "wasm": "src/DIP20/dip20.wasm"
     },
     "basicDAO": {
        "type": "motoko",
