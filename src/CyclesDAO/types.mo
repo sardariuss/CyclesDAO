@@ -18,6 +18,8 @@ module{
       amount: Nat; //1 for NFT
       id: ?{#text: Text; #nat: Nat}; //used for nfts
       standard: TokenStandard;
+      token_identifier: ?Text;
+      is_fungible: Bool;
     };
     // cycle through the allow list and distributes cycles to bring 
     // tokens up to the required balance
@@ -28,6 +30,8 @@ module{
     #ConfigureDAOToken: {
       standard: TokenStandard;
       canister: Principal;
+      token_identifier: ?Text;
+      is_fungible: Bool;
     };
     #AddAllowList: {
       canister: Principal;
@@ -71,6 +75,8 @@ module{
     };
     #EXT : {
       interface: EXTTypes.Interface;
+      token_identifier: Text;
+      is_fungible: Bool;
     };
     #NFT_ORIGYN : {
       interface: OrigynTypes.Interface;

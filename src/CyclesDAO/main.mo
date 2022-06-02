@@ -76,7 +76,7 @@ shared actor class CyclesDAO(governance: Principal) = this {
         let amount = Utils.computeTokensInExchange(
           cycle_exchange_config_, originalBalance, acceptedCycles);
         // Mint the tokens
-        return await Utils.mintToken(token_, msg.caller, amount);
+        return await Utils.mintToken(token_, Principal.fromActor(this), msg.caller, amount);
       };
     };
   };
@@ -95,14 +95,20 @@ shared actor class CyclesDAO(governance: Principal) = this {
         };
         cycle_exchange_config_ := cycle_exchange_config;
       };
-      case(#DistributeBalance {to; token_canister; amount; id; standard}){
-        let token = await Utils.getToken(standard, token_canister);
-        switch (await Utils.transferToken(token, to, amount, id)){
-          case (#err(err)){
+      case(#DistributeBalance {to; token_canister; amount; id; standard; token_identifier}){
+        switch(await Utils.getToken(standard, token_canister, token_identifier)){
+          case(#err(err)){
             return #err(err);
           };
-          case (#ok(_)){
-            return #ok;
+          case(#ok(token)){
+            switch (await Utils.transferToken(token, Principal.fromActor(this), to, amount, id)){
+              case (#err(err)){
+                return #err(err);
+              };
+              case (#ok(_)){
+                return #ok;
+              };
+            };
           };
         };
       };
@@ -116,15 +122,21 @@ shared actor class CyclesDAO(governance: Principal) = this {
           return #err(#NotEnoughCycles);
         };
       };
-      case(#ConfigureDAOToken {standard; canister}){
+      case(#ConfigureDAOToken {standard; canister; token_identifier}){
         token_ := null;
-        let token = await Utils.getToken(standard, canister);
-        if (not Utils.isFungible(token)){
-          return #err(#NotEnoughCycles);
-        } else if (not (await Utils.isOwner(token, Principal.fromActor(this)))) {
-          return #err(#NotEnoughCycles);
-        } else {
-          token_ := ?token;
+        switch(await Utils.getToken(standard, canister, token_identifier)){
+          case(#err(err)){
+            return #err(err);
+          };
+          case(#ok(token)){
+            if (not Utils.isFungible(token)){
+              return #err(#NotEnoughCycles);
+            } else if (not (await Utils.isOwner(token, Principal.fromActor(this)))) {
+              return #err(#NotEnoughCycles);
+            } else {
+              token_ := ?token;
+            };
+          };
         };
       };
       case(#AddAllowList {canister; min_cycles; accept_cycles}){
