@@ -19,7 +19,7 @@ shared actor class CyclesDAO(governance: Principal) = this {
 
   private stable var governance_ : Principal = governance;
 
-  private stable var token_ : ?Types.TokenInterface = null;
+  private stable var token_interface_ : ?Types.TokenInterface = null;
 
   private stable var cycle_exchange_config_ : [Types.ExchangeLevel] = [
     { threshold = 2_000_000_000_000; rate_per_t = 1.0; },
@@ -36,11 +36,34 @@ shared actor class CyclesDAO(governance: Principal) = this {
   private var top_up_list_ : Set.Set<Principal> = Set.empty();
 
 
-  // Used for upgrades only
+  // For upgrades
 
   private stable var allow_list_array_ : [(Principal, Types.PoweringParameters)] = [];
 
   private stable var top_up_list_array_ : [Principal] = [];
+
+
+  // Getters
+
+  public query func getGovernance() : async Principal {
+    return governance_;
+  };
+
+  public query func getToken() : async ?Types.Token {
+    return Utils.getToken(token_interface_);
+  };
+
+  public query func getCycleExchangeConfig() : async [Types.ExchangeLevel] {
+    return cycle_exchange_config_;
+  };
+
+  public query func getAllowList() : async [(Principal, Types.PoweringParameters)] {
+    return Utils.mapToArray(allow_list_);
+  };
+
+  public query func getTopUpList() : async [Principal] {
+    return Utils.setToArray(top_up_list_);
+  };
 
 
   // Public functions
@@ -63,11 +86,11 @@ shared actor class CyclesDAO(governance: Principal) = this {
       return #err(#MaxCyclesReached);
     };
     // Check if the token has been set
-    switch(token_) {
+    switch(token_interface_) {
       case null {
         return #err(#DAOTokenCanisterNull);
       };
-      case (?token_) {
+      case (?token_interface_) {
         // Accept the cycles up to the maximum cycles possible
         let acceptedCycles = ExperimentalCycles.accept(
           Nat.min(availableCycles, maxCycles - originalBalance));
@@ -76,7 +99,7 @@ shared actor class CyclesDAO(governance: Principal) = this {
         let amount = Utils.computeTokensInExchange(
           cycle_exchange_config_, originalBalance, acceptedCycles);
         // Mint the tokens
-        return await Utils.mintToken(token_, Principal.fromActor(this), msg.caller, amount);
+        return await Utils.mintToken(token_interface_, Principal.fromActor(this), msg.caller, amount);
       };
     };
   };
@@ -96,7 +119,7 @@ shared actor class CyclesDAO(governance: Principal) = this {
         cycle_exchange_config_ := cycle_exchange_config;
       };
       case(#DistributeBalance {to; token_canister; amount; id; standard; token_identifier}){
-        switch(await Utils.getToken(standard, token_canister, token_identifier)){
+        switch(await Utils.getTokenInterface(standard, token_canister, token_identifier)){
           case(#err(err)){
             return #err(err);
           };
@@ -123,18 +146,18 @@ shared actor class CyclesDAO(governance: Principal) = this {
         };
       };
       case(#ConfigureDAOToken {standard; canister; token_identifier}){
-        token_ := null;
-        switch(await Utils.getToken(standard, canister, token_identifier)){
+        token_interface_ := null;
+        switch(await Utils.getTokenInterface(standard, canister, token_identifier)){
           case(#err(err)){
             return #err(err);
           };
-          case(#ok(token)){
-            if (not Utils.isFungible(token)){
+          case(#ok(token_interface)){
+            if (not Utils.isFungible(token_interface)){
               return #err(#NotEnoughCycles);
-            } else if (not (await Utils.isOwner(token, Principal.fromActor(this)))) {
+            } else if (not (await Utils.isOwner(token_interface, Principal.fromActor(this)))) {
               return #err(#NotEnoughCycles);
             } else {
-              token_ := ?token;
+              token_interface_ := ?token_interface;
             };
           };
         };
@@ -224,21 +247,10 @@ shared actor class CyclesDAO(governance: Principal) = this {
   };
 
   system func preupgrade(){
-    // Get buffer size (top_up_list is smaller than allow_list)
-    let buffer_size : Nat = allow_list_.size();
     // Save allow_list_ in temporary array
-    let allow_buffer : Buffer.Buffer<(Principal, Types.PoweringParameters)> 
-      = Buffer.Buffer(buffer_size);
-    for (entry in allow_list_.entries()){
-      allow_buffer.add(entry);
-    };
-    allow_list_array_ := allow_buffer.toArray();
+    allow_list_array_ := Utils.mapToArray(allow_list_);
     // Save top_up_list_ in temporary array
-    let top_up_buffer : Buffer.Buffer<Principal> = Buffer.Buffer(buffer_size);
-    for ((principal, _) in Trie.iter(top_up_list_)){
-      top_up_buffer.add(principal);
-    };
-    top_up_list_array_ := top_up_buffer.toArray();
+    top_up_list_array_ := Utils.setToArray(top_up_list_);
   };
 
   system func postupgrade() {

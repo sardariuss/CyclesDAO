@@ -33,6 +33,7 @@ export DEFAULT_WALLET_ACCOUNT_ID=$(dfx ledger account-id --of-principal ${DEFAUL
 
 # Deploy CyclesDAO canister
 dfx deploy cyclesDAO --argument="(principal \"$DEFAULT_PRINCIPAL\")"
+dfx generate cyclesDAO
 
 # Deploy DAO token canister (DIP20)
 export CYCLES_DAO_PRINCIPAL=$(dfx canister id cyclesDAO);
@@ -51,4 +52,9 @@ dfx deploy ledger --argument '(record {minting_account = "'${CYCLES_DAO_ACCOUNT_
 rm src/Ledger/ledger.did
 cp src/Ledger/ledger.public.did src/Ledger/ledger.did
 
+dfx deploy frontend
+
 # See CyclesDAO/tests/commands.sh for a simple scenario!
+
+dfx deploy toPowerUp1
+dfx deploy toPowerUp2

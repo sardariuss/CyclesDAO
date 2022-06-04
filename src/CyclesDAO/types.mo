@@ -9,6 +9,8 @@ import Result    "mo:base/Result";
 
 module{
 
+  // @todo: some types shouldn't be public
+
   public type ConfigureDAOCommand = {
     #UpdateMintConfig: [ExchangeLevel];
     //sends any balance of a token/NFT to the provided principal
@@ -31,7 +33,6 @@ module{
       standard: TokenStandard;
       canister: Principal;
       token_identifier: ?Text;
-      is_fungible: Bool;
     };
     #AddAllowList: {
       canister: Principal;
@@ -61,6 +62,11 @@ module{
     #DIP721;
     #EXT;
     #NFT_ORIGYN;
+  };
+
+  public type Token = {
+    standard: TokenStandard;
+    principal: Principal;
   };
 
   public type TokenInterface = {

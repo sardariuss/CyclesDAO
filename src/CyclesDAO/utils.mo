@@ -7,6 +7,7 @@ import OrigynTypes       "standards/origyn/types";
 import Types             "types";
 
 import Blob "mo:base/Blob";
+import Buffer "mo:base/Buffer";
 import Debug "mo:base/Debug";
 import Float "mo:base/Float";
 import Int "mo:base/Int";
@@ -15,6 +16,9 @@ import Nat "mo:base/Nat";
 import Nat64 "mo:base/Nat64";
 import Principal "mo:base/Principal";
 import Result "mo:base/Result";
+import Set "mo:base/TrieSet";
+import Trie "mo:base/Trie";
+import TrieMap "mo:base/TrieMap";
 
 module {
 
@@ -51,6 +55,56 @@ module {
       };
     });
     isValid;
+  };
+
+  public func mapToArray(
+    trie_map: TrieMap.TrieMap<Principal, Types.PoweringParameters>
+  ) : [(Principal, Types.PoweringParameters)] {
+    let buffer : Buffer.Buffer<(Principal, Types.PoweringParameters)> 
+      = Buffer.Buffer(trie_map.size());
+    for (entry in trie_map.entries()){
+      buffer.add(entry);
+    };
+    buffer.toArray();
+  };
+
+  public func setToArray(
+    trie_set: Set.Set<Principal>
+  ) : [Principal] {
+    let buffer : Buffer.Buffer<Principal> = Buffer.Buffer(0);
+    for ((principal, _) in Trie.iter(trie_set)){
+      buffer.add(principal);
+    };
+    buffer.toArray();
+  };
+
+  public func getToken(
+    token_interface: ?Types.TokenInterface
+  ) : ?Types.Token {
+    switch(token_interface){
+      case(null){
+        return null;
+      };
+      case(?token){
+        switch(token){
+          case(#DIP20({interface})){
+            ?{standard = #DIP20; principal = Principal.fromActor(interface);};
+          };
+          case(#LEDGER({interface})){
+            ?{standard = #LEDGER; principal = Principal.fromActor(interface);};
+          };
+          case(#DIP721({interface})){
+            ?{standard = #DIP721; principal = Principal.fromActor(interface);};
+          };
+          case(#EXT({interface})){
+            ?{standard = #EXT; principal = Principal.fromActor(interface);};
+          };
+          case(#NFT_ORIGYN({interface})){
+            ?{standard = #NFT_ORIGYN; principal = Principal.fromActor(interface);};
+          };
+        };
+      };
+    };
   };
 
   public func isFungible(standard: Types.TokenInterface) : Bool {
@@ -103,7 +157,7 @@ module {
   };
 
   // @todo: check what happends if the canister does not have the same interface (does it trap?)
-  public func getToken(
+  public func getTokenInterface(
     standard: Types.TokenStandard,
     canister: Principal,
     token_identifier: ?Text

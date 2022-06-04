@@ -8,9 +8,16 @@
     },
     "cyclesDAO": {
       "type": "motoko",
-      "main": "src/CyclesDAO/main.mo"
+      "main": "src/CyclesDAO/main.mo",
+      "declarations": {
+				"output": "src/frontend/declarations/cyclesDAO"
+			}
     },
-    "toPowerUp": {
+    "toPowerUp1": {
+      "type": "motoko",
+      "main": "src/CyclesDAO/tests/toPowerUp.mo"
+    },
+    "toPowerUp2": {
       "type": "motoko",
       "main": "src/CyclesDAO/tests/toPowerUp.mo"
     },
@@ -22,6 +29,13 @@
     "basicDAO": {
        "type": "motoko",
        "main": "src/BasicDAO/src/Main.mo"
+    },
+    "frontend": {
+      "frontend": {
+        "entrypoint": "index.html"
+      },
+      "source": ["src/frontend/dist/"],
+      "type": "assets"
     }
   },
   "defaults": {

@@ -3,6 +3,8 @@
 export DIP20_PRINCIPAL=$(dfx canister id dip20)
 export LEDGER_PRINCIPAL=$(dfx canister id ledger)
 export DEFAULT_WALLET_ID=$(dfx identity get-wallet)
+export TO_POWER_UP_1_ID=$(dfx canister id toPowerUp1)
+export TO_POWER_UP_2_ID=$(dfx canister id toPowerUp2)
 # @todo: one shall find another way to get the account identifier than relying on the cyclesDAO canister
 export DEFAULT_WALLET_ACCOUNT_BLOB=$(dfx canister call cyclesDAO getAccountIdentifier '(principal "'${DEFAULT_WALLET_ID}'", principal "'${LEDGER_PRINCIPAL}'")')
 
@@ -22,3 +24,6 @@ echo "Run the following command by replacing ACCOUNT with the given account"
 echo "Command: dfx canister call ledger account_balance 'record { account = ACCOUNT }'"
 echo "Account: ${DEFAULT_WALLET_ACCOUNT_BLOB}"
 
+# Configure receive cycles
+dfx canister call cyclesDAO configure '(variant {AddAllowList = record { min_cycles = 1_000_000; canister = principal "'${TO_POWER_UP_1_ID}'"; accept_cycles = func "'${TO_POWER_UP_1_ID}'"."receiveCycles" }})'
+dfx canister call cyclesDAO configure '(variant {AddAllowList = record { min_cycles = 2_000_000; canister = principal "'${TO_POWER_UP_2_ID}'"; accept_cycles = func "'${TO_POWER_UP_2_ID}'"."receiveCycles" }})'
