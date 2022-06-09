@@ -23,12 +23,6 @@ module{
       token_identifier: ?Text;
       is_fungible: Bool;
     };
-    // cycle through the allow list and distributes cycles to bring 
-    // tokens up to the required balance
-    #DistributeCycles; 
-    // cycle through the request list and distributes cycles to bring
-    // tokens up to the required balance
-    #DistributeRequestedCycles;
     #ConfigureDAOToken: {
       standard: TokenStandard;
       canister: Principal;
@@ -37,11 +31,7 @@ module{
     #AddAllowList: {
       canister: Principal;
       min_cycles: Nat;
-      accept_cycles: shared () -> async ();
-    };
-    //lets canister pull cycles
-    #RequestTopUp: {
-      canister: Principal;
+      pull_authorized: Bool;
     };
     #RemoveAllowList: {
       canister: Principal;
@@ -104,7 +94,12 @@ module{
 
   public type PoweringParameters = { 
     min_cycles: Nat;
-    accept_cycles: shared () -> async ();
+    pull_authorized: Bool;
   };
 
+  public type ToPowerUpInterface = actor {
+    setCyclesDAO: shared (Principal) -> async ();
+    balanceCycles: shared query () -> async (Nat);
+    acceptCycles: shared () -> async (Bool);
+  };
 }

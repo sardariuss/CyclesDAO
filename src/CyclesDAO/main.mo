@@ -5,6 +5,7 @@ import Accounts "standards/ledger/accounts";
 import Buffer "mo:base/Buffer";
 import Debug "mo:base/Debug";
 import ExperimentalCycles "mo:base/ExperimentalCycles";
+import Int "mo:base/Int";
 import Iter "mo:base/Iter";
 import Nat "mo:base/Nat";
 import Principal "mo:base/Principal";
@@ -33,14 +34,10 @@ shared actor class CyclesDAO(governance: Principal) = this {
       Principal.equal, Principal.hash
     );
 
-  private var top_up_list_ : Set.Set<Principal> = Set.empty();
-
 
   // For upgrades
 
   private stable var allow_list_array_ : [(Principal, Types.PoweringParameters)] = [];
-
-  private stable var top_up_list_array_ : [Principal] = [];
 
 
   // Getters
@@ -59,10 +56,6 @@ shared actor class CyclesDAO(governance: Principal) = this {
 
   public query func getAllowList() : async [(Principal, Types.PoweringParameters)] {
     return Utils.mapToArray(allow_list_);
-  };
-
-  public query func getTopUpList() : async [Principal] {
-    return Utils.setToArray(top_up_list_);
   };
 
 
@@ -135,16 +128,6 @@ shared actor class CyclesDAO(governance: Principal) = this {
           };
         };
       };
-      case(#DistributeCycles){
-        if (not (await distributeCycles())){
-          return #err(#NotEnoughCycles);
-        };
-      };
-      case(#DistributeRequestedCycles){
-        if (not (await distributeRequestedCycles())){
-          return #err(#NotEnoughCycles);
-        };
-      };
       case(#ConfigureDAOToken {standard; canister; token_identifier}){
         token_interface_ := null;
         switch(await Utils.getTokenInterface(standard, canister, token_identifier)){
@@ -162,23 +145,8 @@ shared actor class CyclesDAO(governance: Principal) = this {
           };
         };
       };
-      case(#AddAllowList {canister; min_cycles; accept_cycles}){
-        allow_list_.put(canister, {min_cycles = min_cycles; accept_cycles = accept_cycles;});
-      };
-      case(#RequestTopUp {canister}){
-        switch (allow_list_.get(canister)){
-          case(null){
-            return #err(#NotFound);
-          };
-          case(_){
-            top_up_list_ := Set.put(
-              top_up_list_, 
-              canister, 
-              Principal.hash(canister), 
-              Principal.equal
-            );
-          };
-        };
+      case(#AddAllowList {canister; min_cycles; pull_authorized;}){
+        allow_list_.put(canister, {min_cycles = min_cycles; pull_authorized = pull_authorized;});
       };
       case(#RemoveAllowList {canister}){
         if (allow_list_.remove(canister) == null){
@@ -192,49 +160,48 @@ shared actor class CyclesDAO(governance: Principal) = this {
     return #ok;
   };
 
-
-  // Private functions
-
-  private func distributeCycles() : async Bool {
-    var success = true;
-    for ((principal, poweringParameters) in allow_list_.entries()){
-      // @todo: shall the CyclesDAO canister keep a minimum
-      // amount of cycles to be operable ?
-      if (ExperimentalCycles.balance() > poweringParameters.min_cycles)
-      {
-        ExperimentalCycles.add(poweringParameters.min_cycles);
-        await poweringParameters.accept_cycles();
-      } else {
+  public shared func distributeCycles() : async Bool {
+    var success : Bool = true;
+    for ((principal, powering_parameters) in allow_list_.entries()){
+      if (not (await fillWithCycles(principal, powering_parameters.min_cycles))){
         success := false;
       };
     };
+    // @todo: rather return in error like #NotEnoughCycles?
     return success;
   };
 
-  private func distributeRequestedCycles() : async Bool {
-    var success = true;
-    for ((principal, _) in Trie.iter(top_up_list_)){
-      // @todo: shall the CyclesDAO canister keep a minimum 
-      // amount of cycles to be operable ?
-      switch (allow_list_.get(principal)){
-        case(?poweringParameters){
-          if (ExperimentalCycles.balance() > poweringParameters.min_cycles)
-          {
-            ExperimentalCycles.add(poweringParameters.min_cycles);
-            await poweringParameters.accept_cycles();
-          } else {
-            success := false;
-          };
-        };
-        case(null){};
+  public shared(msg) func requestCycles() : async Bool {
+    switch (allow_list_.get(msg.caller)){
+      case(null){
+        return false;
       }
+      case(?powering_parameters){
+        if (powering_parameters.pull_authorized) {
+          return await fillWithCycles(msg.caller, powering_parameters.min_cycles);
+        };
+      };
     };
-    return success;
+  };
+
+  private func fillWithCycles(principal: Principal, min_cycles: Nat) : async Bool {
+    let canister : Types.ToPowerUpInterface = actor(Principal.toText(principal));
+    let difference : Int = min_cycles - (await canister.balanceCycles());
+    if (difference <= 0) {
+      return false;
+    // @todo: shall the CyclesDAO canister keep a minimum
+    // amount of cycles to be operable ?
+    } else if (ExperimentalCycles.balance() < difference) {
+      return false;
+    } else {
+      ExperimentalCycles.add(Int.abs(difference));
+      return await canister.acceptCycles();
+    };
   };
 
   // @todo: this function is specific to the ledger token, it is usefull to
   // test but shouldn't be part of the cyclesDAO canister
-  public func getAccountIdentifier(
+  public shared func getAccountIdentifier(
     account: Principal,
     ledger: Principal
   ) : async Accounts.AccountIdentifier {
@@ -249,8 +216,6 @@ shared actor class CyclesDAO(governance: Principal) = this {
   system func preupgrade(){
     // Save allow_list_ in temporary array
     allow_list_array_ := Utils.mapToArray(allow_list_);
-    // Save top_up_list_ in temporary array
-    top_up_list_array_ := Utils.setToArray(top_up_list_);
   };
 
   system func postupgrade() {
@@ -258,18 +223,8 @@ shared actor class CyclesDAO(governance: Principal) = this {
     for ((principal, powering_parameters) in Iter.fromArray(allow_list_array_)){
       allow_list_.put(principal, powering_parameters);
     };
-    // Restore top_up_list_
-    for (principal in Iter.fromArray(top_up_list_array_)){
-      top_up_list_ := Set.put(
-        top_up_list_, 
-        principal, 
-        Principal.hash(principal), 
-        Principal.equal
-      );
-    };
     // Empty temporary arrays
     allow_list_array_ := [];
-    top_up_list_array_ := [];
   };
 
 };

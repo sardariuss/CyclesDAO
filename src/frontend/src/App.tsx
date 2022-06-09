@@ -23,15 +23,11 @@ function App() {
     canisterId: `${process.env.CYCLESDAO_CANISTER_ID}`
   });
 
-  //type ExchangeLevel = Record<
-  
-
   const [governance, setGovernance] = useState<string>("");
   const [tokenStandard, setTokenStandard] = useState<string>("");
   const [tokenPrincipal, setTokenPrincipal] = useState<string>("");
   const [cycleExchangeConfig, setCycleExchangeConfig] = useState<Array<ExchangeLevel>>([]);
   const [allowList, setAllowList] = useState<Array<[Principal, PoweringParameters]>>([]);
-  const [topUpList, setTopUpList] = useState<Array<Principal>>([]);
   const [cyclesBalance, setCyclesBalance] = useState<bigint>(BigInt(0));
 
   const fetch_data = async () => {
@@ -47,7 +43,6 @@ function App() {
       }
       setCycleExchangeConfig(await cyclesDAOActor.getCycleExchangeConfig() as Array<ExchangeLevel>);
       setAllowList(await cyclesDAOActor.getAllowList() as Array<[Principal, PoweringParameters]>);
-      setTopUpList(await cyclesDAOActor.getTopUpList() as Array<Principal>);
       setCyclesBalance(await cyclesDAOActor.cyclesBalance() as bigint);
     } catch (err) {
 			// handle error (or empty response)
@@ -85,11 +80,6 @@ function App() {
         <div className="mb-10">
 					<h1 className="text-3xl font-bold mr-4 text-slate-700">
             Allow list: {allowList.length}
-					</h1>
-				</div>
-        <div className="mb-10">
-					<h1 className="text-3xl font-bold mr-4 text-slate-700">
-            Top up list: {topUpList.length}
 					</h1>
 				</div>
         <div className="mb-10">

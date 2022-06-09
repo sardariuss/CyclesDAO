@@ -25,5 +25,5 @@ echo "Command: dfx canister call ledger account_balance 'record { account = ACCO
 echo "Account: ${DEFAULT_WALLET_ACCOUNT_BLOB}"
 
 # Configure receive cycles
-dfx canister call cyclesDAO configure '(variant {AddAllowList = record { min_cycles = 1_000_000; canister = principal "'${TO_POWER_UP_1_ID}'"; accept_cycles = func "'${TO_POWER_UP_1_ID}'"."receiveCycles" }})'
-dfx canister call cyclesDAO configure '(variant {AddAllowList = record { min_cycles = 2_000_000; canister = principal "'${TO_POWER_UP_2_ID}'"; accept_cycles = func "'${TO_POWER_UP_2_ID}'"."receiveCycles" }})'
+dfx canister call cyclesDAO configure '(variant {AddAllowList = record { min_cycles = 1_000_000; canister = principal "'${TO_POWER_UP_1_ID}'"; pull_authorized = false; }})'
+dfx canister call cyclesDAO configure '(variant {AddAllowList = record { min_cycles = 2_000_000; canister = principal "'${TO_POWER_UP_2_ID}'"; pull_authorized = true; }})'
