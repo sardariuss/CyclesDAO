@@ -1,8 +1,10 @@
 import { idlFactory as idlCyclesDAO } from "../declarations/cyclesDAO";
-import { Token, TokenStandard, ExchangeLevel, PoweringParameters } from "../declarations/cyclesDAO/cyclesDAO.did.js";
+import { Token, TokenStandard, ExchangeLevel, PoweringParameters, CyclesProfile } from "../declarations/cyclesDAO/cyclesDAO.did.js";
 import { HttpAgent, Actor, Identity, AnonymousIdentity } from "@dfinity/agent";
 import type { Principal } from '@dfinity/principal';
 import { useEffect, useState } from "react";
+import MyChart from "./MyChart";
+import {toTrillions} from "./conversion";
 
 function App() {
 
@@ -30,6 +32,9 @@ function App() {
   const [allowList, setAllowList] = useState<Array<[Principal, PoweringParameters]>>([]);
   const [cyclesBalance, setCyclesBalance] = useState<bigint>(BigInt(0));
 
+  const [chartData, setChartData] = useState({})
+  const [haveData, setHaveData] = useState(false); //here
+
   const fetch_data = async () => {
 		try {
       setGovernance((await cyclesDAOActor.getGovernance() as Principal).toString());
@@ -44,8 +49,22 @@ function App() {
       setCycleExchangeConfig(await cyclesDAOActor.getCycleExchangeConfig() as Array<ExchangeLevel>);
       setAllowList(await cyclesDAOActor.getAllowList() as Array<[Principal, PoweringParameters]>);
       setCyclesBalance(await cyclesDAOActor.cyclesBalance() as bigint);
+
+      const cyclesProfile = await cyclesDAOActor.getCyclesProfile() as Array<CyclesProfile>;
+      setChartData({
+        labels: cyclesProfile.map((profile) => profile.principal),
+        datasets: [
+          {
+            label: "Cycles balance",
+            data: cyclesProfile.map((profile) => {return toTrillions(profile.balance_cycles)}),
+          }
+        ]
+      });
+      setHaveData(true);
+
     } catch (err) {
 			// handle error (or empty response)
+      setHaveData(false);
 			console.log(err);
 		}
   }
@@ -54,8 +73,20 @@ function App() {
 		fetch_data();
 	}, []);
 
+  if (!haveData) {
+    return (
+      <div className="mb-10">
+					<h1 className="text-3xl font-bold mr-4 text-slate-700">
+            Governance: {governance}
+					</h1>
+				</div>
+    );
+  } else {
   return (
 		<>
+      <div className="App">
+        <MyChart chartData={chartData} />
+      </div>
 			<div className="border p-10  m-20 text-center">
 				<div className="mb-10">
 					<h1 className="text-3xl font-bold mr-4 text-slate-700">
@@ -79,17 +110,12 @@ function App() {
 				</div>
         <div className="mb-10">
 					<h1 className="text-3xl font-bold mr-4 text-slate-700">
-            Allow list: {allowList.length}
-					</h1>
-				</div>
-        <div className="mb-10">
-					<h1 className="text-3xl font-bold mr-4 text-slate-700">
-            Balance: {cyclesBalance.toString()} cycles
+            Balance: {(toTrillions(cyclesBalance)).toFixed(3)} trillion cycles
 					</h1>
 				</div>
       </div>
     </>
-  );
+  )};
 }
 
 export default App;

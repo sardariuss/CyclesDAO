@@ -68,15 +68,23 @@ module {
     buffer.toArray();
   };
 
-  public func setToArray(
-    trie_set: Set.Set<Principal>
-  ) : [Principal] {
-    let buffer : Buffer.Buffer<Principal> = Buffer.Buffer(0);
-    for ((principal, _) in Trie.iter(trie_set)){
-      buffer.add(principal);
+  public func getCurrentPoweringParameters(
+    trie_map: TrieMap.TrieMap<Principal, Types.PoweringParameters>
+  ) : async [Types.CyclesProfile] {
+    let buffer : Buffer.Buffer<Types.CyclesProfile> = Buffer.Buffer(trie_map.size());
+    for ((principal, value) in trie_map.entries()){
+      let canister : Types.ToPowerUpInterface = actor(Principal.toText(principal));
+      let balance_cycles = await canister.balanceCycles();
+      buffer.add({
+        principal = principal;
+        balance_cycles = balance_cycles;
+        balance_threshold = value.balance_threshold;
+        pull_authorized = value.pull_authorized});
     };
     buffer.toArray();
   };
+
+  
 
   public func getToken(
     token_interface: ?Types.TokenInterface

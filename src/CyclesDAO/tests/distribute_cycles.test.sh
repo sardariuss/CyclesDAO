@@ -32,11 +32,11 @@ let _ = call bob_wallet.wallet_call(
 decode as cyclesDAO.walletReceive _.Ok.return;
 assert _.ok == (0 : nat);
 
-//dfx canister call CyclesDAO test_distrib "(record{min_cycles = 666_666; accept_cycles = func \"rno2w-sqaaa-aaaaa-aaacq-cai\".receiveCycles;})"
+//dfx canister call CyclesDAO test_distrib "(record{balance_threshold = 666_666; accept_cycles = func \"rno2w-sqaaa-aaaaa-aaacq-cai\".receiveCycles;})"
 configure_cycles_dao(
     variant {
         AddAllowList = record {
-            min_cycles = 1_000_000;
+            balance_threshold = 1_000_000;
             canister = toPowerUp1;
             accept_cycles = func toPowerUp1.receiveCycles; // @todo: fix "Unexpected token"
         }

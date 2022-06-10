@@ -32,11 +32,11 @@ export DEFAULT_WALLET_ID=$(dfx identity get-wallet)
 export DEFAULT_WALLET_ACCOUNT_ID=$(dfx ledger account-id --of-principal ${DEFAULT_WALLET_ID})
 
 # Deploy CyclesDAO canister
-dfx deploy cyclesDAO --argument="(principal \"$DEFAULT_PRINCIPAL\")"
+dfx deploy cyclesDAO --argument="(principal \"$DEFAULT_PRINCIPAL\", 1000000)"
 dfx generate cyclesDAO
 
 # Deploy DAO token canister (DIP20)
-export CYCLES_DAO_PRINCIPAL=$(dfx canister id cyclesDAO);
+export CYCLES_DAO_PRINCIPAL=$(dfx canister id cyclesDAO)
 dfx deploy dip20 --argument="(\"data:image/jpeg;base64,...\", \"DIP20 Dummy\", \"DIPD\", 8, 10000000000000000,  principal \"$CYCLES_DAO_PRINCIPAL\", 10000)"
 
 # Deploy Ledger token canister
@@ -56,5 +56,5 @@ dfx deploy frontend
 
 # See CyclesDAO/tests/commands.sh for a simple scenario!
 
-dfx deploy toPowerUp1
-dfx deploy toPowerUp2
+dfx deploy toPowerUp1 --argument '(principal "'${CYCLES_DAO_PRINCIPAL}'")'
+dfx deploy toPowerUp2 --argument '(principal "'${CYCLES_DAO_PRINCIPAL}'")'

@@ -30,7 +30,8 @@ module{
     };
     #AddAllowList: {
       canister: Principal;
-      min_cycles: Nat;
+      balance_threshold: Nat;
+      balance_target: Nat;
       pull_authorized: Bool;
     };
     #RemoveAllowList: {
@@ -38,6 +39,9 @@ module{
     };
     #ConfigureGovernanceCanister: {
       canister: Principal;
+    };
+    #SetMinimumBalance: {
+      minimum_balance: Nat;
     };
   };
 
@@ -92,8 +96,16 @@ module{
     #NotEnoughCycles;
   };
 
+  public type CyclesProfile = {
+    principal: Principal;
+    balance_cycles: Nat;
+    balance_threshold: Nat;
+    pull_authorized: Bool;
+  };
+
   public type PoweringParameters = { 
-    min_cycles: Nat;
+    balance_threshold: Nat;
+    balance_target: Nat;
     pull_authorized: Bool;
   };
 

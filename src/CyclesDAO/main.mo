@@ -14,11 +14,13 @@ import Set "mo:base/TrieSet";
 import Trie "mo:base/Trie";
 import TrieMap "mo:base/TrieMap";
 
-shared actor class CyclesDAO(governance: Principal) = this {
+shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this {
 
   // Members
 
   private stable var governance_ : Principal = governance;
+
+  private stable var minimum_balance_ : Nat = minimum_balance;
 
   private stable var token_interface_ : ?Types.TokenInterface = null;
 
@@ -56,6 +58,10 @@ shared actor class CyclesDAO(governance: Principal) = this {
 
   public query func getAllowList() : async [(Principal, Types.PoweringParameters)] {
     return Utils.mapToArray(allow_list_);
+  };
+
+  public query func getMinimumBalance() : async Nat {
+    return minimum_balance_;
   };
 
 
@@ -145,8 +151,8 @@ shared actor class CyclesDAO(governance: Principal) = this {
           };
         };
       };
-      case(#AddAllowList {canister; min_cycles; pull_authorized;}){
-        allow_list_.put(canister, {min_cycles = min_cycles; pull_authorized = pull_authorized;});
+      case(#AddAllowList {canister; balance_threshold; balance_target; pull_authorized;}){
+        allow_list_.put(canister, {balance_threshold = balance_threshold; balance_target = balance_target; pull_authorized = pull_authorized;});
       };
       case(#RemoveAllowList {canister}){
         if (allow_list_.remove(canister) == null){
@@ -156,18 +162,21 @@ shared actor class CyclesDAO(governance: Principal) = this {
       case(#ConfigureGovernanceCanister {canister}){
         governance_ := canister;
       };
+      case(#SetMinimumBalance {minimum_balance}){
+        minimum_balance_ := minimum_balance;
+      };
     };
     return #ok;
   };
 
   public shared func distributeCycles() : async Bool {
     var success : Bool = true;
-    for ((principal, powering_parameters) in allow_list_.entries()){
-      if (not (await fillWithCycles(principal, powering_parameters.min_cycles))){
+    for ((principal, {balance_threshold; balance_target}) in allow_list_.entries()){
+      if (not (await fillWithCycles(principal, balance_threshold, balance_target))){
         success := false;
       };
     };
-    // @todo: rather return in error like #NotEnoughCycles?
+    // @todo: rather return an error like #NotEnoughCycles?
     return success;
   };
 
@@ -175,29 +184,44 @@ shared actor class CyclesDAO(governance: Principal) = this {
     switch (allow_list_.get(msg.caller)){
       case(null){
         return false;
-      }
-      case(?powering_parameters){
-        if (powering_parameters.pull_authorized) {
-          return await fillWithCycles(msg.caller, powering_parameters.min_cycles);
+      };
+      case(?{balance_threshold; balance_target; pull_authorized}){
+        if (not pull_authorized) {
+          return false;
+        } else {
+          return await fillWithCycles(msg.caller, balance_threshold, balance_target);
         };
       };
     };
   };
 
-  private func fillWithCycles(principal: Principal, min_cycles: Nat) : async Bool {
+  private func fillWithCycles(
+    principal: Principal,
+    balance_threshold: Nat,
+    balance_target: Nat
+    ) : async Bool {
     let canister : Types.ToPowerUpInterface = actor(Principal.toText(principal));
-    let difference : Int = min_cycles - (await canister.balanceCycles());
+    let difference : Int = balance_threshold - (await canister.balanceCycles());
     if (difference <= 0) {
       return false;
-    // @todo: shall the CyclesDAO canister keep a minimum
-    // amount of cycles to be operable ?
-    } else if (ExperimentalCycles.balance() < difference) {
-      return false;
     } else {
-      ExperimentalCycles.add(Int.abs(difference));
-      return await canister.acceptCycles();
+      let refill_amount = Int.abs(difference) + balance_target;
+      if ((ExperimentalCycles.balance() - minimum_balance_) < refill_amount) {
+        return false;
+      } else {
+        ExperimentalCycles.add(refill_amount);
+        return await canister.acceptCycles();
+      };
     };
   };
+
+
+  // @todo FOR UI
+
+  public shared func getCyclesProfile() : async [Types.CyclesProfile] {
+    return await Utils.getCurrentPoweringParameters(allow_list_);
+  };
+
 
   // @todo: this function is specific to the ledger token, it is usefull to
   // test but shouldn't be part of the cyclesDAO canister
