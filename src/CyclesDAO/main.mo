@@ -2,6 +2,7 @@ import Types    "types";
 import Utils    "utils";
 import Accounts "standards/ledger/accounts";
 
+import Array "mo:base/Array";
 import Buffer "mo:base/Buffer";
 import Debug "mo:base/Debug";
 import ExperimentalCycles "mo:base/ExperimentalCycles";
@@ -11,6 +12,7 @@ import Nat "mo:base/Nat";
 import Principal "mo:base/Principal";
 import Result "mo:base/Result";
 import Set "mo:base/TrieSet";
+import Time "mo:base/Time";
 import Trie "mo:base/Trie";
 import TrieMap "mo:base/TrieMap";
 
@@ -22,9 +24,9 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
 
   private stable var minimum_balance_ : Nat = minimum_balance;
 
-  private stable var token_interface_ : ?Types.TokenInterface = null;
+  private stable var token_ : ?Types.Token = null;
 
-  private stable var cycle_exchange_config_ : [Types.ExchangeLevel] = [
+  private stable var cycles_exchange_config_ : [Types.ExchangeLevel] = [
     { threshold = 2_000_000_000_000; rate_per_t = 1.0; },
     { threshold = 10_000_000_000_000; rate_per_t = 0.8; },
     { threshold = 50_000_000_000_000; rate_per_t = 0.4; },
@@ -36,10 +38,25 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
       Principal.equal, Principal.hash
     );
 
+  private let cycles_balance_register_ : Buffer.Buffer<Types.CyclesBalanceRecord> = Buffer.Buffer(0);
+  
+  private let cycles_transfer_register_ : Buffer.Buffer<Types.CyclesTransferRecord> = Buffer.Buffer(0);
+
+  private let tokens_mint_register_ : Buffer.Buffer<Types.TokensMintRecord> = Buffer.Buffer(0);
+
+  private let configure_command_register_ : Buffer.Buffer<Types.ConfigureCommandRecord> = Buffer.Buffer(0);
 
   // For upgrades
 
   private stable var allow_list_array_ : [(Principal, Types.PoweringParameters)] = [];
+
+  private stable var cycles_balance_register_array_ : [Types.CyclesBalanceRecord] = [];
+
+  private stable var cycles_transfer_register_array_ : [Types.CyclesTransferRecord] = [];
+
+  private stable var tokens_mint_register_array_ : [Types.TokensMintRecord] = [];
+
+  private stable var configure_command_register_array_ : [Types.ConfigureCommandRecord] = [];
 
 
   // Getters
@@ -48,12 +65,12 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
     return governance_;
   };
 
-  public query func getToken() : async ?Types.Token {
-    return Utils.getToken(token_interface_);
+  public query func getToken() : async ?Types.TokenInfo {
+    return Utils.getTokenInfo(token_);
   };
 
   public query func getCycleExchangeConfig() : async [Types.ExchangeLevel] {
-    return cycle_exchange_config_;
+    return cycles_exchange_config_;
   };
 
   public query func getAllowList() : async [(Principal, Types.PoweringParameters)] {
@@ -62,6 +79,22 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
 
   public query func getMinimumBalance() : async Nat {
     return minimum_balance_;
+  };
+
+  public query func getCyclesBalanceRegister() : async [Types.CyclesBalanceRecord] {
+    return cycles_balance_register_.toArray();
+  };
+
+  public query func getCyclesTransferRegister() : async [Types.CyclesTransferRecord] {
+    return cycles_transfer_register_.toArray();
+  };
+
+  public query func getTokensMintRegister() : async [Types.TokensMintRecord] {
+    return tokens_mint_register_.toArray();
+  };
+
+  public query func getConfigureCommandRegister() : async [Types.ConfigureCommandRecord] {
+    return configure_command_register_.toArray();
   };
 
 
@@ -80,25 +113,42 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
     };
     // Check if the max cycles has been reached
     let originalBalance = ExperimentalCycles.balance();
-    let maxCycles = cycle_exchange_config_[cycle_exchange_config_.size() - 1].threshold;
+    let maxCycles = cycles_exchange_config_[cycles_exchange_config_.size() - 1].threshold;
     if (originalBalance > maxCycles) {
       return #err(#MaxCyclesReached);
     };
     // Check if the token has been set
-    switch(token_interface_) {
+    switch(token_) {
       case null {
         return #err(#DAOTokenCanisterNull);
       };
-      case (?token_interface_) {
+      case (?token_) {
+        let now = Time.now();
         // Accept the cycles up to the maximum cycles possible
         let acceptedCycles = ExperimentalCycles.accept(
           Nat.min(availableCycles, maxCycles - originalBalance));
+        cycles_transfer_register_.add({date = now; amount = acceptedCycles; direction = #Received{from = msg.caller}});
+        cycles_balance_register_.add({date = now; balance = ExperimentalCycles.balance()});
         // Compute the amount of tokens to mint in exchange 
         // of the accepted cycles
-        let amount = Utils.computeTokensInExchange(
-          cycle_exchange_config_, originalBalance, acceptedCycles);
+        let amount_tokens = Utils.computeTokensInExchange(
+          cycles_exchange_config_, originalBalance, acceptedCycles);
         // Mint the tokens
-        return await Utils.mintToken(token_interface_, Principal.fromActor(this), msg.caller, amount);
+        switch (await Utils.mintToken(token_.interface, Principal.fromActor(this), msg.caller, amount_tokens)){
+          case(#err(err)){
+            return #err(err);
+          };
+          case(#ok(index)){
+            tokens_mint_register_.add({
+              date = now;
+              token_standard = token_.standard;
+              token_principal = token_.principal;
+              amount = amount_tokens;
+              to = msg.caller;
+            });
+            return #ok(index);
+          };
+        };
       };
     };
   };
@@ -111,42 +161,41 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
       return #err(#NotAllowed);
     };
     switch (command){
-      case(#UpdateMintConfig cycle_exchange_config){
-        if (not Utils.isValidExchangeConfig(cycle_exchange_config)) {
+      case(#UpdateMintConfig cycles_exchange_config){
+        if (not Utils.isValidExchangeConfig(cycles_exchange_config)) {
           return #err(#InvalidMintConfiguration);
         };
-        cycle_exchange_config_ := cycle_exchange_config;
+        cycles_exchange_config_ := cycles_exchange_config;
       };
       case(#DistributeBalance {to; token_canister; amount; id; standard; token_identifier}){
-        switch(await Utils.getTokenInterface(standard, token_canister, token_identifier)){
+        switch(await Utils.getToken(standard, token_canister, token_identifier)){
           case(#err(err)){
             return #err(err);
           };
           case(#ok(token)){
-            switch (await Utils.transferToken(token, Principal.fromActor(this), to, amount, id)){
+            switch (await Utils.transferToken(token.interface, Principal.fromActor(this), to, amount, id)){
               case (#err(err)){
                 return #err(err);
               };
               case (#ok(_)){
-                return #ok;
               };
             };
           };
         };
       };
       case(#ConfigureDAOToken {standard; canister; token_identifier}){
-        token_interface_ := null;
-        switch(await Utils.getTokenInterface(standard, canister, token_identifier)){
+        token_ := null;
+        switch(await Utils.getToken(standard, canister, token_identifier)){
           case(#err(err)){
             return #err(err);
           };
-          case(#ok(token_interface)){
-            if (not Utils.isFungible(token_interface)){
+          case(#ok(token)){
+            if (not Utils.isFungible(token.interface)){
               return #err(#NotEnoughCycles);
-            } else if (not (await Utils.isOwner(token_interface, Principal.fromActor(this)))) {
+            } else if (not (await Utils.isOwner(token.interface, Principal.fromActor(this)))) {
               return #err(#NotEnoughCycles);
             } else {
-              token_interface_ := ?token_interface;
+              token_ := ?token;
             };
           };
         };
@@ -166,17 +215,17 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
         minimum_balance_ := minimum_balance;
       };
     };
+    configure_command_register_.add({date = Time.now(); governance = governance_; command = command;});
     return #ok;
   };
 
   public shared func distributeCycles() : async Bool {
     var success : Bool = true;
     for ((principal, {balance_threshold; balance_target}) in allow_list_.entries()){
-      if (not (await fillWithCycles(principal, balance_threshold, balance_target))){
+      if (not (await fillWithCycles(principal, balance_threshold, balance_target, #Distribution))){
         success := false;
       };
     };
-    // @todo: rather return an error like #NotEnoughCycles?
     return success;
   };
 
@@ -189,7 +238,7 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
         if (not pull_authorized) {
           return false;
         } else {
-          return await fillWithCycles(msg.caller, balance_threshold, balance_target);
+          return await fillWithCycles(msg.caller, balance_threshold, balance_target, #Request);
         };
       };
     };
@@ -198,21 +247,33 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
   private func fillWithCycles(
     principal: Principal,
     balance_threshold: Nat,
-    balance_target: Nat
+    balance_target: Nat,
+    trigger: Types.CyclesRefillTrigger
     ) : async Bool {
     let canister : Types.ToPowerUpInterface = actor(Principal.toText(principal));
     let difference : Int = balance_threshold - (await canister.balanceCycles());
     if (difference <= 0) {
       return false;
-    } else {
-      let refill_amount = Int.abs(difference) + balance_target;
-      if ((ExperimentalCycles.balance() - minimum_balance_) < refill_amount) {
-        return false;
-      } else {
-        ExperimentalCycles.add(refill_amount);
-        return await canister.acceptCycles();
-      };
     };
+    let refill_amount = Int.abs(difference) + balance_target;
+    let available_cycles : Int = ExperimentalCycles.balance() - minimum_balance_;
+    if (available_cycles < refill_amount) {
+      return false;
+    };
+    ExperimentalCycles.add(refill_amount);
+    await canister.acceptCycles();
+    let refund_amount = ExperimentalCycles.refunded();
+    if (refund_amount == refill_amount) {
+      return false;
+    };
+    let now = Time.now();
+    cycles_transfer_register_.add({
+      date = now;
+      amount = (refill_amount - refund_amount);
+      direction = #Sent{to = principal; trigger = trigger}
+    });
+    cycles_balance_register_.add({date = now; balance = ExperimentalCycles.balance()});
+    return true;
   };
 
 
@@ -238,17 +299,36 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
   };
 
   system func preupgrade(){
-    // Save allow_list_ in temporary array
+    // Save allow_list_ and registers in temporary stable arrays
     allow_list_array_ := Utils.mapToArray(allow_list_);
+    cycles_balance_register_array_ := cycles_balance_register_.toArray();
+    cycles_transfer_register_array_ := cycles_transfer_register_.toArray();
+    tokens_mint_register_array_ := tokens_mint_register_.toArray();
+    configure_command_register_array_ := configure_command_register_.toArray();
   };
 
   system func postupgrade() {
-    // Restore allow_list_
+    // Restore allow_list_ and registers from temporary stable arrays
     for ((principal, powering_parameters) in Iter.fromArray(allow_list_array_)){
       allow_list_.put(principal, powering_parameters);
     };
-    // Empty temporary arrays
+    for (record in Array.vals(cycles_balance_register_array_)){
+      cycles_balance_register_.add(record);
+    };
+    for (record in Array.vals(cycles_transfer_register_array_)){
+      cycles_transfer_register_.add(record);
+    };
+    for (record in Array.vals(tokens_mint_register_array_)){
+      tokens_mint_register_.add(record);
+    };
+    for (record in Array.vals(configure_command_register_array_)){
+      configure_command_register_.add(record);
+    };
+    // Empty temporary stable arrays
     allow_list_array_ := [];
+    cycles_balance_register_array_ := [];
+    cycles_transfer_register_array_ := [];
+    tokens_mint_register_array_ := [];
+    configure_command_register_array_ := [];
   };
-
 };

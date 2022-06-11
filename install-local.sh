@@ -3,16 +3,15 @@
 dfx stop
 dfx start --background --clean
 
-# @todo: temporary commented out the BasicDAO to simplify calls
-
 # Create Alice and Bob identities
-#dfx identity new Alice
-#dfx identity use Alice
-#export ALICE=$(dfx identity get-principal);
-#dfx identity new Bob
-#dfx identity use Bob
-#export BOB=$(dfx identity get-principal);
+dfx identity new Alice
+dfx identity use Alice
+export ALICE=$(dfx identity get-principal);
+dfx identity new Bob
+dfx identity use Bob
+export BOB=$(dfx identity get-principal);
 
+# @todo: temporary commented out the BasicDAO to simplify calls
 # Deploy BasicDAO canister
 #dfx deploy basicDAO --argument="(record {
 # accounts = vec { record { owner = principal \"$ALICE\"; tokens = record { amount_e8s = 100_000_000 }; };
@@ -31,8 +30,8 @@ export DEFAULT_PRINCIPAL=$(dfx identity get-principal)
 export DEFAULT_WALLET_ID=$(dfx identity get-wallet)
 export DEFAULT_WALLET_ACCOUNT_ID=$(dfx ledger account-id --of-principal ${DEFAULT_WALLET_ID})
 
-# Deploy CyclesDAO canister
-dfx deploy cyclesDAO --argument="(principal \"$DEFAULT_PRINCIPAL\", 1000000)"
+# Deploy CyclesDAO canister, with 1 trillion minimum cycles, and 1 trillion cycles
+dfx deploy cyclesDAO --argument="(principal \"$DEFAULT_PRINCIPAL\", 1000000000000)" --with-cycles 1000000000000
 dfx generate cyclesDAO
 
 # Deploy DAO token canister (DIP20)
@@ -55,6 +54,3 @@ cp src/Ledger/ledger.public.did src/Ledger/ledger.did
 dfx deploy frontend
 
 # See CyclesDAO/tests/commands.sh for a simple scenario!
-
-dfx deploy toPowerUp1 --argument '(principal "'${CYCLES_DAO_PRINCIPAL}'")'
-dfx deploy toPowerUp2 --argument '(principal "'${CYCLES_DAO_PRINCIPAL}'")'

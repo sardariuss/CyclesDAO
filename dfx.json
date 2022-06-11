@@ -21,6 +21,18 @@
       "type": "motoko",
       "main": "src/CyclesDAO/tests/toPowerUp.mo"
     },
+    "toPowerUp3": {
+      "type": "motoko",
+      "main": "src/CyclesDAO/tests/toPowerUp.mo"
+    },
+    "toPowerUp4": {
+      "type": "motoko",
+      "main": "src/CyclesDAO/tests/toPowerUp.mo"
+    },
+    "toPowerUp5": {
+      "type": "motoko",
+      "main": "src/CyclesDAO/tests/toPowerUp.mo"
+    },
     "dip20": {
       "type": "custom",
       "candid": "src/DIP20/dip20.did",

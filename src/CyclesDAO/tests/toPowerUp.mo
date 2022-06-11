@@ -30,16 +30,14 @@ shared actor class ToPowerUp(cycles_dao: Principal) = this {
     };
   };
 
-  public shared func receiveCycles() : async Bool {
+  public shared func receiveCycles() : async() {
     let cyclesAvailable = ExperimentalCycles.available();
     if (cyclesAvailable > 0) {
       let cyclesAccepted = ExperimentalCycles.accept(cyclesAvailable);
       Debug.print("Accept " # Nat.toText(cyclesAccepted) # " cycles from the " 
         # Nat.toText(cyclesAvailable) # " available.");
-      return cyclesAccepted == cyclesAvailable;
     } else {
       Debug.print("No cycle available.");
-      return false;
     };
   };
 };

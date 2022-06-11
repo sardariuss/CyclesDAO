@@ -58,9 +58,15 @@ module{
     #NFT_ORIGYN;
   };
 
+  public type TokenInfo = {
+    standard: TokenStandard;
+    principal: Principal;    
+  };
+
   public type Token = {
     standard: TokenStandard;
     principal: Principal;
+    interface: TokenInterface;
   };
 
   public type TokenInterface = {
@@ -96,6 +102,46 @@ module{
     #NotEnoughCycles;
   };
 
+  public type CyclesBalanceRecord = {
+    date: Int;
+    balance: Nat;
+  };
+
+  public type CyclesTransferRecord = {
+    date: Int;
+    amount: Nat;
+    direction: CyclesTransferDirection;
+  };
+
+  public type CyclesTransferDirection = {
+    #Received : {
+      from: Principal;
+    };
+    #Sent : {
+      to: Principal;
+      trigger: CyclesRefillTrigger;
+    };
+  };
+
+  public type CyclesRefillTrigger = {
+    #Distribution;
+    #Request;
+  };
+
+  public type TokensMintRecord = {
+    date: Int;
+    token_standard: TokenStandard;
+    token_principal: Principal; 
+    amount: Nat;
+    to: Principal;
+  };
+
+  public type ConfigureCommandRecord = {
+    date: Int;
+    governance: Principal;
+    command: ConfigureDAOCommand;
+  };
+
   public type CyclesProfile = {
     principal: Principal;
     balance_cycles: Nat;
@@ -112,6 +158,6 @@ module{
   public type ToPowerUpInterface = actor {
     setCyclesDAO: shared (Principal) -> async ();
     balanceCycles: shared query () -> async (Nat);
-    acceptCycles: shared () -> async (Bool);
+    acceptCycles: shared () -> async ();
   };
 }

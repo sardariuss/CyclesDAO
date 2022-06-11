@@ -84,33 +84,13 @@ module {
     buffer.toArray();
   };
 
-  
-
-  public func getToken(
-    token_interface: ?Types.TokenInterface
-  ) : ?Types.Token {
-    switch(token_interface){
+  public func getTokenInfo(token: ?Types.Token) : ?Types.TokenInfo {
+    switch(token){
       case(null){
         return null;
       };
       case(?token){
-        switch(token){
-          case(#DIP20({interface})){
-            ?{standard = #DIP20; principal = Principal.fromActor(interface);};
-          };
-          case(#LEDGER({interface})){
-            ?{standard = #LEDGER; principal = Principal.fromActor(interface);};
-          };
-          case(#DIP721({interface})){
-            ?{standard = #DIP721; principal = Principal.fromActor(interface);};
-          };
-          case(#EXT({interface})){
-            ?{standard = #EXT; principal = Principal.fromActor(interface);};
-          };
-          case(#NFT_ORIGYN({interface})){
-            ?{standard = #NFT_ORIGYN; principal = Principal.fromActor(interface);};
-          };
-        };
+        return ?{standard = token.standard; principal = token.principal;};
       };
     };
   };
@@ -165,30 +145,30 @@ module {
   };
 
   // @todo: check what happends if the canister does not have the same interface (does it trap?)
-  public func getTokenInterface(
+  public func getToken(
     standard: Types.TokenStandard,
     canister: Principal,
     token_identifier: ?Text
-  ) : async Result.Result<Types.TokenInterface, Types.DAOCyclesError> {
+  ) : async Result.Result<Types.Token, Types.DAOCyclesError> {
     switch(standard){
       case(#DIP20){
         let dip20 : DIP20Types.Interface = actor (Principal.toText(canister));
-        #ok(#DIP20({interface = dip20;}));
+        #ok({standard = #DIP20; principal = canister; interface = #DIP20({interface = dip20;})});
       };
       case(#LEDGER){
         let ledger : LedgerTypes.Interface = actor (Principal.toText(canister));
-        #ok(#LEDGER({interface = ledger;}))
+        #ok({standard = #LEDGER; principal = canister; interface = #LEDGER({interface = ledger;})});
       };
       case(#DIP721){
         let dip721 : DIP721Types.Interface = actor (Principal.toText(canister));
-        #ok(#DIP721({interface = dip721}));
+        #ok({standard = #DIP721; principal = canister; interface = #DIP721({interface = dip721})});
       };
       case(#EXT){
         let ext : EXTTypes.Interface = actor (Principal.toText(canister));
         switch(token_identifier){
           case(null){
             // If the token identifier is an empty string, assume the token is fungible
-            #ok(#EXT({interface = ext; token_identifier = ""; is_fungible = true}));
+            #ok({standard = #EXT; principal = canister; interface = #EXT({interface = ext; token_identifier = ""; is_fungible = true})});
           };
           case(?identifier){
             switch (await ext.metadata(identifier)){
@@ -198,10 +178,10 @@ module {
               case(#ok(meta_data)){
                 switch (meta_data){
                   case(#fungible(_)){
-                    #ok(#EXT({interface = ext; token_identifier = identifier; is_fungible = true}));
+                    #ok({standard = #EXT; principal = canister; interface = #EXT({interface = ext; token_identifier = identifier; is_fungible = true})});
                   };
                   case(#nonfungible(_)){
-                    #ok(#EXT({interface = ext; token_identifier = identifier; is_fungible = false}));
+                    #ok({standard = #EXT; principal = canister; interface = #EXT({interface = ext; token_identifier = identifier; is_fungible = false})});
                   };
                 };
               };
@@ -211,7 +191,7 @@ module {
       };
       case(#NFT_ORIGYN){
         let nft_origyn : OrigynTypes.Interface = actor (Principal.toText(canister));
-        #ok(#NFT_ORIGYN({interface = nft_origyn}));
+        #ok({standard = #NFT_ORIGYN; principal = canister; interface = #NFT_ORIGYN({interface = nft_origyn})});
       };
     };
   };
@@ -421,11 +401,11 @@ module {
 
   public func getAccountIdentifier(account: Principal, ledger: Principal) : ?Accounts.AccountIdentifier {
     let identifier = Accounts.accountIdentifier(ledger, Accounts.principalToSubaccount(account));
-      if(Accounts.validateAccountIdentifier(identifier)){
-        ?identifier;
-      } else {
-        null;
-      };
+    if(Accounts.validateAccountIdentifier(identifier)){
+      ?identifier;
+    } else {
+      null;
+    };
   };
 
 };
