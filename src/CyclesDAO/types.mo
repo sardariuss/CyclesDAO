@@ -145,8 +145,7 @@ module{
   public type CyclesProfile = {
     principal: Principal;
     balance_cycles: Nat;
-    balance_threshold: Nat;
-    pull_authorized: Bool;
+    powering_parameters: PoweringParameters;
   };
 
   public type PoweringParameters = { 

@@ -256,7 +256,7 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
       Debug.print("difference <= 0");
       return false;
     };
-    let refill_amount = balance_target - Int.abs(difference);
+    let refill_amount = balance_target - Int.abs(difference); // @todo: operator may trap
     let available_cycles : Int = ExperimentalCycles.balance() - minimum_balance_;
     if (available_cycles < refill_amount) {
       Debug.print("available_cycles < refill_amount");

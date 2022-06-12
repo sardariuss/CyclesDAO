@@ -4,19 +4,58 @@ import { toTrillions } from "./../conversion";
 
 import { Bar }            from 'react-chartjs-2'
 import { Chart, registerables } from 'chart.js';
+import annotationPlugin, { AnnotationOptions, AnnotationPluginOptions, AnnotationTypeRegistry } from 'chartjs-plugin-annotation';
+import autocolors from 'chartjs-plugin-autocolors';
+
+Chart.register(autocolors);
+Chart.register(annotationPlugin);
+
 Chart.register(...registerables);
 
-const BarChart = ({ chartData }) => {
+const addBox = (listBoxes: AnnotationOptions<keyof AnnotationTypeRegistry>[], index: number, threshold: number, target: number) => {
+  // Bottom
+  listBoxes.push({
+    type: 'box',
+    xMin: index -0.35,
+    xMax: index + 0.35,
+    yMin: threshold,
+    yMax: threshold,
+    borderColor: 'rgba(255, 255, 255, 1)',
+    borderWidth: 3
+  });
+  // Top
+  listBoxes.push({
+    type: 'box',
+    xMin: index - 0.35,
+    xMax: index + 0.35,
+    yMin: target,
+    yMax: target,
+    borderColor: 'rgba(255, 255, 255, 1)',
+    borderWidth: 3
+  });
+  // Vertical bar
+  listBoxes.push({
+    type: 'box',
+    xMin: index,
+    xMax: index,
+    yMin: threshold,
+    yMax: target,
+    borderColor: 'rgba(255, 255, 255, 1)',
+    borderWidth: 3
+  });
+}
+
+const BarChart = ({ chartData, annotation }) => {
   return (
     <div>
       <Bar
         data={chartData}
         options={{
           plugins: {
-            legend: {
-              display: true,
-              position: "bottom"
-           }
+            autocolors: {
+              mode: 'dataset'
+            },
+            annotation: annotation
           }
         }}
       />
@@ -28,19 +67,24 @@ function ChartLivePoweredUp({cyclesDAOActor}: any) {
 
   const [chartData, setChartData] = useState({})
   const [haveData, setHaveData] = useState(false);
+  const [annotation, setAnnotation] = useState<AnnotationPluginOptions>({annotations: []});
 
   const fetch_data = async () => {
 		try {
       const cyclesProfile = await cyclesDAOActor.getCyclesProfile() as Array<CyclesProfile>;
+
       setChartData({
         labels: cyclesProfile.map((profile) => profile.principal),
-        datasets: [
-          {
+        datasets: [{
             label: "Cycles balance",
             data: cyclesProfile.map((profile) => {return toTrillions(profile.balance_cycles)}),
-          }
-        ]
+        }]
       });
+
+      let listBoxes: AnnotationOptions<keyof AnnotationTypeRegistry>[] = [];
+      cyclesProfile.map((profile, index) => {addBox(listBoxes, index, toTrillions(profile.powering_parameters.balance_threshold), toTrillions(profile.powering_parameters.balance_target))});
+      let testpluginOptions : AnnotationPluginOptions = { annotations : listBoxes };
+      setAnnotation(testpluginOptions);
       setHaveData(true);
 
     } catch (err) {
@@ -60,7 +104,7 @@ function ChartLivePoweredUp({cyclesDAOActor}: any) {
     return (
       <>
         <div className="App">
-          <BarChart chartData={chartData} />
+          <BarChart chartData={chartData} annotation={annotation} />
         </div>
       </>
     )

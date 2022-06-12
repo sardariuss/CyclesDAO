@@ -72,14 +72,14 @@ module {
     trie_map: TrieMap.TrieMap<Principal, Types.PoweringParameters>
   ) : async [Types.CyclesProfile] {
     let buffer : Buffer.Buffer<Types.CyclesProfile> = Buffer.Buffer(trie_map.size());
-    for ((principal, value) in trie_map.entries()){
+    for ((principal, powering_parameters) in trie_map.entries()){
       let canister : Types.ToPowerUpInterface = actor(Principal.toText(principal));
       let balance_cycles = await canister.balanceCycles();
       buffer.add({
         principal = principal;
         balance_cycles = balance_cycles;
-        balance_threshold = value.balance_threshold;
-        pull_authorized = value.pull_authorized});
+        powering_parameters = powering_parameters;
+      });
     };
     buffer.toArray();
   };

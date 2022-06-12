@@ -1,4 +1,4 @@
-import { CyclesTransferRecord, TokensMintRecord, PoweringParameters, CyclesTransferDirection } from "../../declarations/cyclesDAO/cyclesDAO.did.js";
+import { CyclesTransferRecord, TokensMintRecord, PoweringParameters } from "../../declarations/cyclesDAO/cyclesDAO.did.js";
 import { toTrillions } from "./../conversion";
 import  ChartLivePoweredUp from "./ChartLivePoweredUp";
 
