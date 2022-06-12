@@ -253,17 +253,20 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
     let canister : Types.ToPowerUpInterface = actor(Principal.toText(principal));
     let difference : Int = balance_threshold - (await canister.balanceCycles());
     if (difference <= 0) {
+      Debug.print("difference <= 0");
       return false;
     };
-    let refill_amount = Int.abs(difference) + balance_target;
+    let refill_amount = balance_target - Int.abs(difference);
     let available_cycles : Int = ExperimentalCycles.balance() - minimum_balance_;
     if (available_cycles < refill_amount) {
+      Debug.print("available_cycles < refill_amount");
       return false;
     };
     ExperimentalCycles.add(refill_amount);
     await canister.acceptCycles();
     let refund_amount = ExperimentalCycles.refunded();
     if (refund_amount == refill_amount) {
+      Debug.print("refund_amount == refill_amount");
       return false;
     };
     let now = Time.now();

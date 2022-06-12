@@ -30,7 +30,7 @@ shared actor class ToPowerUp(cycles_dao: Principal) = this {
     };
   };
 
-  public shared func receiveCycles() : async() {
+  public shared func acceptCycles() : async() {
     let cyclesAvailable = ExperimentalCycles.available();
     if (cyclesAvailable > 0) {
       let cyclesAccepted = ExperimentalCycles.accept(cyclesAvailable);

@@ -44,4 +44,4 @@ dfx canister --wallet ${BOB_WALLET} call cyclesDAO walletReceive --with-cycles 1
 
 # CyclesDAO shall now have at least 15 trillion cycles
 #dfx identity use default
-#dfx canister calll cyclesDAO distributeCycles
+#dfx canister call cyclesDAO distributeCycles
