@@ -1,6 +1,7 @@
 import { CyclesTransferRecord, TokensMintRecord, PoweringParameters } from "../../declarations/cyclesDAO/cyclesDAO.did.js";
-import { toTrillions } from "./../conversion";
-import  ChartLivePoweredUp from "./ChartLivePoweredUp";
+import { toTrillions } from "./../utils/conversion";
+import CyclesProfiles from "./charts/CyclesProfiles";
+import CyclesBalance from "./charts/CyclesBalance";
 
 import type { Principal } from '@dfinity/principal';
 import { useEffect, useState } from "react";
@@ -49,26 +50,37 @@ function Dashboard({cyclesDAOActor}: any) {
 
   return (
 		<>
-      <div className="flex flex-row justify-center gap-3">
-        <span className="grow p-6 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700">
-          <p className="font-normal text-gray-700 dark:text-gray-400">Current cycles balance</p>
-          <h5 className="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{(toTrillions(cyclesBalance)).toFixed(3)} trillion cycles</h5>
-        </span>
-        <span className="grow p-6 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700">
-          <p className="font-normal text-gray-700 dark:text-gray-400">Current number of canisters powered</p>
-          <h5 className="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{allowList.length} canisters</h5>
-        </span>
-        <span className="grow p-6 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700">
-          <p className="font-normal text-gray-700 dark:text-gray-400">Total number of cycles distributed</p>
-          <h5 className="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{(toTrillions(totalDistributedCycles)).toFixed(3)} trillion cycles</h5>
-        </span>
-        <span className="grow p-6 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700">
-          <p className="font-normal text-gray-700 dark:text-gray-400">Total number of tokens minted</p>
-          <h5 className="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{(toTrillions(totalMintTokens)).toFixed(3)} trillion tokens</h5>
-        </span>
-      </div>
-      <div className="App">
-        <ChartLivePoweredUp cyclesDAOActor={cyclesDAOActor}/>
+      <div className="flex flex-col space-y-10">
+        <div className="flex flex-row justify-center gap-3">
+          <span className="grow p-6 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700">
+            <p className="font-normal text-gray-700 dark:text-gray-400">Current cycles balance</p>
+            <h5 className="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{(toTrillions(cyclesBalance)).toFixed(3)} trillion cycles</h5>
+          </span>
+          <span className="grow p-6 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700">
+            <p className="font-normal text-gray-700 dark:text-gray-400">Current number of canisters powered</p>
+            <h5 className="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{allowList.length} canisters</h5>
+          </span>
+          <span className="grow p-6 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700">
+            <p className="font-normal text-gray-700 dark:text-gray-400">Total number of cycles distributed</p>
+            <h5 className="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{(toTrillions(totalDistributedCycles)).toFixed(3)} trillion cycles</h5>
+          </span>
+          <span className="grow p-6 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700">
+            <p className="font-normal text-gray-700 dark:text-gray-400">Total number of tokens minted</p>
+            <h5 className="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{(toTrillions(totalMintTokens)).toFixed(3)} trillion tokens</h5>
+          </span>
+        </div>
+        <div className="flex flex-row space-x-10">
+          <span className="grow w-1/2">
+          <div className="App">
+            <CyclesProfiles cyclesDAOActor={cyclesDAOActor}/>
+          </div>
+          </span>
+          <span className="grow w-1/2">
+          <div className="App">
+            <CyclesBalance cyclesDAOActor={cyclesDAOActor}/>
+          </div>
+          </span>
+        </div>
       </div>
     </>
   );

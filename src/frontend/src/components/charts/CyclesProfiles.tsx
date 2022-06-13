@@ -1,6 +1,6 @@
-import { CyclesProfile } from "../../declarations/cyclesDAO/cyclesDAO.did.js";
+import { CyclesProfile } from "../../../declarations/cyclesDAO/cyclesDAO.did.js";
 import { useEffect, useState } from "react";
-import { toTrillions } from "./../conversion";
+import { toTrillions } from "../../utils/conversion";
 
 import { Bar }            from 'react-chartjs-2'
 import { Chart, registerables } from 'chart.js';
@@ -9,7 +9,6 @@ import autocolors from 'chartjs-plugin-autocolors';
 
 Chart.register(autocolors);
 Chart.register(annotationPlugin);
-
 Chart.register(...registerables);
 
 const addBox = (listBoxes: AnnotationOptions<keyof AnnotationTypeRegistry>[], index: number, threshold: number, target: number) => {
@@ -63,7 +62,7 @@ const BarChart = ({ chartData, annotation }) => {
   );
 };
 
-function ChartLivePoweredUp({cyclesDAOActor}: any) {
+function CyclesProfiles({cyclesDAOActor}: any) {
 
   const [chartData, setChartData] = useState({})
   const [haveData, setHaveData] = useState(false);
@@ -111,4 +110,4 @@ function ChartLivePoweredUp({cyclesDAOActor}: any) {
   };
 }
 
-export default ChartLivePoweredUp;
+export default CyclesProfiles;

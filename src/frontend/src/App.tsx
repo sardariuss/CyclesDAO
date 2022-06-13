@@ -27,7 +27,7 @@ function App() {
 
   return (
 		<>
-      <div className="bg-white dark:bg-slate-900">
+      <div className="flex flex-col h-screen bg-white dark:bg-slate-900 justify-between">
         <HashRouter>
           <nav className="bg-white border-gray-200 px-2 sm:px-4 py-2.5 dark:bg-gray-800">
             <div className="container flex flex-wrap justify-between items-center mx-auto">
@@ -52,7 +52,7 @@ function App() {
               </div>
             </div>
           </nav>
-          <div className="border border-none mx-20 my-10 text-center min-h-full">
+          <div className="border border-none mx-20 my-10 text-center">
             <Routes>
               <Route
                 path="/"

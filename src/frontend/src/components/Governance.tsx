@@ -1,3 +1,5 @@
+import ConfigureHistory from './tables/ConfigureHistory'
+
 import type { Principal } from '@dfinity/principal';
 import { useEffect, useState } from "react";
 
@@ -21,6 +23,7 @@ function Governance({cyclesDAOActor}: any) {
 
   return (
 		<>
+      <ConfigureHistory cyclesDAOActor={cyclesDAOActor}/>
     </>
   );
 }

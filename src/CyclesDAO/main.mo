@@ -97,6 +97,10 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
     return configure_command_register_.toArray();
   };
 
+  public shared func getCyclesProfile() : async [Types.CyclesProfile] {
+    return await Utils.getCurrentPoweringParameters(allow_list_);
+  };
+
 
   // Public functions
 
@@ -277,13 +281,6 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
     });
     cycles_balance_register_.add({date = now; balance = ExperimentalCycles.balance()});
     return true;
-  };
-
-
-  // @todo FOR UI
-
-  public shared func getCyclesProfile() : async [Types.CyclesProfile] {
-    return await Utils.getCurrentPoweringParameters(allow_list_);
   };
 
 
