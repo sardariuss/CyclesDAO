@@ -13,7 +13,7 @@ type TimeStamp = record {
 };
 
 type ArchiveOptions = record {
-    trigger_threshold : nat64;
+    method_threshold : nat64;
     num_blocks_to_archive : nat64;
     node_max_memory_size_bytes: opt nat64;
     max_message_size_bytes: opt nat64;

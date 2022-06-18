@@ -40,9 +40,9 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
 
   private let cycles_balance_register_ : Buffer.Buffer<Types.CyclesBalanceRecord> = Buffer.Buffer(0);
   
-  private let cycles_transfer_register_ : Buffer.Buffer<Types.CyclesTransferRecord> = Buffer.Buffer(0);
+  private let cycles_sent_register_ : Buffer.Buffer<Types.CyclesSentRecord> = Buffer.Buffer(0);
 
-  private let tokens_mint_register_ : Buffer.Buffer<Types.TokensMintRecord> = Buffer.Buffer(0);
+  private let cycles_received_register_ : Buffer.Buffer<Types.CyclesReceivedRecord> = Buffer.Buffer(0);
 
   private let configure_command_register_ : Buffer.Buffer<Types.ConfigureCommandRecord> = Buffer.Buffer(0);
 
@@ -52,9 +52,9 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
 
   private stable var cycles_balance_register_array_ : [Types.CyclesBalanceRecord] = [];
 
-  private stable var cycles_transfer_register_array_ : [Types.CyclesTransferRecord] = [];
+  private stable var cycles_sent_register_array_ : [Types.CyclesSentRecord] = [];
 
-  private stable var tokens_mint_register_array_ : [Types.TokensMintRecord] = [];
+  private stable var cycles_received_register_array_ : [Types.CyclesReceivedRecord] = [];
 
   private stable var configure_command_register_array_ : [Types.ConfigureCommandRecord] = [];
 
@@ -85,12 +85,12 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
     return cycles_balance_register_.toArray();
   };
 
-  public query func getCyclesTransferRegister() : async [Types.CyclesTransferRecord] {
-    return cycles_transfer_register_.toArray();
+  public query func getCyclesSentRegister() : async [Types.CyclesSentRecord] {
+    return cycles_sent_register_.toArray();
   };
 
-  public query func getTokensMintRegister() : async [Types.TokensMintRecord] {
-    return tokens_mint_register_.toArray();
+  public query func getCyclesReceivedRegister() : async [Types.CyclesReceivedRecord] {
+    return cycles_received_register_.toArray();
   };
 
   public query func getConfigureCommandRegister() : async [Types.ConfigureCommandRecord] {
@@ -131,28 +131,25 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
         // Accept the cycles up to the maximum cycles possible
         let acceptedCycles = ExperimentalCycles.accept(
           Nat.min(availableCycles, maxCycles - originalBalance));
-        cycles_transfer_register_.add({date = now; amount = acceptedCycles; direction = #Received{from = msg.caller}});
-        cycles_balance_register_.add({date = now; balance = ExperimentalCycles.balance()});
         // Compute the amount of tokens to mint in exchange 
         // of the accepted cycles
         let amount_tokens = Utils.computeTokensInExchange(
           cycles_exchange_config_, originalBalance, acceptedCycles);
         // Mint the tokens
-        switch (await Utils.mintToken(token_.interface, Principal.fromActor(this), msg.caller, amount_tokens)){
-          case(#err(err)){
-            return #err(err);
-          };
-          case(#ok(index)){
-            tokens_mint_register_.add({
-              date = now;
-              token_standard = token_.standard;
-              token_principal = token_.principal;
-              amount = amount_tokens;
-              to = msg.caller;
-            });
-            return #ok(index);
-          };
-        };
+        let block_index = await Utils.mintToken(token_.interface, Principal.fromActor(this), msg.caller, amount_tokens);
+        // Update the registers
+        cycles_balance_register_.add({date = now; balance = ExperimentalCycles.balance()});
+        cycles_received_register_.add({
+          date = now;
+          from = msg.caller;
+          cycle_amount = acceptedCycles;
+          token_amount = amount_tokens;
+          token_standard = token_.standard;
+          token_principal = token_.principal;
+          block_index = block_index;
+        });
+        // Return the resulting block index
+        return block_index;
       };
     };
   };
@@ -226,7 +223,7 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
   public shared func distributeCycles() : async Bool {
     var success : Bool = true;
     for ((principal, {balance_threshold; balance_target}) in allow_list_.entries()){
-      if (not (await fillWithCycles(principal, balance_threshold, balance_target, #Distribution))){
+      if (not (await fillWithCycles(principal, balance_threshold, balance_target, #DistributeCycles))){
         success := false;
       };
     };
@@ -242,7 +239,7 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
         if (not pull_authorized) {
           return false;
         } else {
-          return await fillWithCycles(msg.caller, balance_threshold, balance_target, #Request);
+          return await fillWithCycles(msg.caller, balance_threshold, balance_target, #RequestCycles);
         };
       };
     };
@@ -252,32 +249,33 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
     principal: Principal,
     balance_threshold: Nat,
     balance_target: Nat,
-    trigger: Types.CyclesRefillTrigger
+    method: Types.CyclesDistributionMethod
     ) : async Bool {
     let canister : Types.ToPowerUpInterface = actor(Principal.toText(principal));
     let difference : Int = balance_threshold - (await canister.balanceCycles());
     if (difference <= 0) {
-      Debug.print("difference <= 0");
+      Debug.print("difference <= 0"); //@todo
       return false;
     };
     let refill_amount = balance_target - Int.abs(difference); // @todo: operator may trap
     let available_cycles : Int = ExperimentalCycles.balance() - minimum_balance_;
     if (available_cycles < refill_amount) {
-      Debug.print("available_cycles < refill_amount");
+      Debug.print("available_cycles < refill_amount"); //@todo
       return false;
     };
     ExperimentalCycles.add(refill_amount);
     await canister.acceptCycles();
     let refund_amount = ExperimentalCycles.refunded();
     if (refund_amount == refill_amount) {
-      Debug.print("refund_amount == refill_amount");
+      Debug.print("refund_amount == refill_amount"); //@todo
       return false;
     };
     let now = Time.now();
-    cycles_transfer_register_.add({
+    cycles_sent_register_.add({
       date = now;
       amount = (refill_amount - refund_amount);
-      direction = #Sent{to = principal; trigger = trigger}
+      to = principal;
+      method = method;
     });
     cycles_balance_register_.add({date = now; balance = ExperimentalCycles.balance()});
     return true;
@@ -302,8 +300,8 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
     // Save allow_list_ and registers in temporary stable arrays
     allow_list_array_ := Utils.mapToArray(allow_list_);
     cycles_balance_register_array_ := cycles_balance_register_.toArray();
-    cycles_transfer_register_array_ := cycles_transfer_register_.toArray();
-    tokens_mint_register_array_ := tokens_mint_register_.toArray();
+    cycles_sent_register_array_ := cycles_sent_register_.toArray();
+    cycles_received_register_array_ := cycles_received_register_.toArray();
     configure_command_register_array_ := configure_command_register_.toArray();
   };
 
@@ -315,11 +313,11 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
     for (record in Array.vals(cycles_balance_register_array_)){
       cycles_balance_register_.add(record);
     };
-    for (record in Array.vals(cycles_transfer_register_array_)){
-      cycles_transfer_register_.add(record);
+    for (record in Array.vals(cycles_sent_register_array_)){
+      cycles_sent_register_.add(record);
     };
-    for (record in Array.vals(tokens_mint_register_array_)){
-      tokens_mint_register_.add(record);
+    for (record in Array.vals(cycles_received_register_array_)){
+      cycles_received_register_.add(record);
     };
     for (record in Array.vals(configure_command_register_array_)){
       configure_command_register_.add(record);
@@ -327,8 +325,8 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
     // Empty temporary stable arrays
     allow_list_array_ := [];
     cycles_balance_register_array_ := [];
-    cycles_transfer_register_array_ := [];
-    tokens_mint_register_array_ := [];
+    cycles_sent_register_array_ := [];
+    cycles_received_register_array_ := [];
     configure_command_register_array_ := [];
   };
 };

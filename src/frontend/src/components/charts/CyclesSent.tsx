@@ -1,5 +1,5 @@
-import { CyclesBalanceRecord } from "../../../declarations/cyclesDAO/cyclesDAO.did.js";
-import { toTrillions, toMilliSeconds } from "./../../utils/conversion";
+import { CyclesSentRecord } from "../../../declarations/cyclesDAO/cyclesDAO.did.js";
+import { toTrillions, toMilliSeconds } from "../../utils/conversion";
 
 import { useEffect, useState } from "react";
 import { Scatter }            from 'react-chartjs-2'
@@ -32,24 +32,34 @@ const ScatterChart = ({ chartData }) => {
   );
 };
 
-function CyclesBalance({cyclesDAOActor}: any) {
+function CyclesSent({cyclesDAOActor}: any) {
 
   const [chartData, setChartData] = useState({})
   const [haveData, setHaveData] = useState(false);
 
   const fetch_data = async () => {
 		try {
-      const cyclesBalance = await cyclesDAOActor.getCyclesBalanceRegister() as Array<CyclesBalanceRecord>;
+      const cyclesTransfered = await cyclesDAOActor.getCyclesSentRegister() as Array<CyclesSentRecord>;
       
       setChartData({
         datasets: [
           {
-            label: "Cycles balance",
-            data: cyclesBalance.map((record) => {
-                return {x: toMilliSeconds(record.date), y: toTrillions(record.balance)};
-              }),
-            showLine: true,
-            fill: true
+            label: "Cycles received",
+            data: cyclesTransfered.map((transfer) => {
+              if ("Received" in transfer.direction) {
+                return {x: toMilliSeconds(transfer.date), y: toTrillions(transfer.amount)};
+              };
+            }),
+            showLine: true
+          },
+          {
+            label: "Cycles sent",
+            data: cyclesTransfered.map((transfer) => {
+              if ("Sent" in transfer.direction) {
+                console.log("HAS SENT! " + toMilliSeconds(transfer.date)); // @todo: fix chart limits (min Y: 0, min/max X: depend on data)
+                return {x: toMilliSeconds(transfer.date), y: toTrillions(transfer.amount)};
+              };
+            })
           }
         ]
       });
@@ -80,4 +90,4 @@ function CyclesBalance({cyclesDAOActor}: any) {
   };
 }
 
-export default CyclesBalance;
+export default CyclesSent;

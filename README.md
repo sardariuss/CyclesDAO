@@ -12,3 +12,7 @@ Use the basic DAO written from the dfinity examples: https://github.com/dfinity/
 
 ## DIP 20
 Use the DIP20 standard token: https://github.com/Psychedelic/DIP20
+
+## To fix
+
+* The units of tokens minted shouldn't be always in trillions, but should adapt to the amount of tokens

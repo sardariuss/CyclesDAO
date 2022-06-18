@@ -1,5 +1,5 @@
-import { CyclesTransferRecord } from "../../../declarations/cyclesDAO/cyclesDAO.did.js";
-import { toTrillions, toMilliSeconds } from "./../../utils/conversion";
+import { CyclesReceivedRecord } from "../../../declarations/cyclesDAO/cyclesDAO.did.js";
+import { toTrillions, toMilliSeconds } from "../../utils/conversion";
 
 import { useEffect, useState } from "react";
 import { Scatter }            from 'react-chartjs-2'
@@ -32,34 +32,41 @@ const ScatterChart = ({ chartData }) => {
   );
 };
 
-function CyclesTransfered({cyclesDAOActor}: any) {
+type ScatterData = {
+  x: number,
+  y: number
+}
+
+function CyclesSent({cyclesDAOActor}: any) {
 
   const [chartData, setChartData] = useState({})
   const [haveData, setHaveData] = useState(false);
 
   const fetch_data = async () => {
 		try {
-      const cyclesTransfered = await cyclesDAOActor.getCyclesTransferRegister() as Array<CyclesTransferRecord>;
+      const cyclesReceived = await cyclesDAOActor.getCyclesReceivedRegister() as Array<CyclesReceivedRecord>;
+      var accumulatedCyclesAmount : bigint = 0n;
+      var accumulatedCyclesDataset : ScatterData[] = [];
+      var accumulatedTokensAmount : bigint = 0n;
+      let accumulatedTokensDataset : ScatterData[] = [];
+      cyclesReceived.map((record) => {
+        accumulatedCyclesDataset.push({x: toMilliSeconds(record.date), y: toTrillions(accumulatedCyclesAmount + record.cycle_amount)});
+        accumulatedCyclesAmount += record.cycle_amount;
+        accumulatedTokensDataset.push({x: toMilliSeconds(record.date), y: toTrillions(accumulatedTokensAmount + record.token_amount)});
+        accumulatedTokensAmount += record.token_amount;
+      });
       
       setChartData({
         datasets: [
           {
             label: "Cycles received",
-            data: cyclesTransfered.map((transfer) => {
-              if ("Received" in transfer.direction) {
-                return {x: toMilliSeconds(transfer.date), y: toTrillions(transfer.amount)};
-              };
-            }),
+            data: accumulatedCyclesDataset,
             showLine: true
           },
           {
-            label: "Cycles sent",
-            data: cyclesTransfered.map((transfer) => {
-              if ("Sent" in transfer.direction) {
-                console.log("HAS SENT! " + toMilliSeconds(transfer.date)); // @todo: fix chart limits (min Y: 0, min/max X: depend on data)
-                return {x: toMilliSeconds(transfer.date), y: toTrillions(transfer.amount)};
-              };
-            })
+            label: "Tokens minted",
+            data: accumulatedTokensDataset,
+            showLine: true
           }
         ]
       });
@@ -90,4 +97,4 @@ function CyclesTransfered({cyclesDAOActor}: any) {
   };
 }
 
-export default CyclesTransfered;
+export default CyclesSent;

@@ -67,9 +67,9 @@ function ConfigureHistory({cyclesDAOActor}: any) {
               </tr>
           </thead>
           <tbody>
-          {commandHistory.map((record: ConfigureCommandRecord) => {
+          {commandHistory.map((record: ConfigureCommandRecord, index: number) => {
             return (
-              <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+              <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600" key={index}>
                 <th scope="row" className="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">
                     { formatDate(record.date) }
                 </th>

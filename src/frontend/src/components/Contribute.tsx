@@ -1,4 +1,8 @@
+import CyclesExchangeConfig from './charts/CyclesExchangeConfig'
+import CyclesReceived from './charts/CyclesReceived'
+import TradeHistory from './tables/TradeHistory'
 import { TokenInfo, TokenStandard, ExchangeLevel } from "../../declarations/cyclesDAO/cyclesDAO.did.js";
+
 import { useEffect, useState } from "react";
 
 
@@ -33,6 +37,19 @@ function Contribute({cyclesDAOActor}: any) {
 
   return (
 		<>
+      <div className="flex flex-col space-y-10">
+        <span className="grow w-1/4">
+          <CyclesExchangeConfig cyclesDAOActor={cyclesDAOActor}/>
+        </span>
+        <div className="flex flex-row space-x-10">
+          <span className="grow w-2/5">
+            <CyclesReceived cyclesDAOActor={cyclesDAOActor}/>
+          </span>
+          <span className="grow w-3/5">
+            <TradeHistory cyclesDAOActor={cyclesDAOActor}/>
+          </span>
+        </div>
+      </div>
     </>
   );
 }

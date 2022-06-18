@@ -107,33 +107,26 @@ module{
     balance: Nat;
   };
 
-  public type CyclesTransferRecord = {
+  public type CyclesSentRecord = {
     date: Int;
-    amount: Nat;
-    direction: CyclesTransferDirection;
-  };
-
-  public type CyclesTransferDirection = {
-    #Received : {
-      from: Principal;
-    };
-    #Sent : {
-      to: Principal;
-      trigger: CyclesRefillTrigger;
-    };
-  };
-
-  public type CyclesRefillTrigger = {
-    #Distribution;
-    #Request;
-  };
-
-  public type TokensMintRecord = {
-    date: Int;
-    token_standard: TokenStandard;
-    token_principal: Principal; 
     amount: Nat;
     to: Principal;
+    method: CyclesDistributionMethod;
+  };
+
+  public type CyclesDistributionMethod = {
+    #DistributeCycles;
+    #RequestCycles;
+  };
+
+  public type CyclesReceivedRecord = {
+    date: Int;
+    from: Principal;
+    cycle_amount: Nat;
+    token_amount: Nat;
+    token_standard: TokenStandard;
+    token_principal: Principal;
+    block_index: Result.Result<Nat, DAOCyclesError>;
   };
 
   public type ConfigureCommandRecord = {
