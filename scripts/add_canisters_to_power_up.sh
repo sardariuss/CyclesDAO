@@ -1,10 +1,9 @@
 #!/bin/bash
 
-dfx identity use default
+# Assume dfx is already running and the cyclesDAO canister is governed by the default user
 
-# Configure the Cycles DAO to use the DIP20 token
-export DIP20_PRINCIPAL=$(dfx canister id dip20)
-dfx canister call cyclesDAO configure '(variant { ConfigureDAOToken = record { standard = variant {DIP20}; canister = principal "'${DIP20_PRINCIPAL}'" }})'
+# Change directory to dfx directory
+cd ..
 
 export CYCLES_DAO_PRINCIPAL=$(dfx canister id cyclesDAO)
 
@@ -30,18 +29,5 @@ dfx deploy toPowerUp5 --argument '(principal "'${CYCLES_DAO_PRINCIPAL}'")' --wit
 export TO_POWER_UP_5_ID=$(dfx canister id toPowerUp5)
 dfx canister call cyclesDAO configure '(variant {AddAllowList = record { balance_threshold = 1_000_000_000_000; balance_target = 2_000_000_000_000; canister = principal "'${TO_POWER_UP_5_ID}'"; pull_authorized = false; }})'
 
-dfx identity use Alice
-export ALICE_WALLET=$(dfx identity get-wallet)
-# Alice gives 2 trillions cycles
-dfx canister --wallet ${ALICE_WALLET} call cyclesDAO walletReceive --with-cycles 2000000000000
-# Alice gives 3 trillions cycles
-dfx canister --wallet ${ALICE_WALLET} call cyclesDAO walletReceive --with-cycles 3000000000000
-
-dfx identity use Bob
-export BOB_WALLET=$(dfx identity get-wallet)
-# Bob gives 10 trillions cycles
-dfx canister --wallet ${BOB_WALLET} call cyclesDAO walletReceive --with-cycles 10000000000000
-
-# CyclesDAO shall now have at least 15 trillion cycles
-#dfx identity use default
-#dfx canister call cyclesDAO distributeCycles
+# Go back to initial directory
+cd scripts
