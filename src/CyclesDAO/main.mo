@@ -1,20 +1,21 @@
-import Types    "types";
-import Utils    "utils";
-import Accounts "standards/ledger/accounts";
+import Accounts            "standards/ledger/accounts";
+import Token               "token";
+import Types               "types";
+import Utils               "utils";
 
-import Array "mo:base/Array";
-import Buffer "mo:base/Buffer";
-import Debug "mo:base/Debug";
-import ExperimentalCycles "mo:base/ExperimentalCycles";
-import Int "mo:base/Int";
-import Iter "mo:base/Iter";
-import Nat "mo:base/Nat";
-import Principal "mo:base/Principal";
-import Result "mo:base/Result";
-import Set "mo:base/TrieSet";
-import Time "mo:base/Time";
-import Trie "mo:base/Trie";
-import TrieMap "mo:base/TrieMap";
+import Array               "mo:base/Array";
+import Buffer              "mo:base/Buffer";
+import Debug               "mo:base/Debug";
+import ExperimentalCycles  "mo:base/ExperimentalCycles";
+import Int                 "mo:base/Int";
+import Iter                "mo:base/Iter";
+import Nat                 "mo:base/Nat";
+import Principal           "mo:base/Principal";
+import Result              "mo:base/Result";
+import Set                 "mo:base/TrieSet";
+import Time                "mo:base/Time";
+import Trie                "mo:base/Trie";
+import TrieMap             "mo:base/TrieMap";
 
 shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this {
 
@@ -66,7 +67,7 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
   };
 
   public query func getToken() : async ?Types.TokenInfo {
-    return Utils.getTokenInfo(token_);
+    return Token.getTokenInfo(token_);
   };
 
   public query func getCycleExchangeConfig() : async [Types.ExchangeLevel] {
@@ -98,7 +99,7 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
   };
 
   public shared func getCyclesProfile() : async [Types.CyclesProfile] {
-    return await Utils.getCurrentPoweringParameters(allow_list_);
+    return await Utils.getPoweringParameters(allow_list_);
   };
 
 
@@ -136,7 +137,7 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
         let amount_tokens = Utils.computeTokensInExchange(
           cycles_exchange_config_, originalBalance, acceptedCycles);
         // Mint the tokens
-        let block_index = await Utils.mintToken(token_.interface, Principal.fromActor(this), msg.caller, amount_tokens);
+        let block_index = await Token.mintToken(token_.interface, Principal.fromActor(this), msg.caller, amount_tokens);
         // Update the registers
         cycles_balance_register_.add({date = now; balance = ExperimentalCycles.balance()});
         cycles_received_register_.add({
@@ -169,12 +170,12 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
         cycles_exchange_config_ := cycles_exchange_config;
       };
       case(#DistributeBalance {to; token_canister; amount; id; standard; token_identifier}){
-        switch(await Utils.getToken(standard, token_canister, token_identifier)){
+        switch(await Token.getToken(standard, token_canister, token_identifier)){
           case(#err(err)){
             return #err(err);
           };
           case(#ok(token)){
-            switch (await Utils.transferToken(token.interface, Principal.fromActor(this), to, amount, id)){
+            switch (await Token.transferToken(token.interface, Principal.fromActor(this), to, amount, id)){
               case (#err(err)){
                 return #err(err);
               };
@@ -186,14 +187,14 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
       };
       case(#ConfigureDAOToken {standard; canister; token_identifier}){
         token_ := null;
-        switch(await Utils.getToken(standard, canister, token_identifier)){
+        switch(await Token.getToken(standard, canister, token_identifier)){
           case(#err(err)){
             return #err(err);
           };
           case(#ok(token)){
-            if (not Utils.isFungible(token.interface)){
+            if (not Token.isFungible(token.interface)){
               return #err(#NotEnoughCycles);
-            } else if (not (await Utils.isOwner(token.interface, Principal.fromActor(this)))) {
+            } else if (not (await Token.isOwner(token.interface, Principal.fromActor(this)))) {
               return #err(#NotEnoughCycles);
             } else {
               token_ := ?token;
