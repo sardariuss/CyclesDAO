@@ -202,6 +202,9 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
         };
       };
       case(#AddAllowList {canister; balance_threshold; balance_target; pull_authorized;}){
+        if (balance_threshold >= balance_target) {
+          return #err(#NotFound);
+        };
         allow_list_.put(canister, {balance_threshold = balance_threshold; balance_target = balance_target; pull_authorized = pull_authorized;});
       };
       case(#RemoveAllowList {canister}){
@@ -252,18 +255,19 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
     method: Types.CyclesDistributionMethod
     ) : async Bool {
     let canister : Types.ToPowerUpInterface = actor(Principal.toText(principal));
-    let difference : Int = balance_threshold - (await canister.balanceCycles());
+    let current_balance = await canister.balanceCycles();
+    let difference : Int = balance_threshold - current_balance;
     if (difference <= 0) {
       Debug.print("difference <= 0"); //@todo
-      return false;
+      return true;
     };
-    let refill_amount = balance_target - Int.abs(difference); // @todo: operator may trap
+    let refill_amount : Int = balance_target - current_balance;
     let available_cycles : Int = ExperimentalCycles.balance() - minimum_balance_;
     if (available_cycles < refill_amount) {
       Debug.print("available_cycles < refill_amount"); //@todo
       return false;
     };
-    ExperimentalCycles.add(refill_amount);
+    ExperimentalCycles.add(Int.abs(refill_amount));
     await canister.acceptCycles();
     let refund_amount = ExperimentalCycles.refunded();
     if (refund_amount == refill_amount) {
@@ -273,7 +277,7 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
     let now = Time.now();
     cycles_sent_register_.add({
       date = now;
-      amount = (refill_amount - refund_amount);
+      amount = Int.abs(refill_amount - refund_amount);
       to = principal;
       method = method;
     });
