@@ -19,8 +19,8 @@ const addBox = (listBoxes: AnnotationOptions<keyof AnnotationTypeRegistry>[], in
     xMax: index + 0.35,
     yMin: threshold,
     yMax: threshold,
-    borderColor: 'rgba(255, 255, 255, 1)',
-    borderWidth: 3
+    borderColor: 'rgba(220, 220, 220, 1)',
+    borderWidth: 2
   });
   // Top
   listBoxes.push({
@@ -29,8 +29,8 @@ const addBox = (listBoxes: AnnotationOptions<keyof AnnotationTypeRegistry>[], in
     xMax: index + 0.35,
     yMin: target,
     yMax: target,
-    borderColor: 'rgba(255, 255, 255, 1)',
-    borderWidth: 3
+    borderColor: 'rgba(220, 220, 220, 1)',
+    borderWidth: 2
   });
   // Vertical bar
   listBoxes.push({
@@ -39,12 +39,12 @@ const addBox = (listBoxes: AnnotationOptions<keyof AnnotationTypeRegistry>[], in
     xMax: index,
     yMin: threshold,
     yMax: target,
-    borderColor: 'rgba(255, 255, 255, 1)',
-    borderWidth: 3
+    borderColor: 'rgba(220, 220, 220, 1)',
+    borderWidth: 2
   });
 }
 
-const BarChart = ({ chartData, annotation }) => {
+const BarChart = ({ chartData, annotation }: any) => {
   return (
     <div>
       <Bar
@@ -54,7 +54,10 @@ const BarChart = ({ chartData, annotation }) => {
             autocolors: {
               mode: 'dataset'
             },
-            annotation: annotation
+            annotation: annotation,
+            legend:{
+              display: false
+            }
           }
         }}
       />
@@ -77,13 +80,13 @@ function CyclesProfiles({cyclesDAOActor}: any) {
         datasets: [{
             label: "Cycles balance",
             data: cyclesProfile.map((profile) => {return toTrillions(profile.balance_cycles)}),
-        }]
+            backgroundColor:'#8c4232'
+        }],
       });
 
       let listBoxes: AnnotationOptions<keyof AnnotationTypeRegistry>[] = [];
       cyclesProfile.map((profile, index) => {addBox(listBoxes, index, toTrillions(profile.powering_parameters.balance_threshold), toTrillions(profile.powering_parameters.balance_target))});
-      let testpluginOptions : AnnotationPluginOptions = { annotations : listBoxes };
-      setAnnotation(testpluginOptions);
+      setAnnotation({ annotations : listBoxes });
       setHaveData(true);
 
     } catch (err) {
@@ -92,7 +95,7 @@ function CyclesProfiles({cyclesDAOActor}: any) {
   }
 
   useEffect(() => {
-		fetch_data();
+    fetch_data();
 	}, []);
 
   if (!haveData) {
@@ -102,9 +105,7 @@ function CyclesProfiles({cyclesDAOActor}: any) {
   } else {
     return (
       <>
-        <div className="App">
-          <BarChart chartData={chartData} annotation={annotation} />
-        </div>
+        <BarChart chartData={chartData} annotation={annotation} />
       </>
     )
   };

@@ -23,7 +23,13 @@ function Governance({cyclesDAOActor}: any) {
 
   return (
 		<>
-      <ConfigureHistory cyclesDAOActor={cyclesDAOActor}/>
+      <div className="flex flex-col">
+        <div className="flex flex-row mb-10">
+          <h5 className="mb-2 text-2xl tracking-tight text-gray-900 dark:text-white mr-2">Governed by </h5>
+          <h5 className="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{governance}</h5>
+        </div>
+        <ConfigureHistory cyclesDAOActor={cyclesDAOActor}/>
+      </div>
     </>
   );
 }

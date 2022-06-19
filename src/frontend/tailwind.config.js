@@ -4,7 +4,11 @@ module.exports = {
 		fontFamily: {
 			inter: "'Inter', sans-serif",
 		},
-		extend: {},
+		extend: {
+			spacing: {
+        '160': '40rem',
+      }
+		},
 	},
 	plugins: [],
 };

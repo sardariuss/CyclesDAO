@@ -38,10 +38,10 @@ function TradeHistory({cyclesDAOActor}: any) {
                     From
                   </th>
                   <th scope="col" className="px-6 py-3 text-center">
-                    Cycles sent (in trillions)
+                    Sent (in T cycles)
                   </th>
                   <th scope="col" className="px-6 py-3 text-center">
-                    Tokens received (in trillions)
+                    Received (in T cycles)
                   </th>
                   <th scope="col" className="px-6 py-3 text-center">
                     Token standard

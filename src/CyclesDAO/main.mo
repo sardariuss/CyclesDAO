@@ -301,6 +301,10 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
     };
   };
 
+  public shared func computeTokensInExchange(cycles_amount: Nat) : async Nat {
+    return Utils.computeTokensInExchange(cycles_exchange_config_, ExperimentalCycles.balance(), cycles_amount);
+  };
+
   system func preupgrade(){
     // Save allow_list_ and registers in temporary stable arrays
     allow_list_array_ := Utils.mapToArray(allow_list_);

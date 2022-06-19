@@ -1,36 +1,11 @@
 import { CyclesBalanceRecord } from "../../../declarations/cyclesDAO/cyclesDAO.did.js";
 import { toTrillions, toMilliSeconds } from "./../../utils/conversion";
+import { ScatterChart } from "./raw/ScatterChart";
 
 import { useEffect, useState } from "react";
-import { Scatter }            from 'react-chartjs-2'
 import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
-
-const ScatterChart = ({ chartData }) => {
-  return (
-    <div>
-      <Scatter
-        data={chartData}
-        options={{
-          scales:{
-            y:{
-              suggestedMin: 0
-            },
-            x:{
-              ticks:{
-                callback: function(value, index, values){
-                  const date = new Date(value);
-                  return date.toLocaleDateString('en-US');
-                }
-              }
-            }
-          }
-        }}
-      />
-    </div>
-  );
-};
 
 function CyclesBalance({cyclesDAOActor}: any) {
 
@@ -49,7 +24,9 @@ function CyclesBalance({cyclesDAOActor}: any) {
                 return {x: toMilliSeconds(record.date), y: toTrillions(record.balance)};
               }),
             showLine: true,
-            fill: true
+            fill: true,
+            backgroundColor:'#328c6a',
+            borderColor:'#328c6a'
           }
         ]
       });
@@ -72,9 +49,7 @@ function CyclesBalance({cyclesDAOActor}: any) {
   } else {
     return (
       <>
-        <div className="App">
-          <ScatterChart chartData={chartData} />
-        </div>
+        <ScatterChart chartData={chartData} />
       </>
     )
   };

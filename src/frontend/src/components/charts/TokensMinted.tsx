@@ -7,7 +7,7 @@ import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
 
-function CyclesSent({cyclesDAOActor}: any) {
+function TokensMinted({cyclesDAOActor}: any) {
 
   const [chartData, setChartData] = useState({})
   const [haveData, setHaveData] = useState(false);
@@ -15,22 +15,22 @@ function CyclesSent({cyclesDAOActor}: any) {
   const fetch_data = async () => {
 		try {
       const cyclesReceived = await cyclesDAOActor.getCyclesReceivedRegister() as Array<CyclesReceivedRecord>;
-      var accumulatedCyclesAmount : bigint = 0n;
-      var accumulatedCyclesDataset : ScatterData[] = [];
+      var accumulatedTokensAmount : bigint = 0n;
+      let accumulatedTokensDataset : ScatterData[] = [];
       cyclesReceived.map((record) => {
-        accumulatedCyclesDataset.push({x: toMilliSeconds(record.date), y: toTrillions(accumulatedCyclesAmount + record.cycle_amount)});
-        accumulatedCyclesAmount += record.cycle_amount;
+        accumulatedTokensDataset.push({x: toMilliSeconds(record.date), y: toTrillions(accumulatedTokensAmount + record.token_amount)});
+        accumulatedTokensAmount += record.token_amount;
       });
       
       setChartData({
         datasets: [
           {
-            label: "Cycles received",
-            data: accumulatedCyclesDataset,
+            label: "Tokens minted",
+            data: accumulatedTokensDataset,
             showLine: true,
             fill: true,
-            backgroundColor:'#5e328c',
-            borderColor:'#5e328c'
+            backgroundColor:'#32528c',
+            borderColor:'#32528c'
           }
         ]
       });
@@ -59,4 +59,4 @@ function CyclesSent({cyclesDAOActor}: any) {
   };
 }
 
-export default CyclesSent;
+export default TokensMinted;

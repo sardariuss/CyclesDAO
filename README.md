@@ -16,3 +16,7 @@ Use the DIP20 standard token: https://github.com/Psychedelic/DIP20
 ## To fix
 
 * The units of tokens minted shouldn't be always in trillions, but should adapt to the amount of tokens
+
+## Credits
+
+* Battery: https://www.svgrepo.com/svg/219834/battery
