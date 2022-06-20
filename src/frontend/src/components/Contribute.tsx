@@ -148,8 +148,6 @@ function Contribute({cyclesDAOActor}: any) {
         listAnnotations.push(getLabel(toTrillions(previousThreshold + (exchangeLevel.threshold - previousThreshold) / 2n ), exchangeLevel.rate_per_t));
       })
 
-      listAnnotations.push(getLine(toTrillions(cyclesBalance)));
-
       listAnnotations.push(getBox(toTrillions(cyclesBalance), toTrillions(cyclesPreview)));
 
       setChartData({
