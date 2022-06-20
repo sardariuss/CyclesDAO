@@ -65,7 +65,7 @@ const BarChart = ({ chartData, annotation }: any) => {
   );
 };
 
-function CyclesProfiles({cyclesDAOActor}: any) {
+function PoweredCanisters({cyclesDAOActor}: any) {
 
   const [chartData, setChartData] = useState({})
   const [haveData, setHaveData] = useState(false);
@@ -111,4 +111,4 @@ function CyclesProfiles({cyclesDAOActor}: any) {
   };
 }
 
-export default CyclesProfiles;
+export default PoweredCanisters;

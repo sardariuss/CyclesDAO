@@ -1,6 +1,6 @@
 import { CyclesSentRecord, CyclesReceivedRecord, PoweringParameters } from "../../declarations/cyclesDAO/cyclesDAO.did.js";
 import { toTrillions } from "./../utils/conversion";
-import CyclesProfiles from "./charts/CyclesProfiles";
+import PoweredCanisters from "./charts/PoweredCanisters";
 import CyclesBalance from "./charts/CyclesBalance";
 import CyclesReceived from './charts/CyclesReceived'
 import TokensMinted from './charts/TokensMinted'
@@ -74,15 +74,15 @@ function Dashboard({cyclesDAOActor}: any) {
         </div>
         <div className="flex flex-row space-x-10">
           <span className="grow w-1/2">
-          <div className="flex flex-col bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700">
+          <div className="flex flex-col bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 h-128">
             <p className="font-normal text-gray-700 dark:text-gray-400 text-start m-5">Balance of powered canisters (in T cycles)</p>
             <div className="App m-5">
-            <CyclesProfiles cyclesDAOActor={cyclesDAOActor}/>
+              <PoweredCanisters cyclesDAOActor={cyclesDAOActor}/>
             </div>
           </div>
           </span>
           <span className="grow w-1/2">
-          <div className="flex flex-col bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700">
+          <div className="flex flex-col bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 h-128">
             <p className="font-normal text-gray-700 dark:text-gray-400 text-start m-5">Balance history (in T cycles)</p>
             <div className="App m-5">
               <CyclesBalance cyclesDAOActor={cyclesDAOActor}/>
@@ -92,7 +92,7 @@ function Dashboard({cyclesDAOActor}: any) {
         </div>
         <div className="flex flex-row space-x-10">
           <span className="grow w-1/2">
-          <div className="flex flex-col bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700">
+          <div className="flex flex-col bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 h-128">
             <p className="font-normal text-gray-700 dark:text-gray-400 text-start m-5">Total cycles received (in T cycles)</p>
             <div className="App m-5">
               <CyclesReceived cyclesDAOActor={cyclesDAOActor}/>
@@ -100,7 +100,7 @@ function Dashboard({cyclesDAOActor}: any) {
           </div>
           </span>
           <span className="grow w-1/2">
-          <div className="flex flex-col bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700">
+          <div className="flex flex-col bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 h-128">
             <p className="font-normal text-gray-700 dark:text-gray-400 text-start m-5">Total tokens minted (in T cycles)</p>
             <div className="App m-5">
               <TokensMinted cyclesDAOActor={cyclesDAOActor}/>
