@@ -65,7 +65,7 @@ const BarChart = ({ chartData, annotation }: any) => {
   );
 };
 
-function CyclesExchangeConfig({cyclesDAOActor}: any) {
+function CyclesExchangeConfig({exchangeConfig, cyclesBalance}: any) {
 
   const [chartData, setChartData] = useState({})
   const [haveData, setHaveData] = useState(false);
@@ -73,13 +73,12 @@ function CyclesExchangeConfig({cyclesDAOActor}: any) {
 
   const fetch_data = async () => {
 		try {
-      const cyclesExchangeConfig = await cyclesDAOActor.getCycleExchangeConfig() as Array<ExchangeLevel>;
-
       var currentThreshold : bigint = 0n;
       let listDatasets : any = [];
       let listAnnotations: any = [];
 
-      cyclesExchangeConfig.map((exchangeLevel) => {
+      exchangeConfig.map((exchangeLevel) => {
+        console.log()
         let previousThreshold = currentThreshold;
         currentThreshold = exchangeLevel.threshold;
         listDatasets.push({
@@ -89,7 +88,7 @@ function CyclesExchangeConfig({cyclesDAOActor}: any) {
         listAnnotations.push(getLabel(toTrillions(previousThreshold + (exchangeLevel.threshold - previousThreshold) / 2n ), exchangeLevel.rate_per_t));
       })
 
-      listAnnotations.push(getLine(toTrillions(await cyclesDAOActor.cyclesBalance())));
+      listAnnotations.push(getLine(toTrillions(cyclesBalance)));
 
       setChartData({
         labels: ["Cycles exchange config"],

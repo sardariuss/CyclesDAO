@@ -289,7 +289,7 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
 
   // @todo: this function is specific to the ledger token, it is usefull to
   // test but shouldn't be part of the cyclesDAO canister
-  public shared func getAccountIdentifier(
+  public query func getAccountIdentifier(
     account: Principal,
     ledger: Principal
   ) : async Accounts.AccountIdentifier {
@@ -301,7 +301,7 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
     };
   };
 
-  public shared func computeTokensInExchange(cycles_amount: Nat) : async Nat {
+  public query func computeTokensInExchange(cycles_amount: Nat) : async Nat {
     return Utils.computeTokensInExchange(cycles_exchange_config_, ExperimentalCycles.balance(), cycles_amount);
   };
 

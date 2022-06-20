@@ -29,7 +29,7 @@ module {
         };
       };
     });
-    assert(tokensToGive > 0);
+    assert(tokensToGive >= 0);
     // @todo: check the conversion performed by toInt and if it is what we want (i.e. trunc?)
     Int.abs(Float.toInt(tokensToGive));
   };

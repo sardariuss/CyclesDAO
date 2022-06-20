@@ -1,7 +1,12 @@
 import { DAOCyclesError, TokenStandard, Result } from "../../declarations/cyclesDAO/cyclesDAO.did.js";
 
 export const toTrillions = (cycles: bigint) => {
-	return Number(cycles / (10n ** 12n));
+	//return Number(cycles / (10n ** 12n));
+	return Number(cycles) / (10 ** 12);
+}
+
+export const fromTrillions = (trillions: number) => {
+	return BigInt(trillions)* 10n ** 12n;
 }
 
 export const toMilliSeconds = (timeNanoSeconds: bigint) => {
