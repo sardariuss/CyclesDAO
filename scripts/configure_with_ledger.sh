@@ -22,7 +22,6 @@ export LEDGER_PRINCIPAL=$(dfx canister id ledger)
 dfx canister call cyclesDAO configure '(variant { ConfigureDAOToken = record { standard = variant {LEDGER}; canister = principal "'${LEDGER_PRINCIPAL}'" } })'
 
 # To test the wallet_receive methods correctly transfer tokens back to the caller, executes the following commands
-# @todo: one shall find another way to get the account identifier than relying on the cyclesDAO canister
 export LEDGER_PRINCIPAL=$(dfx canister id ledger)
 export DEFAULT_WALLET_ID=$(dfx identity get-wallet)
 export DEFAULT_WALLET_ACCOUNT_BLOB=$(dfx canister call cyclesDAO getAccountIdentifier '(principal "'${DEFAULT_WALLET_ID}'", principal "'${LEDGER_PRINCIPAL}'")')
@@ -35,7 +34,6 @@ export DEFAULT_WALLET_ACCOUNT_BLOB=$(dfx canister call cyclesDAO getAccountIdent
 #dfx canister --wallet ${DEFAULT_WALLET_ID} call cyclesDAO walletReceive --with-cycles 2000000000000
 #echo "CyclesDAO cycles balance after wallet receive:"
 #dfx canister call cyclesDAO cyclesBalance
-## @todo: this shall be done manually, because the return blob is formatted inside parenthesis
 #echo "Run the following command by replacing ACCOUNT with the given account"
 #echo "Command: dfx canister call ledger account_balance 'record { account = ACCOUNT }'"
 #echo "Account: ${DEFAULT_WALLET_ACCOUNT_BLOB}"

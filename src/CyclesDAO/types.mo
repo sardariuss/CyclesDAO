@@ -11,6 +11,12 @@ module{
 
   // @todo: some types shouldn't be public
 
+  public type CreateCyclesDaoArgs = {
+    governance: Principal;
+    minimum_cycles_balance: Nat;
+    cycles_exchange_config: [ExchangeLevel];
+  };
+
   public type ConfigureDAOCommand = {
     #UpdateMintConfig: [ExchangeLevel];
     //sends any balance of a token/NFT to the provided principal
@@ -97,9 +103,9 @@ module{
     #DAOTokenCanisterNotOwned;
     #DAOTokenCanisterMintError;
     #NotAllowed;
-    #InvalidMintConfiguration;
     #NotFound;
     #NotEnoughCycles;
+    #InvalidCyclesExchangeConfig;
   };
 
   public type CyclesBalanceRecord = {

@@ -17,22 +17,20 @@ import Time                "mo:base/Time";
 import Trie                "mo:base/Trie";
 import TrieMap             "mo:base/TrieMap";
 
-shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this {
+shared actor class CyclesDAO(create_cycles_dao_args: Types.CreateCyclesDaoArgs) = this {
 
   // Members
 
-  private stable var governance_ : Principal = governance;
+  private stable var governance_ : Principal = create_cycles_dao_args.governance;
 
-  private stable var minimum_balance_ : Nat = minimum_balance;
+  private stable var minimum_cycles_balance_ : Nat = create_cycles_dao_args.minimum_cycles_balance;
 
   private stable var token_ : ?Types.Token = null;
 
-  private stable var cycles_exchange_config_ : [Types.ExchangeLevel] = [
-    { threshold = 2_000_000_000_000; rate_per_t = 1.0; },
-    { threshold = 10_000_000_000_000; rate_per_t = 0.8; },
-    { threshold = 50_000_000_000_000; rate_per_t = 0.4; },
-    { threshold = 150_000_000_000_000; rate_per_t = 0.2; }
-  ];
+  private stable var cycles_exchange_config_ : [Types.ExchangeLevel] = [];
+  if (Utils.isValidExchangeConfig(create_cycles_dao_args.cycles_exchange_config)) {
+    cycles_exchange_config_ := create_cycles_dao_args.cycles_exchange_config;
+  };
 
   private let allow_list_ : TrieMap.TrieMap<Principal, Types.PoweringParameters> = 
     TrieMap.TrieMap<Principal, Types.PoweringParameters>(
@@ -40,7 +38,8 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
     );
 
   private let cycles_balance_register_ : Buffer.Buffer<Types.CyclesBalanceRecord> = Buffer.Buffer(0);
-  
+  cycles_balance_register_.add({date = Time.now(); balance = ExperimentalCycles.balance()});
+
   private let cycles_sent_register_ : Buffer.Buffer<Types.CyclesSentRecord> = Buffer.Buffer(0);
 
   private let cycles_received_register_ : Buffer.Buffer<Types.CyclesReceivedRecord> = Buffer.Buffer(0);
@@ -58,10 +57,6 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
   private stable var cycles_received_register_array_ : [Types.CyclesReceivedRecord] = [];
 
   private stable var configure_command_register_array_ : [Types.ConfigureCommandRecord] = [];
-
-
-  // Add the initial amount of cycles the canister has at creation
-  cycles_balance_register_.add({date = Time.now(); balance = ExperimentalCycles.balance()});
 
 
   // Getters
@@ -83,7 +78,7 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
   };
 
   public query func getMinimumBalance() : async Nat {
-    return minimum_balance_;
+    return minimum_cycles_balance_;
   };
 
   public query func getCyclesBalanceRegister() : async [Types.CyclesBalanceRecord] {
@@ -120,6 +115,10 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
     if (availableCycles == 0) {
       return #err(#NoCyclesAdded);
     };
+    // Check if the cycles exchange config is set
+    if (cycles_exchange_config_.size() == 0){
+      return #err(#InvalidCyclesExchangeConfig);
+    };
     // Check if the max cycles has been reached
     let originalBalance = ExperimentalCycles.balance();
     let maxCycles = cycles_exchange_config_[cycles_exchange_config_.size() - 1].threshold;
@@ -143,7 +142,6 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
         // Mint the tokens
         let block_index = await Token.mintToken(token_.interface, Principal.fromActor(this), msg.caller, amount_tokens);
         // Update the registers
-
         cycles_balance_register_.add({date = now; balance = ExperimentalCycles.balance()});
         cycles_received_register_.add({
           date = now;
@@ -170,7 +168,7 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
     switch (command){
       case(#UpdateMintConfig cycles_exchange_config){
         if (not Utils.isValidExchangeConfig(cycles_exchange_config)) {
-          return #err(#InvalidMintConfiguration);
+          return #err(#InvalidCyclesExchangeConfig);
         };
         cycles_exchange_config_ := cycles_exchange_config;
       };
@@ -222,13 +220,14 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
         governance_ := canister;
       };
       case(#SetMinimumBalance {minimum_balance}){
-        minimum_balance_ := minimum_balance;
+        minimum_cycles_balance_ := minimum_balance;
       };
     };
     configure_command_register_.add({date = Time.now(); governance = governance_; command = command;});
     return #ok;
   };
 
+  // @todo: what if one canister traps? it will block all the others from receiving the cycles
   public shared func distributeCycles() : async Bool {
     var success : Bool = true;
     for ((principal, {balance_threshold; balance_target}) in allow_list_.entries()){
@@ -264,20 +263,20 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
     let current_balance = await canister.balanceCycles();
     let difference : Int = balance_threshold - current_balance;
     if (difference <= 0) {
-      Debug.print("difference <= 0"); //@todo
+      Debug.print("difference <= 0"); //@todo: remove debug.print
       return true;
     };
     let refill_amount : Int = balance_target - current_balance;
-    let available_cycles : Int = ExperimentalCycles.balance() - minimum_balance_;
+    let available_cycles : Int = ExperimentalCycles.balance() - minimum_cycles_balance_;
     if (available_cycles < refill_amount) {
-      Debug.print("available_cycles < refill_amount"); //@todo
+      Debug.print("available_cycles < refill_amount"); //@todo: remove debug.print
       return false;
     };
     ExperimentalCycles.add(Int.abs(refill_amount));
     await canister.acceptCycles();
     let refund_amount = ExperimentalCycles.refunded();
     if (refund_amount == refill_amount) {
-      Debug.print("refund_amount == refill_amount"); //@todo
+      Debug.print("refund_amount == refill_amount"); //@todo: remove debug.print
       return false;
     };
     let now = Time.now();
