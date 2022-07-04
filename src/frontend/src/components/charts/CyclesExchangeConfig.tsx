@@ -100,6 +100,7 @@ function CyclesExchangeConfig({exchangeConfig, cyclesBalance}: any) {
       setHaveData(true);
 
     } catch (err) {
+      console.error(err);
       setHaveData(false);
 		}
   }

@@ -12,7 +12,7 @@ function ConfigureHistory({cyclesDAOActor}: any) {
       setCommandHistory(await cyclesDAOActor.getConfigureCommandRegister() as Array<ConfigureCommandRecord>);
     } catch (err) {
 			// handle error (or empty response)
-			console.log(err);
+			console.error(err);
 		}
   }
 

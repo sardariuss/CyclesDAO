@@ -18,17 +18,18 @@ dfx canister call cyclesDAO configure '(variant { ConfigureDAOToken = record { s
 # To test the wallet_receive methods correctly transfer tokens back to the caller, executes the following commands
 export DEFAULT_WALLET_ID=$(dfx identity get-wallet)
 
-echo "CyclesDAO cycles balance before wallet receive:"
-dfx canister call cyclesDAO cyclesBalance
-echo "Default wallet DIP20 balance before wallet receive:"
-dfx canister call dip20 balanceOf 'principal "'${DEFAULT_WALLET_ID}'"'
+# To verify if it worked you can perform a first wallet_receive and then
+# check the account balance by uncommenting the following lines!
 
-dfx canister --wallet ${DEFAULT_WALLET_ID} call cyclesDAO walletReceive --with-cycles 8000000000000
-
-echo "CyclesDAO cycles balance after wallet receive:"
-dfx canister call cyclesDAO cyclesBalance
-echo "Default wallet DIP20 balance after wallet receive:"
-dfx canister call dip20 balanceOf 'principal "'${DEFAULT_WALLET_ID}'"'
+#echo "CyclesDAO cycles balance before wallet receive:"
+#dfx canister call cyclesDAO cyclesBalance
+#echo "Default wallet DIP20 balance before wallet receive:"
+#dfx canister call dip20 balanceOf 'principal "'${DEFAULT_WALLET_ID}'"'
+#dfx canister --wallet ${DEFAULT_WALLET_ID} call cyclesDAO walletReceive --with-cycles 8000000000000
+#echo "CyclesDAO cycles balance after wallet receive:"
+#dfx canister call cyclesDAO cyclesBalance
+#echo "Default wallet DIP20 balance after wallet receive:"
+#dfx canister call dip20 balanceOf 'principal "'${DEFAULT_WALLET_ID}'"'
 
 # Go back to initial directory
 cd scripts

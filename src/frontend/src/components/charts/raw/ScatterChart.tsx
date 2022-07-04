@@ -9,6 +9,9 @@ export const ScatterChart = ({ chartData }: any) => {
           elements: {
             point:{
                 radius: 0
+            },
+            line:{
+              borderWidth: 1
             }
           },
           scales:{

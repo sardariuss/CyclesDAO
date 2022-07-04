@@ -13,7 +13,7 @@ function Governance({cyclesDAOActor}: any) {
       setGovernance((await cyclesDAOActor.getGovernance() as Principal).toString());
     } catch (err) {
 			// handle error (or empty response)
-			console.log(err);
+			console.error(err);
 		}
   }
 

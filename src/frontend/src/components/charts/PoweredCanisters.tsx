@@ -90,6 +90,7 @@ function PoweredCanisters({cyclesDAOActor}: any) {
       setHaveData(true);
 
     } catch (err) {
+      console.error(err);
       setHaveData(false);
 		}
   }

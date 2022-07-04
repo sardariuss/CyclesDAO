@@ -27,17 +27,18 @@ export LEDGER_PRINCIPAL=$(dfx canister id ledger)
 export DEFAULT_WALLET_ID=$(dfx identity get-wallet)
 export DEFAULT_WALLET_ACCOUNT_BLOB=$(dfx canister call cyclesDAO getAccountIdentifier '(principal "'${DEFAULT_WALLET_ID}'", principal "'${LEDGER_PRINCIPAL}'")')
 
-echo "CyclesDAO cycles balance before wallet receive:"
-dfx canister call cyclesDAO cyclesBalance
+# To verify if it worked you can perform a first wallet_receive and then
+# check the account balance by uncommenting the following lines!
 
-dfx canister --wallet ${DEFAULT_WALLET_ID} call cyclesDAO walletReceive --with-cycles 2000000000000
-
-echo "CyclesDAO cycles balance after wallet receive:"
-dfx canister call cyclesDAO cyclesBalance
-# @todo: this shall be done manually, because the return blob is formatted inside parenthesis
-echo "Run the following command by replacing ACCOUNT with the given account"
-echo "Command: dfx canister call ledger account_balance 'record { account = ACCOUNT }'"
-echo "Account: ${DEFAULT_WALLET_ACCOUNT_BLOB}"
+#echo "CyclesDAO cycles balance before wallet receive:"
+#dfx canister call cyclesDAO cyclesBalance
+#dfx canister --wallet ${DEFAULT_WALLET_ID} call cyclesDAO walletReceive --with-cycles 2000000000000
+#echo "CyclesDAO cycles balance after wallet receive:"
+#dfx canister call cyclesDAO cyclesBalance
+## @todo: this shall be done manually, because the return blob is formatted inside parenthesis
+#echo "Run the following command by replacing ACCOUNT with the given account"
+#echo "Command: dfx canister call ledger account_balance 'record { account = ACCOUNT }'"
+#echo "Account: ${DEFAULT_WALLET_ACCOUNT_BLOB}"
 
 # Go back to initial directory
 cd scripts

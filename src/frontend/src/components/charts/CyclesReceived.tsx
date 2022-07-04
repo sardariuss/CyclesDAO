@@ -21,6 +21,11 @@ function CyclesSent({cyclesDAOActor}: any) {
         accumulatedCyclesDataset.push({x: toMilliSeconds(record.date), y: toTrillions(accumulatedCyclesAmount + record.cycle_amount)});
         accumulatedCyclesAmount += record.cycle_amount;
       });
+      // If there is only one point, add a dummy point on the bottom to be able to see something
+      // (required because we removed the visualization of point but use areas instead)
+      if (accumulatedCyclesDataset.length === 1) {
+        accumulatedCyclesDataset.push({x: accumulatedCyclesDataset[0].x, y: 0});
+      }
       
       setChartData({
         datasets: [
@@ -38,6 +43,7 @@ function CyclesSent({cyclesDAOActor}: any) {
       setHaveData(true);
 
     } catch (err) {
+      console.error(err);
       setHaveData(false);
 		}
   }

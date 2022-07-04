@@ -60,6 +60,10 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
   private stable var configure_command_register_array_ : [Types.ConfigureCommandRecord] = [];
 
 
+  // Add the initial amount of cycles the canister has at creation
+  cycles_balance_register_.add({date = Time.now(); balance = ExperimentalCycles.balance()});
+
+
   // Getters
 
   public query func getGovernance() : async Principal {
@@ -139,6 +143,7 @@ shared actor class CyclesDAO(governance: Principal, minimum_balance: Nat) = this
         // Mint the tokens
         let block_index = await Token.mintToken(token_.interface, Principal.fromActor(this), msg.caller, amount_tokens);
         // Update the registers
+
         cycles_balance_register_.add({date = now; balance = ExperimentalCycles.balance()});
         cycles_received_register_.add({
           date = now;

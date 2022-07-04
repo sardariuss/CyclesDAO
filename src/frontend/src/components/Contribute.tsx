@@ -107,7 +107,7 @@ function Contribute({cyclesDAOActor}: any) {
       setExchangeConfig(await cyclesDAOActor.getCycleExchangeConfig() as Array<ExchangeLevel>);
     } catch (err) {
 			// handle error (or empty response)
-			console.log(err);
+			console.error(err);
 		}
   }
 
@@ -160,6 +160,7 @@ function Contribute({cyclesDAOActor}: any) {
       setHaveData(true);
 
     } catch (err) {
+      console.error(err);
       setHaveData(false);
 		}
   }

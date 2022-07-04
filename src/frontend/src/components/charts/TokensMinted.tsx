@@ -21,6 +21,11 @@ function TokensMinted({cyclesDAOActor}: any) {
         accumulatedTokensDataset.push({x: toMilliSeconds(record.date), y: toTrillions(accumulatedTokensAmount + record.token_amount)});
         accumulatedTokensAmount += record.token_amount;
       });
+      // If there is only one point, add a dummy point on the bottom to be able to see something
+      // (required because we removed the visualization of point but use areas instead)
+      if (accumulatedTokensDataset.length === 1) {
+        accumulatedTokensDataset.push({x: accumulatedTokensDataset[0].x, y: 0});
+      }
       
       setChartData({
         datasets: [
@@ -38,6 +43,7 @@ function TokensMinted({cyclesDAOActor}: any) {
       setHaveData(true);
 
     } catch (err) {
+      console.error(err);
       setHaveData(false);
 		}
   }

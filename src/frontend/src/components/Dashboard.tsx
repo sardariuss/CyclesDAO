@@ -39,7 +39,7 @@ function Dashboard({cyclesDAOActor}: any) {
 
     } catch (err) {
 			// handle error (or empty response)
-			console.log(err);
+			console.error(err);
 		}
   }
 

@@ -12,11 +12,11 @@ export CARLOS_WALLET=$(dfx identity get-wallet)
 dfx canister --wallet ${CARLOS_WALLET} call cyclesDAO walletReceive --with-cycles 2000000000000
 dfx canister --wallet ${CARLOS_WALLET} call cyclesDAO walletReceive --with-cycles 3000000000000
 
-# David gives 10 trillions cycles
+# David gives 5 trillion cycles
 dfx identity new David
 dfx identity use David
 export DAVID_WALLET=$(dfx identity get-wallet)
-dfx canister --wallet ${DAVID_WALLET} call cyclesDAO walletReceive --with-cycles 10000000000000
+dfx canister --wallet ${DAVID_WALLET} call cyclesDAO walletReceive --with-cycles 5000000000000
 
 # Switch back to default identity
 dfx identity use default

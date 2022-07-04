@@ -12,7 +12,7 @@ function TradeHistory({cyclesDAOActor}: any) {
       setCyclesReceivedHistory(await cyclesDAOActor.getCyclesReceivedRegister() as Array<CyclesReceivedRecord>);
     } catch (err) {
 			// handle error (or empty response)
-			console.log(err);
+			console.error(err);
 		}
   }
 
