@@ -71,7 +71,7 @@ call cyclesDao.configure(variant {UpdateMintConfig =  vec {
 }});
 assert _ == variant { ok };
 
-load "common/configure_dip20.sh";
+load "common/config_token_dip20.sh";
 
 // Add 1 million cycles, verify CyclesDAO's balance is 3 million cycles
 // and default's balance is 0.8 million tokens

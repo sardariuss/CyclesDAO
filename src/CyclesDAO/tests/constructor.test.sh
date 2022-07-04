@@ -35,6 +35,8 @@ assert _ == vec{};
 call cyclesDao.getCyclesProfile();
 assert _ == vec{};
 
+load "common/config_gov_basic_dao.sh";
+
 //@todo: this fails with thread 'main' panicked at assertion failed: `(left == right)`
 //Diff < left / right > :
 //<null

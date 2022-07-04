@@ -25,4 +25,4 @@ call dip20.getMetadata();
 assert _.owner == cyclesDao;
 
 call cyclesDao.configure(variant {ConfigureDAOToken = record {standard = variant{DIP20}; canister = dip20; token_identifier=opt("")}});
-assert _ == variant { ok }
+assert _ == variant { ok };

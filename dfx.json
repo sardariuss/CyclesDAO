@@ -15,23 +15,23 @@
     },
     "toPowerUp1": {
       "type": "motoko",
-      "main": "src/CyclesDAO/tests/toPowerUp.mo"
+      "main": "src/ToPowerUp/toPowerUp.mo"
     },
     "toPowerUp2": {
       "type": "motoko",
-      "main": "src/CyclesDAO/tests/toPowerUp.mo"
+      "main": "src/ToPowerUp/toPowerUp.mo"
     },
     "toPowerUp3": {
       "type": "motoko",
-      "main": "src/CyclesDAO/tests/toPowerUp.mo"
+      "main": "src/ToPowerUp/toPowerUp.mo"
     },
     "toPowerUp4": {
       "type": "motoko",
-      "main": "src/CyclesDAO/tests/toPowerUp.mo"
+      "main": "src/ToPowerUp/toPowerUp.mo"
     },
     "toPowerUp5": {
       "type": "motoko",
-      "main": "src/CyclesDAO/tests/toPowerUp.mo"
+      "main": "src/ToPowerUp/toPowerUp.mo"
     },
     "dip20": {
       "type": "custom",
@@ -39,8 +39,9 @@
       "wasm": "src/DIP20/dip20.wasm"
     },
     "basicDAO": {
-       "type": "motoko",
-       "main": "src/BasicDAO/src/Main.mo"
+      "type": "custom",
+      "candid": "src/BasicDAO/basicDAO.did",
+      "wasm": "src/Ledger/basicDAO.wasm"
     },
     "frontend": {
       "frontend": {
