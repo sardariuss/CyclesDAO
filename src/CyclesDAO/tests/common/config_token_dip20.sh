@@ -14,7 +14,7 @@ function install(wasm, args, cycle) {
   S
 };
 
-// Create the TokenDAO (DIP20) canister
+// Create the DIP20 canister
 import dip20Interface = "2vxsx-fae" as "../../../DIP20/dip20.did";
 let dip20args = encode dip20Interface.__init_args(
   "Test Token Logo", "Test Token Name", "Test Token Symbol", 3, 10000000000000000, cyclesDao, 10000);
