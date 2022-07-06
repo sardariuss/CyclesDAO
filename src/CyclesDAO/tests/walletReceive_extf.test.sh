@@ -13,15 +13,15 @@ let init_cycles_config = vec {
 };
 let initial_balance = (0 : nat);
 
-load "../common/create_cycles_dao.sh";
+load "common/create_cycles_dao.sh";
 
 // Verify the original balance
 call cyclesDao.cyclesBalance();
 assert _ == (0 : nat);
 
-import default_wallet = "rwlgt-iiaaa-aaaaa-aaaaa-cai" as "../wallet.did";
+import default_wallet = "rwlgt-iiaaa-aaaaa-aaaaa-cai" as "wallet.did";
 
-load "../common/config_token_extf.sh";
+load "common/config_token_extf.sh";
 
 // Add 1 million cycles, verify CyclesDAO's balance is 1 million cycles
 // and default's balance is 1 million tokens
