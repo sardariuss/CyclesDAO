@@ -194,8 +194,12 @@ module {
             case (#err(_)){
               #err(#DAOTokenCanisterMintError);      
             };
+            // @todo: see the extension Archive.mo in Extendable-Token standard. One could retrieve
+            // the transaction IDs for a given user, and select the most recent one, but this
+            // seems a bit dangerous...
+            // For now always return 0 for the transaction ID
             case (#ok(balance)){
-              #ok(balance); // @todo: it should not be the balance here!
+              #ok(0);
             };
           };
         };

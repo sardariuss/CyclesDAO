@@ -305,6 +305,12 @@ shared actor class CyclesDAO(create_cycles_dao_args: Types.CreateCyclesDaoArgs) 
     };
   };
 
+  // @todo: this function is used for the tests only (see walletReceive/token_extf.test.sh),
+  // it shouldn't be part of the cyclesDAO canister
+  public query func toText(principal: Principal) : async Text {
+    return Principal.toText(principal);
+  };
+
   public query func computeTokensInExchange(cycles_amount: Nat) : async Nat {
     return Utils.computeTokensInExchange(cycles_exchange_config_, ExperimentalCycles.balance(), cycles_amount);
   };
