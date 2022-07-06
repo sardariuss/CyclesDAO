@@ -169,6 +169,7 @@ shared actor class CyclesDAO(create_cycles_dao_args: Types.CreateCyclesDaoArgs) 
     switch (command){
       case(#SetCycleExchangeConfig cycles_exchange_config){
         if (not Utils.isValidExchangeConfig(cycles_exchange_config)) {
+          cycles_exchange_config_ := [];
           return #err(#InvalidCyclesExchangeConfig);
         };
         cycles_exchange_config_ := cycles_exchange_config;

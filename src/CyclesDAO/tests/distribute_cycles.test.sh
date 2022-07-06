@@ -36,7 +36,6 @@ let argsCyclesDao = encode cyclesDaoInterface.__init_args(
   }
 );
 let wasmCyclesDao = file "../../../.dfx/local/canisters/cyclesDAO/cyclesDAO.wasm";
-let initial_balance = (1_000_000_000_000 : nat);
 let cyclesDao = install(wasmCyclesDao, argsCyclesDao, opt(initial_balance));
 
 let wasmToPowerUp = file "../../../.dfx/local/canisters/ToPowerUp/ToPowerUp.wasm";
