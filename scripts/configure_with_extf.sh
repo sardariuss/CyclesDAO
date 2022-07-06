@@ -14,7 +14,7 @@ dfx deploy extf --argument="(\"EXT FUNGIBLE EXAMPLE\", \"EXTF\", 8, 100_000_000_
 
 # Configure CyclesDAO to use EXTF as token
 export EXTF_PRINCIPAL=$(dfx canister id extf)
-dfx canister call cyclesDAO configure '(variant { ConfigureDAOToken = record { standard = variant {EXT}; canister = principal "'${EXTF_PRINCIPAL}'"; token_identifier = opt("'${EXTF_PRINCIPAL}'") } })'
+dfx canister call cyclesDAO configure '(variant { SetToken = record { standard = variant {EXT}; canister = principal "'${EXTF_PRINCIPAL}'"; token_identifier = opt("'${EXTF_PRINCIPAL}'") } })'
 
 # To verify if it worked you can perform a first wallet_receive and then
 # check the account balance by uncommenting the following lines!

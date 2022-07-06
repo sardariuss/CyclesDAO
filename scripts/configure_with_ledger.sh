@@ -20,7 +20,7 @@ cp src/Ledger/ledger.public.did src/Ledger/ledger.did
 
 # Configure CyclesDAO to use Ledger as token
 export LEDGER_PRINCIPAL=$(dfx canister id ledger)
-dfx canister call cyclesDAO configure '(variant { ConfigureDAOToken = record { standard = variant {LEDGER}; canister = principal "'${LEDGER_PRINCIPAL}'" } })'
+dfx canister call cyclesDAO configure '(variant { SetToken = record { standard = variant {LEDGER}; canister = principal "'${LEDGER_PRINCIPAL}'" } })'
 
 # To verify if it worked you can perform a first wallet_receive and then
 # check the account balance by uncommenting the following lines!

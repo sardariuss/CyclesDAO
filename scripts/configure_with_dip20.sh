@@ -14,7 +14,7 @@ dfx deploy dip20 --argument="(\"data:image/jpeg;base64,...\", \"DIP20 Dummy\", \
 
 # Configure CyclesDAO to use DIP20 as token
 export DIP20_PRINCIPAL=$(dfx canister id dip20)
-dfx canister call cyclesDAO configure '(variant { ConfigureDAOToken = record { standard = variant {DIP20}; canister = principal "'${DIP20_PRINCIPAL}'" } })'
+dfx canister call cyclesDAO configure '(variant { SetToken = record { standard = variant {DIP20}; canister = principal "'${DIP20_PRINCIPAL}'" } })'
 
 # To verify if it worked you can perform a first wallet_receive and then
 # check the account balance by uncommenting the following lines!

@@ -43,6 +43,7 @@ module {
       if (level.threshold < lastThreshold) {
         isValid := false;
       };
+      lastThreshold := level.threshold;
     });
     isValid;
   };

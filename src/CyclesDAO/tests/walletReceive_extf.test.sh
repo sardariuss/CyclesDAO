@@ -22,6 +22,7 @@ assert _ == (0 : nat);
 import default_wallet = "rwlgt-iiaaa-aaaaa-aaaaa-cai" as "wallet.did";
 
 load "common/config_token_extf.sh";
+assert _ == variant { ok };
 
 // Add 1 million cycles, verify CyclesDAO's balance is 1 million cycles
 // and default's balance is 1 million tokens

@@ -167,7 +167,7 @@ shared actor class CyclesDAO(create_cycles_dao_args: Types.CreateCyclesDaoArgs) 
       return #err(#NotAllowed);
     };
     switch (command){
-      case(#UpdateMintConfig cycles_exchange_config){
+      case(#SetCycleExchangeConfig cycles_exchange_config){
         if (not Utils.isValidExchangeConfig(cycles_exchange_config)) {
           return #err(#InvalidCyclesExchangeConfig);
         };
@@ -189,7 +189,7 @@ shared actor class CyclesDAO(create_cycles_dao_args: Types.CreateCyclesDaoArgs) 
           };
         };
       };
-      case(#ConfigureDAOToken {standard; canister; token_identifier}){
+      case(#SetToken {standard; canister; token_identifier}){
         token_ := null;
         switch(await Token.getToken(standard, canister, token_identifier)){
           case(#err(err)){
@@ -217,7 +217,7 @@ shared actor class CyclesDAO(create_cycles_dao_args: Types.CreateCyclesDaoArgs) 
           return #err(#NotFound);
         };
       };
-      case(#ConfigureGovernanceCanister {canister}){
+      case(#SetGovernance {canister}){
         governance_ := canister;
       };
       case(#SetMinimumBalance {minimum_balance}){

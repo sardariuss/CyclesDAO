@@ -22,8 +22,7 @@ assert _ == (0 : nat);
 import default_wallet = "rwlgt-iiaaa-aaaaa-aaaaa-cai" as "wallet.did";
 
 load "common/config_token_ledger.sh";
-
-// @todo: once the config_token_ledger.sh script is fixed, run and verify this test
+assert _ == variant { ok };
 
 let default_account = call cyclesDao.getAccountIdentifier(default_wallet, ledger);
 

@@ -26,14 +26,14 @@ function ConfigureHistory({cyclesDAOActor}: any) {
   }
 
   const commandToString = (commandType: ConfigureDAOCommand) => {
-    if ('UpdateMintConfig' in commandType){
-      return 'UpdateMintConfig';
+    if ('SetCycleExchangeConfig' in commandType){
+      return 'SetCycleExchangeConfig';
     }
     if ('DistributeBalance' in commandType){
       return 'DistributeBalance';
     }
-    if ('ConfigureDAOToken' in commandType){
-      return 'ConfigureDAOToken';
+    if ('SetToken' in commandType){
+      return 'SetToken';
     }
     if ('AddAllowList' in commandType){
       return 'AddAllowList';
@@ -41,8 +41,8 @@ function ConfigureHistory({cyclesDAOActor}: any) {
     if ('RemoveAllowList' in commandType){
       return 'RemoveAllowList';
     }
-    if ('ConfigureGovernanceCanister' in commandType){
-      return 'ConfigureGovernanceCanister';
+    if ('SetGovernance' in commandType){
+      return 'SetGovernance';
     }
     if ('SetMinimumBalance' in commandType){
       return 'SetMinimumBalance';

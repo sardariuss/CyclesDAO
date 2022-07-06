@@ -51,5 +51,4 @@ let ledgerArgs = encode ledgerInterface.__init_args(ledgerArgsDictionary);
 let ledgerWasm = file "../../../Ledger/ledger.wasm";
 let ledger = install(ledgerWasm, ledgerArgs, null);
 
-call cyclesDao.configure(variant {ConfigureDAOToken = record {standard = variant{LEDGER}; canister = ledger; token_identifier=opt("")}});
-assert _ == variant { ok };
+call cyclesDao.configure(variant {SetToken = record {standard = variant{LEDGER}; canister = ledger; token_identifier=opt("")}});

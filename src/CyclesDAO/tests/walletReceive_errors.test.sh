@@ -41,7 +41,7 @@ decode as cyclesDao.walletReceive _.Ok.return;
 assert _ == variant { err = variant { InvalidCyclesExchangeConfig } };
 
 // Configure with a valid cycles exchange config
-call cyclesDao.configure( variant { UpdateMintConfig = vec {
+call cyclesDao.configure( variant { SetCycleExchangeConfig = vec {
   record { threshold = 1_000_000_000 : nat; rate_per_t = 1.0 : float64 };
 }});
 assert _ == variant { ok };

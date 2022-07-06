@@ -23,5 +23,4 @@ let extf = install(extf_wasm, extf_args, null);
 
 let token_identifier = call cyclesDao.toText(extf);
 
-call cyclesDao.configure(variant {ConfigureDAOToken = record {standard = variant{EXT}; canister = extf; token_identifier=opt(token_identifier)}});
-assert _ == variant { ok };
+call cyclesDao.configure(variant {SetToken = record {standard = variant{EXT}; canister = extf; token_identifier=opt(token_identifier)}});

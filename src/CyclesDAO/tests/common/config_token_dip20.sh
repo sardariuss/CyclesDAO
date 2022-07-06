@@ -24,5 +24,4 @@ let dip20 = install(dip20wasm, dip20args, null);
 call dip20.getMetadata();
 assert _.owner == cyclesDao;
 
-call cyclesDao.configure(variant {ConfigureDAOToken = record {standard = variant{DIP20}; canister = dip20; token_identifier=opt("")}});
-assert _ == variant { ok };
+call cyclesDao.configure(variant {SetToken = record {standard = variant{DIP20}; canister = dip20; token_identifier=opt("")}});

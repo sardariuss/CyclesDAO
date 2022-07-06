@@ -28,7 +28,7 @@ dfx deploy basicDAO --argument="(record {
 # Configure the CyclesDAO canister to be governed by the BasicDAO
 dfx identity use default
 export BASIC_DAO=$(dfx canister id basicDAO)
-dfx canister call cyclesDAO configure "(variant {ConfigureGovernanceCanister = record {canister = principal \"$BASIC_DAO\"}})"
+dfx canister call cyclesDAO configure "(variant {SetGovernance = record {canister = principal \"$BASIC_DAO\"}})"
 
 # Go back to initial directory
 cd scripts

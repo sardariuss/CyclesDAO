@@ -16,8 +16,7 @@ let basicDaoArgs = encode basicDaoInterface.__init_args(
 let basicDaoWasm = file "../../../BasicDAO/basicDAO.wasm";
 let basicDao = install(basicDaoWasm, basicDaoArgs, null);
 
-call cyclesDao.configure(variant {ConfigureGovernanceCanister = record {canister = basicDao}});
-assert _ == variant { ok };
+call cyclesDao.configure(variant {SetGovernance = record {canister = basicDao}});
 
 function configure_cycles_dao(configureCommand) {
   identity default;

@@ -18,7 +18,7 @@ module{
   };
 
   public type ConfigureDAOCommand = {
-    #UpdateMintConfig: [ExchangeLevel];
+    #SetCycleExchangeConfig: [ExchangeLevel];
     //sends any balance of a token/NFT to the provided principal
     #DistributeBalance: {
       to: Principal;
@@ -29,7 +29,7 @@ module{
       token_identifier: ?Text;
       is_fungible: Bool;
     };
-    #ConfigureDAOToken: {
+    #SetToken: {
       standard: TokenStandard;
       canister: Principal;
       token_identifier: ?Text;
@@ -43,7 +43,7 @@ module{
     #RemoveAllowList: {
       canister: Principal;
     };
-    #ConfigureGovernanceCanister: {
+    #SetGovernance: {
       canister: Principal;
     };
     #SetMinimumBalance: {
