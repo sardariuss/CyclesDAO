@@ -39,7 +39,7 @@ let _ = call default_wallet.wallet_call(
   }
 );
 decode as cyclesDao.walletReceive _.Ok.return;
-assert _ == variant { ok = (0 : nat)};
+assert _ == variant { ok = opt (0 : nat) };
 call cyclesDao.cyclesBalance();
 assert _ == (1_000_000_000 : nat);
 call ledger.account_balance(default_account);
@@ -57,7 +57,7 @@ let _ = call default_wallet.wallet_call(
   }
 );
 decode as cyclesDao.walletReceive _.Ok.return;
-assert _ == variant { ok = (1 : nat)};
+assert _ == variant { ok = opt (1 : nat)};
 call cyclesDao.cyclesBalance();
 assert _ == (3_000_000_000 : nat);
 call ledger.account_balance(default_account);
@@ -77,12 +77,12 @@ assert _[0].cycle_amount == (1_000_000_000 : nat);
 assert _[0].token_amount == (1_000_000_000 : nat);
 assert _[0].token_standard == variant {LEDGER};
 assert _[0].token_principal == (ledger : principal);
-assert _[0].block_index.ok == (0 : nat);
+assert _[0].block_index == variant { ok = opt (0 : nat) };
 // Second transaction
 assert _[1].from == (default_wallet : principal);
 assert _[1].cycle_amount == (2_000_000_000 : nat);
 assert _[1].token_amount == (1_800_000_000 : nat);
 assert _[1].token_standard == variant {LEDGER};
 assert _[1].token_principal == (ledger : principal);
-assert _[1].block_index.ok == (1 : nat);
+assert _[1].block_index == variant { ok = opt (1 : nat) };
 

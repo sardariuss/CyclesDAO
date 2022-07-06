@@ -14,6 +14,17 @@ let initial_balance = (1_000_000_000_000 : nat);
 load "common/create_cycles_dao.sh";
 
 // Test the cyclesDAO getters after construction
+call cyclesDao.getToken();
+assert _ == ( null : opt record {
+  standard: variant {
+    DIP20;
+    LEDGER;
+    DIP721;
+    EXT;
+    NFT_ORIGYN;
+  };
+  "principal": principal;
+});
 call cyclesDao.cyclesBalance();
 assert _ == initial_balance;
 call cyclesDao.getGovernance();
@@ -34,12 +45,3 @@ call cyclesDao.getConfigureCommandRegister();
 assert _ == vec{};
 call cyclesDao.getCyclesProfile();
 assert _ == vec{};
-
-load "common/config_gov_basic_dao.sh";
-
-//@todo: this fails with thread 'main' panicked at assertion failed: `(left == right)`
-//Diff < left / right > :
-//<null
-//>null : null
-//call cyclesDao.getToken();
-//assert _ == null;

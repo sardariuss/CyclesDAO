@@ -109,7 +109,7 @@ shared actor class CyclesDAO(create_cycles_dao_args: Types.CreateCyclesDaoArgs) 
   };
 
   public shared(msg) func walletReceive() : 
-    async Result.Result<Nat, Types.DAOCyclesError> {
+    async Result.Result<?Nat, Types.DAOCyclesError> {
     // Check if cycles are available
     let availableCycles = ExperimentalCycles.available();
     if (availableCycles == 0) {
@@ -140,6 +140,7 @@ shared actor class CyclesDAO(create_cycles_dao_args: Types.CreateCyclesDaoArgs) 
         let amount_tokens = Utils.computeTokensInExchange(
           cycles_exchange_config_, originalBalance, acceptedCycles);
         // Mint the tokens
+        // @todo: discuss what to do if the minting ever fails
         let block_index = await Token.mintToken(token_.interface, Principal.fromActor(this), msg.caller, amount_tokens);
         // Update the registers
         cycles_balance_register_.add({date = now; balance = ExperimentalCycles.balance()});

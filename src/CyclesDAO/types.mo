@@ -132,7 +132,7 @@ module{
     token_amount: Nat;
     token_standard: TokenStandard;
     token_principal: Principal;
-    block_index: Result.Result<Nat, DAOCyclesError>;
+    block_index: Result.Result<?Nat, DAOCyclesError>;
   };
 
   public type ConfigureCommandRecord = {

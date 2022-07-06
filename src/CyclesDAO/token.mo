@@ -135,7 +135,7 @@ module {
     from: Principal,
     to: Principal, 
     amount: Nat
-  ) : async Result.Result<Nat, Types.DAOCyclesError> {
+  ) : async Result.Result<?Nat, Types.DAOCyclesError> {
     switch(token){
       case(#DIP20({interface})){
         switch (await interface.mint(to, amount)){
@@ -143,7 +143,7 @@ module {
             #err(#DAOTokenCanisterMintError);
           };
           case(#Ok(tx_counter)){
-            #ok(tx_counter);
+            #ok(?tx_counter);
           };
         };
       };
@@ -165,7 +165,7 @@ module {
                 #err(#DAOTokenCanisterMintError);
               };
               case(#Ok(block_index)){
-                #ok(Nat64.toNat(block_index));
+                #ok(?Nat64.toNat(block_index));
               };
             };
           };
@@ -197,9 +197,8 @@ module {
             // @todo: see the extension Archive.mo in Extendable-Token standard. One could retrieve
             // the transaction IDs for a given user, and select the most recent one, but this
             // seems a bit dangerous...
-            // For now always return 0 for the transaction ID
             case (#ok(balance)){
-              #ok(0);
+              #ok(null);
             };
           };
         };
