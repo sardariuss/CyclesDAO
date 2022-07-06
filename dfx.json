@@ -1,11 +1,6 @@
 {
   "version": 1,
   "canisters": {
-    "ledger": {
-      "type": "custom",
-      "candid": "src/Ledger/ledger.did",
-      "wasm": "src/Ledger/ledger.wasm"
-    },
     "cyclesDAO": {
       "type": "motoko",
       "main": "src/CyclesDAO/main.mo",
@@ -37,6 +32,16 @@
       "type": "custom",
       "candid": "src/DIP20/dip20.did",
       "wasm": "src/DIP20/dip20.wasm"
+    },
+    "ledger": {
+      "type": "custom",
+      "candid": "src/Ledger/ledger.did",
+      "wasm": "src/Ledger/ledger.wasm"
+    },
+    "extf":{
+      "type": "custom",
+      "candid": "src/ExtFungible/extf.did",
+      "wasm": "src/ExtFungible/extf.wasm"
     },
     "basicDAO": {
       "type": "custom",
