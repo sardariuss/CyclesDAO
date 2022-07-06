@@ -30,7 +30,7 @@ assert _ == valid_cycles_config;
 
 // Assert one cannot set an invalid cycle exchange config
 call cyclesDao.configure(variant {SetCycleExchangeConfig = invalid_cycles_config});
-assert _ == variant { err = variant { InvalidCyclesExchangeConfig } };
+assert _ == variant { err = variant { InvalidCycleConfig } };
 
 // Assert the cycle exchange config is empty
 call cyclesDao.getCycleExchangeConfig();

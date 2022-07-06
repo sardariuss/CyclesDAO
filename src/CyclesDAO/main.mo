@@ -117,7 +117,7 @@ shared actor class CyclesDAO(create_cycles_dao_args: Types.CreateCyclesDaoArgs) 
     };
     // Check if the cycles exchange config is set
     if (cycles_exchange_config_.size() == 0){
-      return #err(#InvalidCyclesExchangeConfig);
+      return #err(#InvalidCycleConfig);
     };
     // Check if the max cycles has been reached
     let originalBalance = ExperimentalCycles.balance();
@@ -170,7 +170,7 @@ shared actor class CyclesDAO(create_cycles_dao_args: Types.CreateCyclesDaoArgs) 
       case(#SetCycleExchangeConfig cycles_exchange_config){
         if (not Utils.isValidExchangeConfig(cycles_exchange_config)) {
           cycles_exchange_config_ := [];
-          return #err(#InvalidCyclesExchangeConfig);
+          return #err(#InvalidCycleConfig);
         };
         cycles_exchange_config_ := cycles_exchange_config;
       };
@@ -209,7 +209,7 @@ shared actor class CyclesDAO(create_cycles_dao_args: Types.CreateCyclesDaoArgs) 
       };
       case(#AddAllowList {canister; balance_threshold; balance_target; pull_authorized;}){
         if (balance_threshold >= balance_target) {
-          return #err(#NotFound);
+          return #err(#InvalidCycleConfig);
         };
         allow_list_.put(canister, {balance_threshold = balance_threshold; balance_target = balance_target; pull_authorized = pull_authorized;});
       };

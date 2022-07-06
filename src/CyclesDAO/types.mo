@@ -105,7 +105,7 @@ module{
     #NotAllowed;
     #NotFound;
     #NotEnoughCycles;
-    #InvalidCyclesExchangeConfig;
+    #InvalidCycleConfig;
   };
 
   public type CyclesBalanceRecord = {

@@ -55,7 +55,7 @@ decode as cyclesDao.walletReceive _.Ok.return;
 assert _ == variant { err = variant { NoCyclesAdded } };
 
 // Verify that if the cycles config is invalid, the function walletReceive 
-// returns the error #InvalidCyclesExchangeConfig
+// returns the error #InvalidCycleConfig
 let _ = call default_wallet.wallet_call(
   record {
     args = encode();
@@ -65,7 +65,7 @@ let _ = call default_wallet.wallet_call(
   }
 );
 decode as cyclesDao.walletReceive _.Ok.return;
-assert _ == variant { err = variant { InvalidCyclesExchangeConfig } };
+assert _ == variant { err = variant { InvalidCycleConfig } };
 
 // Configure with a valid cycles exchange config
 call cyclesDao.configure( variant { SetCycleExchangeConfig = vec {
