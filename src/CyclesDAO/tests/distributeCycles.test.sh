@@ -118,3 +118,26 @@ call toPowerUp2.balanceCycles();
 assert _ == (400_000_000 : nat);
 call cyclesDao.cyclesBalance();
 assert _ == (600_000_000 : nat);
+
+// Add a third canister to the cyclesDAO allow list
+let toPowerUp3 = installToPowerUp(cyclesDao, 300_000_000);
+call cyclesDao.configure(variant {AddAllowList = record {
+  canister = toPowerUp3;
+  balance_threshold = 200_000_000;
+  balance_target = 400_000_000;
+  pull_authorized = true;
+}});
+assert _ == variant { ok };
+
+// The canister 3 already has a balance superior than its threshold, calling
+// distributeCycles shall leave its balance unchanged
+call toPowerUp3.balanceCycles();
+assert _ == (300_000_000 : nat);
+call cyclesDao.cyclesBalance();
+assert _ == (600_000_000 : nat);
+call cyclesDao.distributeCycles();
+assert _ == true;
+call toPowerUp3.balanceCycles();
+assert _ == (300_000_000 : nat);
+call cyclesDao.cyclesBalance();
+assert _ == (600_000_000 : nat);
