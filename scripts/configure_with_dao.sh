@@ -3,6 +3,7 @@
 # Assume dfx is already running and the cyclesDAO canister is governed by the default user
 
 # Change directory to dfx directory
+# @todo: this script shall be callable from anywhere!
 cd ..
 
 # Create Alice and Bob identities

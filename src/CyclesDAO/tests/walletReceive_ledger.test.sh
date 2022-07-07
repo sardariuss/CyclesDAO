@@ -8,7 +8,7 @@ load "common/create_cycles_dao.sh";
 call cyclesDao.cyclesBalance();
 assert _ == (0 : nat);
 
-import default_wallet = "rwlgt-iiaaa-aaaaa-aaaaa-cai" as "wallet.did";
+import default_wallet = "rwlgt-iiaaa-aaaaa-aaaaa-cai" as "common/wallet.did";
 
 load "common/config_token_ledger.sh";
 assert _ == variant { ok };

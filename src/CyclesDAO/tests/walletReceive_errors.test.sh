@@ -39,7 +39,7 @@ let cyclesDao = install(wasmCyclesDao, argsCyclesDao, opt(initial_balance));
 call cyclesDao.cyclesBalance();
 assert _ == (2_000_000_000 : nat);
 
-import default_wallet = "rwlgt-iiaaa-aaaaa-aaaaa-cai" as "wallet.did";
+import default_wallet = "rwlgt-iiaaa-aaaaa-aaaaa-cai" as "common/wallet.did";
 
 // Verify that if no cycles is added, the function walletReceive 
 // returns the error #NoCyclesAdded

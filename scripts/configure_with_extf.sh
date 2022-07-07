@@ -19,17 +19,17 @@ dfx canister call cyclesDAO configure '(variant { SetToken = record { standard =
 # To verify if it worked you can perform a first wallet_receive and then
 # check the account balance by uncommenting the following lines!
 
-export DEFAULT_WALLET_ID=$(dfx identity get-wallet)
-echo "CyclesDAO cycles balance before wallet receive:"
-dfx canister call cyclesDAO cyclesBalance
-echo "Default wallet EXTF balance before wallet receive:"
-dfx canister call extf balance '(record { token = "'${EXTF_PRINCIPAL}'"; user = variant { "principal" = principal "'${DEFAULT_WALLET_ID}'" }})'
-echo "Feed 8 trillions cycles to the cyclesDAO:"
-dfx canister --wallet ${DEFAULT_WALLET_ID} call cyclesDAO walletReceive --with-cycles 8000000000000
-echo "CyclesDAO cycles balance after wallet receive:"
-dfx canister call cyclesDAO cyclesBalance
-echo "Default wallet EXTF balance after wallet receive:"
-dfx canister call extf balance '(record { token = "'${EXTF_PRINCIPAL}'"; user = variant { "principal" = principal "'${DEFAULT_WALLET_ID}'" }})'
+#export DEFAULT_WALLET_ID=$(dfx identity get-wallet)
+#echo "CyclesDAO cycles balance before wallet receive:"
+#dfx canister call cyclesDAO cyclesBalance
+#echo "Default wallet EXTF balance before wallet receive:"
+#dfx canister call extf balance '(record { token = "'${EXTF_PRINCIPAL}'"; user = variant { "principal" = principal "'${DEFAULT_WALLET_ID}'" }})'
+#echo "Feed 8 trillions cycles to the cyclesDAO:"
+#dfx canister --wallet ${DEFAULT_WALLET_ID} call cyclesDAO walletReceive --with-cycles 8000000000000
+#echo "CyclesDAO cycles balance after wallet receive:"
+#dfx canister call cyclesDAO cyclesBalance
+#echo "Default wallet EXTF balance after wallet receive:"
+#dfx canister call extf balance '(record { token = "'${EXTF_PRINCIPAL}'"; user = variant { "principal" = principal "'${DEFAULT_WALLET_ID}'" }})'
 
 # Go back to initial directory
 cd scripts

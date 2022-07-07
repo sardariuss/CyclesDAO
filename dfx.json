@@ -8,25 +8,9 @@
 				"output": "src/frontend/declarations/cyclesDAO"
 			}
     },
-    "toPowerUp1": {
+    "toPowerUpFactory": {
       "type": "motoko",
-      "main": "src/ToPowerUp/toPowerUp.mo"
-    },
-    "toPowerUp2": {
-      "type": "motoko",
-      "main": "src/ToPowerUp/toPowerUp.mo"
-    },
-    "toPowerUp3": {
-      "type": "motoko",
-      "main": "src/ToPowerUp/toPowerUp.mo"
-    },
-    "toPowerUp4": {
-      "type": "motoko",
-      "main": "src/ToPowerUp/toPowerUp.mo"
-    },
-    "toPowerUp5": {
-      "type": "motoko",
-      "main": "src/ToPowerUp/toPowerUp.mo"
+      "main": "src/ToPowerUp/toPowerUpFactory.mo"
     },
     "dip20": {
       "type": "custom",
