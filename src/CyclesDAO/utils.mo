@@ -65,7 +65,7 @@ module {
     let buffer : Buffer.Buffer<Types.CyclesProfile> = Buffer.Buffer(trie_map.size());
     for ((principal, powering_parameters) in trie_map.entries()){
       let canister : Types.ToPowerUpInterface = actor(Principal.toText(principal));
-      let balance_cycles = await canister.balanceCycles();
+      let balance_cycles = await canister.cyclesBalance();
       buffer.add({
         principal = principal;
         balance_cycles = balance_cycles;

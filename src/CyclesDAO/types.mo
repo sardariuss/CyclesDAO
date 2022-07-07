@@ -108,6 +108,13 @@ module{
     #InvalidCycleConfig;
   };
 
+  public type CyclesTransferError = {
+    #CanisterNotAllowed;
+    #PullNotAuthorized;
+    #InsufficientCycles;
+    #CallerRefundedAll;
+  };
+
   public type CyclesBalanceRecord = {
     date: Int;
     balance: Nat;
@@ -155,7 +162,7 @@ module{
 
   public type ToPowerUpInterface = actor {
     setCyclesDAO: shared (Principal) -> async ();
-    balanceCycles: shared query () -> async (Nat);
+    cyclesBalance: shared query () -> async (Nat);
     acceptCycles: shared () -> async ();
   };
 }

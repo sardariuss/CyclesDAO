@@ -233,21 +233,24 @@ shared actor class CyclesDAO(create_cycles_dao_args: Types.CreateCyclesDaoArgs) 
   public shared func distributeCycles() : async Bool {
     var success : Bool = true;
     for ((principal, {balance_threshold; balance_target}) in allow_list_.entries()){
-      if (not (await fillWithCycles(principal, balance_threshold, balance_target, #DistributeCycles))){
-        success := false;
+      switch (await fillWithCycles(principal, balance_threshold, balance_target, #DistributeCycles)){
+        case (#ok(_)){};
+        case (#err(_)){
+          success := false;  
+        };
       };
     };
     return success;
   };
 
-  public shared(msg) func requestCycles() : async Bool {
+  public shared(msg) func requestCycles() : async Result.Result<(), Types.CyclesTransferError> {
     switch (allow_list_.get(msg.caller)){
       case(null){
-        return false;
+        return #err(#CanisterNotAllowed);
       };
       case(?{balance_threshold; balance_target; pull_authorized}){
         if (not pull_authorized) {
-          return false;
+          return #err(#PullNotAuthorized);
         } else {
           return await fillWithCycles(msg.caller, balance_threshold, balance_target, #RequestCycles);
         };
@@ -260,27 +263,26 @@ shared actor class CyclesDAO(create_cycles_dao_args: Types.CreateCyclesDaoArgs) 
     balance_threshold: Nat,
     balance_target: Nat,
     method: Types.CyclesDistributionMethod
-    ) : async Bool {
+    ) : async Result.Result<(), Types.CyclesTransferError> {
     let canister : Types.ToPowerUpInterface = actor(Principal.toText(principal));
-    let current_balance = await canister.balanceCycles();
+    let current_balance = await canister.cyclesBalance();
     let difference : Int = balance_threshold - current_balance;
     if (difference <= 0) {
-      Debug.print("difference <= 0"); //@todo: remove debug.print
-      return true;
+      // Canister balance is already above threshold, return ok
+      return #ok;
     };
     let refill_amount : Int = balance_target - current_balance;
     let available_cycles : Int = ExperimentalCycles.balance() - minimum_cycles_balance_;
     if (available_cycles < refill_amount) {
-      Debug.print("available_cycles < refill_amount"); //@todo: remove debug.print
-      return false;
+      // Available cycles is less than the amount to refill, return an error
+      return #err(#InsufficientCycles);
     };
     ExperimentalCycles.add(Int.abs(refill_amount));
     await canister.acceptCycles();
     let refund_amount = ExperimentalCycles.refunded();
-    // Consider partial refill is a success
+    // Consider partial refill is a success, so raise an error only if all cycles are returned
     if (refund_amount == refill_amount) {
-      Debug.print("refund_amount == refill_amount"); //@todo: remove debug.print
-      return false;
+      return #err(#CallerRefundedAll);
     };
     let now = Time.now();
     cycles_sent_register_.add({
@@ -290,9 +292,8 @@ shared actor class CyclesDAO(create_cycles_dao_args: Types.CreateCyclesDaoArgs) 
       method = method;
     });
     cycles_balance_register_.add({date = now; balance = ExperimentalCycles.balance()});
-    return true;
+    return #ok;
   };
-
 
   // @todo: this function is specific to the ledger token, it is usefull to
   // test but shouldn't be part of the cyclesDAO canister

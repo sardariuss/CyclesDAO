@@ -37,7 +37,7 @@ assert _ == variant { ok };
 // Verify original balances
 call cyclesDao.cyclesBalance();
 assert _ == (0 : nat);
-call toPowerUp1.balanceCycles();
+call toPowerUp1.cyclesBalance();
 assert _ == (0 : nat);
 
 // CyclesDAO balance is 0, distributeCycles shall return false
@@ -63,7 +63,7 @@ assert _ == (700_000_000 : nat);
 // the canister 1
 call cyclesDao.distributeCycles();
 assert _ == true;
-call toPowerUp1.balanceCycles();
+call toPowerUp1.cyclesBalance();
 assert _ == (200_000_000 : nat);
 call cyclesDao.cyclesBalance();
 assert _ == (500_000_000 : nat);
@@ -84,7 +84,7 @@ call cyclesDao.configure(variant {AddAllowList = record {
 assert _ == variant { ok };
 
 // Verify original balance
-call toPowerUp2.balanceCycles();
+call toPowerUp2.cyclesBalance();
 assert _ == (0 : nat);
 
 // CyclesDAO balance is 500 million, which is the minimum balance, hence
@@ -101,7 +101,7 @@ assert _ == (700_000_000 : nat);
 // the canister 2
 call cyclesDao.distributeCycles();
 assert _ == false;
-call toPowerUp2.balanceCycles();
+call toPowerUp2.cyclesBalance();
 assert _ == (0 : nat);
 call cyclesDao.cyclesBalance();
 assert _ == (700_000_000 : nat);
@@ -114,7 +114,7 @@ assert _ == (1_000_000_000 : nat);
 // CyclesDAO balance is 1 billion, which is shall be enough to refill canister 2
 call cyclesDao.distributeCycles();
 assert _ == true;
-call toPowerUp2.balanceCycles();
+call toPowerUp2.cyclesBalance();
 assert _ == (400_000_000 : nat);
 call cyclesDao.cyclesBalance();
 assert _ == (600_000_000 : nat);
@@ -131,13 +131,13 @@ assert _ == variant { ok };
 
 // The canister 3 already has a balance superior than its threshold, calling
 // distributeCycles shall leave its balance unchanged
-call toPowerUp3.balanceCycles();
+call toPowerUp3.cyclesBalance();
 assert _ == (300_000_000 : nat);
 call cyclesDao.cyclesBalance();
 assert _ == (600_000_000 : nat);
 call cyclesDao.distributeCycles();
 assert _ == true;
-call toPowerUp3.balanceCycles();
+call toPowerUp3.cyclesBalance();
 assert _ == (300_000_000 : nat);
 call cyclesDao.cyclesBalance();
 assert _ == (600_000_000 : nat);
