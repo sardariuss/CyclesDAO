@@ -277,6 +277,7 @@ shared actor class CyclesDAO(create_cycles_dao_args: Types.CreateCyclesDaoArgs) 
     ExperimentalCycles.add(Int.abs(refill_amount));
     await canister.acceptCycles();
     let refund_amount = ExperimentalCycles.refunded();
+    // Consider partial refill is a success
     if (refund_amount == refill_amount) {
       Debug.print("refund_amount == refill_amount"); //@todo: remove debug.print
       return false;

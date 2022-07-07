@@ -8,6 +8,10 @@
 				"output": "src/frontend/declarations/cyclesDAO"
 			}
     },
+    "toPowerUp": {
+      "type": "motoko",
+      "main": "src/ToPowerUp/toPowerUp.mo"
+    },
     "toPowerUpFactory": {
       "type": "motoko",
       "main": "src/ToPowerUp/toPowerUpFactory.mo"
