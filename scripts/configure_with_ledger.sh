@@ -27,7 +27,8 @@ dfx canister call cyclesDAO configure '(variant { SetToken = record { standard =
 
 #export LEDGER_PRINCIPAL=$(dfx canister id ledger)
 #export DEFAULT_WALLET_ID=$(dfx identity get-wallet)
-#export DEFAULT_WALLET_ACCOUNT_BLOB=$(dfx canister call cyclesDAO getAccountIdentifier '(principal "'${DEFAULT_WALLET_ID}'", principal "'${LEDGER_PRINCIPAL}'")')
+#dfx deploy utilities
+#export DEFAULT_WALLET_ACCOUNT_BLOB=$(dfx canister call utilities getAccountIdentifier '(principal "'${DEFAULT_WALLET_ID}'", principal "'${LEDGER_PRINCIPAL}'")')
 #echo "CyclesDAO cycles balance before wallet receive:"
 #dfx canister call cyclesDAO cyclesBalance
 #echo "Feed 2 trillions cycles to the cyclesDAO:"

@@ -16,6 +16,10 @@
       "type": "motoko",
       "main": "src/ToPowerUp/toPowerUpFactory.mo"
     },
+    "utilities": {
+      "type": "motoko",
+      "main": "src/ToPowerUp/utilities.mo"
+    },
     "dip20": {
       "type": "custom",
       "candid": "src/DIP20/dip20.did",

@@ -295,26 +295,6 @@ shared actor class CyclesDAO(create_cycles_dao_args: Types.CreateCyclesDaoArgs) 
     return #ok;
   };
 
-  // @todo: this function is specific to the ledger token, it is usefull to
-  // test but shouldn't be part of the cyclesDAO canister
-  public query func getAccountIdentifier(
-    account: Principal,
-    ledger: Principal
-  ) : async Accounts.AccountIdentifier {
-    let identifier = Accounts.accountIdentifier(ledger, Accounts.principalToSubaccount(account));
-    if(Accounts.validateAccountIdentifier(identifier)){
-      return identifier;
-    } else {
-      Debug.trap("Could not get account identifier")
-    };
-  };
-
-  // @todo: this function is used for the tests only (see walletReceive/token_extf.test.sh),
-  // it shouldn't be part of the cyclesDAO canister
-  public query func toText(principal: Principal) : async Text {
-    return Principal.toText(principal);
-  };
-
   public query func computeTokensInExchange(cycles_amount: Nat) : async Nat {
     return Utils.computeTokensInExchange(cycles_exchange_config_, ExperimentalCycles.balance(), cycles_amount);
   };

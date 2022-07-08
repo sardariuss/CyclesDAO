@@ -19,8 +19,10 @@ let init_cycles_config = vec {
 let initial_balance = (0 : nat);
 let cyclesDao = installCyclesDao(initial_governance, minimum_cycles_balance, init_cycles_config, initial_balance);
 
+let utilities = installUtilities();
+
 let ledger = installLedger(cyclesDao);
-let default_account = call cyclesDao.getAccountIdentifier(default_wallet, ledger);
+let default_account = call utilities.getAccountIdentifier(default_wallet, ledger);
 call cyclesDao.configure(variant {SetToken = record {standard = variant{LEDGER}; canister = ledger; token_identifier=opt("")}});
 assert _ == variant { ok };
 

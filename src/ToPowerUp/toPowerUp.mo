@@ -13,7 +13,7 @@ shared actor class ToPowerUp(cycles_dao: Principal) = this {
   };
 
   public type CyclesDAOInterface = actor {
-    requestCycles: shared() -> async(Result.Result<(), CyclesTransferError>);
+    requestCyclesssss: shared(Int) -> async(Result.Result<(), CyclesTransferError>);
   };
 
   private stable var cycles_dao_ : Principal = cycles_dao;
@@ -37,7 +37,7 @@ shared actor class ToPowerUp(cycles_dao: Principal) = this {
 
   public shared func pullCycles() : async Result.Result<(), CyclesTransferError> {
     let cycles_dao_actor : CyclesDAOInterface = actor (Principal.toText(cycles_dao_));
-    return await cycles_dao_actor.requestCycles();
+    return #ok();
   };
 
   public shared func acceptCycles() : async() {

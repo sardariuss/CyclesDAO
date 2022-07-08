@@ -15,6 +15,7 @@ import Nat               "mo:base/Nat";
 import Nat64             "mo:base/Nat64";
 import Principal         "mo:base/Principal";
 import Result            "mo:base/Result";
+import Time              "mo:base/Time";
 
 module {
 
@@ -61,9 +62,9 @@ module {
         true;
       };
       case(#DIP721(_)){
-        // Cannot use the tokenMetadata interface of dip721 canister, because it uses
-        // a 'vec record' in Candid that cannot be used in Motoko
-        // Hence assume the given principal is the owner
+        // @todo: investigate why it's not possible to use the tokenMetadata interface of the
+        // dip721 canister (it uses a 'vec record' in Candid that cannot be used in Motoko?)
+        // For now assume the given principal is the owner
         true;
       };
       case(#EXT(_)){
@@ -78,7 +79,6 @@ module {
     }; 
   };
 
-  // @todo: check what happends if the canister does not have the same interface (does it trap?)
   public func getToken(
     standard: Types.TokenStandard,
     canister: Principal,
@@ -101,8 +101,8 @@ module {
         let ext : EXTTypes.Interface = actor (Principal.toText(canister));
         switch(token_identifier){
           case(null){
-            // If the token identifier is an empty string, assume the token is fungible
-            #ok({standard = #EXT; principal = canister; interface = #EXT({interface = ext; token_identifier = ""; is_fungible = true})});
+            // The EXT token requires a token identifier!
+            #err(#DAOTokenCanisterMintError);
           };
           case(?identifier){
             switch (await ext.metadata(identifier)){
@@ -112,10 +112,18 @@ module {
               case(#ok(meta_data)){
                 switch (meta_data){
                   case(#fungible(_)){
-                    #ok({standard = #EXT; principal = canister; interface = #EXT({interface = ext; token_identifier = identifier; is_fungible = true})});
+                    #ok({
+                      standard = #EXT;
+                      principal = canister;
+                      interface = #EXT({interface = ext; token_identifier = identifier; is_fungible = true})
+                    });
                   };
                   case(#nonfungible(_)){
-                    #ok({standard = #EXT; principal = canister; interface = #EXT({interface = ext; token_identifier = identifier; is_fungible = false})});
+                    #ok({
+                      standard = #EXT;
+                      principal = canister;
+                      interface = #EXT({interface = ext; token_identifier = identifier; is_fungible = false})
+                    });
                   };
                 };
               };
@@ -155,11 +163,11 @@ module {
           case(?account_identifier){
             switch (await interface.transfer({
               memo = 0;
-              amount = { e8s = Nat64.fromNat(amount); }; // @todo: this can trap on overflow/underflow!
-              fee = { e8s = 0; }; // fee for minting shall be 0
+              amount = { e8s = Nat64.fromNat(amount); }; // This will trap on overflow/underflow
+              fee = { e8s = 0; }; // Fee for minting shall be 0
               from_subaccount = null;
               to = account_identifier;
-              created_at_time = null; // @todo: Time.now() is an Int, weird
+              created_at_time = ?{ timestamp_nanos = Nat64.fromNat(Int.abs(Time.now())); };
             })){
               case(#Err(_)){
                 #err(#DAOTokenCanisterMintError);
@@ -180,24 +188,22 @@ module {
           // Minting of NFTs is not supported!
           #err(#DAOTokenCanisterMintError);
         } else {
-          // @todo: There is no mint interface in EXT standard, does it mean the minting
-          // depends of the implementation of the canister?
+          // There is no mint interface in EXT standard, perform a simple transfer
           switch (await interface.transfer({
             from = #principal(from);
             to = #principal(to);
             token = token_identifier;
             amount = amount;
-            memo = Blob.fromArray([]); // @todo
-            notify = false; // @todo
-            subaccount = null; // @todo
+            memo = Blob.fromArray([]);
+            notify = false;
+            subaccount = null;
           })){
             case (#err(_)){
               #err(#DAOTokenCanisterMintError);      
             };
-            // @todo: see the extension Archive.mo in Extendable-Token standard. One could retrieve
-            // the transaction IDs for a given user, and select the most recent one, but this
-            // seems a bit dangerous...
-            case (#ok(balance)){
+            // @todo: see the archive extention from the EXT standard. One could use
+            // it to add the transfer and get a transcation ID
+            case (#ok(_)){
               #ok(null);
             };
           };
@@ -218,7 +224,7 @@ module {
     to: Principal, 
     amount: Nat,
     id: ?{#text: Text; #nat: Nat}
-  ) : async Result.Result<Nat, Types.DAOCyclesError> {
+  ) : async Result.Result<?Nat, Types.DAOCyclesError> {
     switch(token){
       case(#DIP20({interface})){
         switch (await interface.transfer(to, amount)){
@@ -226,7 +232,7 @@ module {
             #err(#DAOTokenCanisterMintError);
           };
           case(#Ok(tx_counter)){
-            #ok(tx_counter);
+            #ok(?tx_counter);
           };
         };
       };
@@ -238,17 +244,17 @@ module {
           case(?account_identifier){
             switch (await interface.transfer({
               memo = 0;
-              amount = { e8s = Nat64.fromNat(amount); }; // @todo: this can trap on overflow/underflow!
+              amount = { e8s = Nat64.fromNat(amount); }; // This will trap on overflow/underflow
               fee = { e8s = 10_000; }; // The standard ledger fee
               from_subaccount = null;
               to = account_identifier;
-              created_at_time = null; // @todo: Time.now() is an Int, weird
+              created_at_time = ?{ timestamp_nanos = Nat64.fromNat(Int.abs(Time.now())); };
             })){
               case(#Err(_)){
                 #err(#DAOTokenCanisterMintError);
               };
               case(#Ok(block_index)){
-                #ok(Nat64.toNat(block_index));
+                #ok(?Nat64.toNat(block_index));
               };
             };
           };
@@ -270,7 +276,7 @@ module {
                     #err(#DAOTokenCanisterMintError);
                   };
                   case(#Ok(tx_counter)){
-                    #ok(tx_counter);
+                    #ok(?tx_counter);
                   };
                 };
               };
@@ -285,15 +291,17 @@ module {
             to = #principal(to);
             token = token_identifier;
             amount = amount;
-            memo = Blob.fromArray([]); // @todo
-            notify = false; // @todo
-            subaccount = null; // @todo
+            memo = Blob.fromArray([]);
+            notify = false;
+            subaccount = null;
           })){
             case (#err(_)){
               #err(#DAOTokenCanisterMintError);      
             };
-            case (#ok(balance)){
-              #ok(balance); // @todo: it should not be the balance here!
+            // @todo: see the archive extention from the EXT standard. One could use
+            // it to add the transfer and get a transcation ID
+            case (#ok(_)){
+              #ok(null);
             };
           };
         } else {
@@ -306,21 +314,23 @@ module {
                 case(#nat(_)){
                   #err(#DAOTokenCanisterMintError);
                 };
-                case(#text(token_identifier)){ // EXT uses a text as NFT identifier
+                case(#text(nft_identifier)){ // EXT uses a text as NFT identifier
                   switch (await interface.transfer({
                     from = #principal(from);
                     to = #principal(to);
-                    token = token_identifier;
+                    token = nft_identifier;
                     amount = 1;
-                    memo = Blob.fromArray([]); // @todo
-                    notify = false; // @todo
-                    subaccount = null; // @todo
+                    memo = Blob.fromArray([]);
+                    notify = false;
+                    subaccount = null;
                   })){
                     case(#err(_)){
                       #err(#DAOTokenCanisterMintError);
                     };
-                    case(#ok(amount)){
-                      #ok(amount); // @todo
+                    // @todo: see the archive extention from the EXT standard. One could use
+                    // it to add the transfer and get a transcation ID
+                    case(#ok(_)){
+                      #ok(null);
                     };
                   };
                 };

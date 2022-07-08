@@ -104,17 +104,9 @@ function installToPowerUp(cycles_dao, init_balance) {
   install(wasm, args, init_balance);
 };
 
-//function configure_cycles_dao(configureCommand) {
-//  identity default;
-//  call basicDAO.submit_proposal(
-//    record {
-//      method = "configure";
-//      canister_id = cyclesDAO;
-//      message = encode cyclesDAO.configure(configureCommand);
-//    }
-//  );
-//  let proposal_id = _.ok;
-//  call basicDAO.vote(record { proposal_id = proposal_id; vote = variant { yes } });
-//  assert _.ok == variant { accepted };
-//  call basicDAO.list_proposals(); // required to pass the state from accepted to succeeded
-//};
+function installUtilities() {
+  import interface = "2vxsx-fae" as "../../../.dfx/local/canisters/utilities/utilities.did";
+  let args = encode interface.__init_args();
+  let wasm = file "../../../.dfx/local/canisters/utilities/utilities.wasm";
+  install(wasm, args, 0);
+};

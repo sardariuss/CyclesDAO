@@ -10,7 +10,7 @@ module{
   type SubAccount = [Nat8];
 
   // A user can be any principal or canister, which can hold a balance
-  public type User = { // @todo
+  public type User = {
     #address : AccountIdentifier; //No notification
     #principal : Principal; //defaults to sub account 0
   };
@@ -80,7 +80,6 @@ module{
     };
   };
 
-  // @todo
   public type Interface = actor {
     extensions : query () -> async [Extension];
 

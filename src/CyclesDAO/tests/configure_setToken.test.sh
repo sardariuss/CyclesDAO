@@ -10,6 +10,8 @@ let init_cycles_config = vec {record { threshold = 1_000_000_000_000_000 : nat; 
 let initial_balance = (0 : nat);
 let cyclesDao = installCyclesDao(initial_governance, minimum_cycles_balance, init_cycles_config, initial_balance);
 
+let utilities = installUtilities();
+
 // Test dip20
 let dip20 = installDip20(cyclesDao, 1_000_000_000_000_000);
 call cyclesDao.configure(variant {SetToken = record {standard = variant{DIP20}; canister = dip20; token_identifier=opt("")}});
@@ -19,7 +21,7 @@ assert _ == opt record { "principal" = dip20; standard = variant { DIP20 }; };
 
 // Test EXT fungible
 let extf = installExtf(cyclesDao, 1_000_000_000_000_000);
-let token_identifier = call cyclesDao.toText(extf);
+let token_identifier = call utilities.toText(extf);
 call cyclesDao.configure(variant {SetToken = record {standard = variant{EXT}; canister = extf; token_identifier=opt(token_identifier)}});
 assert _ == variant { ok };
 call cyclesDao.getToken();
