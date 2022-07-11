@@ -174,19 +174,12 @@ shared actor class CyclesDAO(create_cycles_dao_args: Types.CreateCyclesDaoArgs) 
         };
         cycles_exchange_config_ := cycles_exchange_config;
       };
-      case(#DistributeBalance {to; token_canister; amount; id; standard; token_identifier}){
-        switch(await Token.getToken(standard, token_canister, token_identifier)){
-          case(#err(err)){
+      case(#DistributeBalance {standard; canister; to; amount; id; }){
+        switch (await Token.transferToken(standard, canister, Principal.fromActor(this), to, amount, id)){
+          case (#err(err)){
             return #err(err);
           };
-          case(#ok(token)){
-            switch (await Token.transferToken(token.interface, Principal.fromActor(this), to, amount, id)){
-              case (#err(err)){
-                return #err(err);
-              };
-              case (#ok(_)){
-              };
-            };
+          case (#ok(_)){
           };
         };
       };
@@ -197,12 +190,18 @@ shared actor class CyclesDAO(create_cycles_dao_args: Types.CreateCyclesDaoArgs) 
             return #err(err);
           };
           case(#ok(token)){
-            if (not Token.isFungible(token.interface)){
-              return #err(#NotEnoughCycles);
-            } else if (not (await Token.isOwner(token.interface, Principal.fromActor(this)))) {
-              return #err(#NotEnoughCycles);
-            } else {
-              token_ := ?token;
+            switch (await Token.isFungible(token.interface)){
+              case(#err(err)){
+                return #err(err);
+              };
+              case(#ok(is_fungible)){
+                if (not is_fungible){
+                  return #err(#NotEnoughCycles);
+                } else if (not (await Token.isOwner(token.interface, Principal.fromActor(this)))) {
+                  return #err(#NotEnoughCycles);
+                };
+                token_ := ?token;
+              };
             };
           };
         };

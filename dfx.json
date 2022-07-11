@@ -35,6 +35,11 @@
       "candid": "src/ExtFungible/extf.did",
       "wasm": "src/ExtFungible/extf.wasm"
     },
+    "extNft":{
+      "type": "custom",
+      "candid": "src/ExtNft/extNft.did",
+      "wasm": "src/ExtNft/extNft.wasm"
+    },
     "basicDAO": {
       "type": "custom",
       "candid": "src/BasicDAO/basicDAO.did",

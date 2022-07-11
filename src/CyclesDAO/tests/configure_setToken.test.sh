@@ -21,7 +21,7 @@ assert _ == opt record { "principal" = dip20; standard = variant { DIP20 }; };
 
 // Test EXT fungible
 let extf = installExtf(cyclesDao, 1_000_000_000_000_000);
-let token_identifier = call utilities.toText(extf);
+let token_identifier = call utilities.getPrincipalAsText(extf);
 call cyclesDao.configure(variant {SetToken = record {standard = variant{EXT}; canister = extf; token_identifier=opt(token_identifier)}});
 assert _ == variant { ok };
 call cyclesDao.getToken();

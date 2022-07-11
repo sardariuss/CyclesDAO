@@ -30,22 +30,36 @@ module {
     };
   };
 
-  public func isFungible(standard: Types.TokenInterface) : Bool {
+  public func isFungible(standard: Types.TokenInterface) : async Result.Result<Bool, Types.DAOCyclesError> {
     switch(standard){
       case(#DIP20(_)){
-        true;
+        #ok(true);
       };
       case(#LEDGER(_)){
-        true;
+        #ok(true);
       };
       case(#DIP721(_)){
-        false;
+        #ok(false);
       };
-      case(#EXT({is_fungible})){
-        is_fungible;
+      case(#EXT({interface; token_identifier})){
+        switch (await interface.metadata(token_identifier)){
+          case(#err(_)){
+            #err(#DAOTokenCanisterMintError);
+          };
+          case(#ok(meta_data)){
+            switch (meta_data){
+              case(#fungible(_)){
+                #ok(true);
+              };
+              case(#nonfungible(_)){
+                #ok(false);
+              };
+            };
+          };
+        };
       };
       case(#NFT_ORIGYN(_)){
-        false;
+        #ok(false);
       };
     };
   };
@@ -82,7 +96,7 @@ module {
   public func getToken(
     standard: Types.TokenStandard,
     canister: Principal,
-    token_identifier: ?Text
+    token_identifier: ?Text // Only used for EXT tokens
   ) : async Result.Result<Types.Token, Types.DAOCyclesError> {
     switch(standard){
       case(#DIP20){
@@ -101,33 +115,10 @@ module {
         let ext : EXTTypes.Interface = actor (Principal.toText(canister));
         switch(token_identifier){
           case(null){
-            // The EXT token requires a token identifier!
             #err(#DAOTokenCanisterMintError);
           };
           case(?identifier){
-            switch (await ext.metadata(identifier)){
-              case(#err(_)){
-                #err(#DAOTokenCanisterMintError);
-              };
-              case(#ok(meta_data)){
-                switch (meta_data){
-                  case(#fungible(_)){
-                    #ok({
-                      standard = #EXT;
-                      principal = canister;
-                      interface = #EXT({interface = ext; token_identifier = identifier; is_fungible = true})
-                    });
-                  };
-                  case(#nonfungible(_)){
-                    #ok({
-                      standard = #EXT;
-                      principal = canister;
-                      interface = #EXT({interface = ext; token_identifier = identifier; is_fungible = false})
-                    });
-                  };
-                };
-              };
-            };
+            #ok({standard = #EXT; principal = canister; interface = #EXT({interface = ext; token_identifier = identifier;})});
           };
         };
       };
@@ -183,28 +174,38 @@ module {
         // Minting of NFTs is not supported!
         #err(#DAOTokenCanisterMintError);
       };
-      case(#EXT({interface; token_identifier; is_fungible})){
-        if(not is_fungible){
-          // Minting of NFTs is not supported!
-          #err(#DAOTokenCanisterMintError);
-        } else {
-          // There is no mint interface in EXT standard, perform a simple transfer
-          switch (await interface.transfer({
-            from = #principal(from);
-            to = #principal(to);
-            token = token_identifier;
-            amount = amount;
-            memo = Blob.fromArray([]);
-            notify = false;
-            subaccount = null;
-          })){
-            case (#err(_)){
-              #err(#DAOTokenCanisterMintError);      
-            };
-            // @todo: see the archive extention from the EXT standard. One could use
-            // it to add the transfer and get a transcation ID
-            case (#ok(_)){
-              #ok(null);
+      case(#EXT({interface; token_identifier})){
+        switch (await interface.metadata(token_identifier)){
+          case(#err(_)){
+            #err(#DAOTokenCanisterMintError);
+          };
+          case(#ok(meta_data)){
+            switch (meta_data){
+              case(#nonfungible(_)){
+                // Minting of NFTs is not supported!
+                #err(#DAOTokenCanisterMintError);
+              };
+              case(#fungible(_)){
+                // There is no mint interface in EXT standard, perform a simple transfer
+                switch (await interface.transfer({
+                  from = #principal(from);
+                  to = #principal(to);
+                  token = token_identifier;
+                  amount = amount;
+                  memo = Blob.fromArray([]);
+                  notify = false;
+                  subaccount = null;
+                })){
+                  case (#err(_)){
+                    #err(#DAOTokenCanisterMintError);
+                  };
+                  // @todo: see the archive extention from the EXT standard. One could use
+                  // it to add the transfer and get a transcation ID
+                  case (#ok(_)){
+                    #ok(null);
+                  };
+                };
+              };
             };
           };
         };
@@ -219,14 +220,16 @@ module {
   // Assume check already performed: either token is fungible and id is null, 
   // or token is a nft and id is not null
   public func transferToken(
-    token: Types.TokenInterface,
+    standard: Types.TokenStandard,
+    canister: Principal,
     from: Principal,
     to: Principal, 
     amount: Nat,
     id: ?{#text: Text; #nat: Nat}
   ) : async Result.Result<?Nat, Types.DAOCyclesError> {
-    switch(token){
-      case(#DIP20({interface})){
+    switch(standard){
+      case(#DIP20){
+        let interface : DIP20Types.Interface = actor (Principal.toText(canister));
         switch (await interface.transfer(to, amount)){
           case(#Err(_)){
             #err(#DAOTokenCanisterMintError);
@@ -236,12 +239,13 @@ module {
           };
         };
       };
-      case(#LEDGER({interface})){
-        switch (Utils.getAccountIdentifier(to, Principal.fromActor(interface))){
+      case(#LEDGER){
+        switch (Utils.getAccountIdentifier(to, canister)){
           case(null){
             #err(#DAOTokenCanisterMintError);
           };
           case(?account_identifier){
+            let interface : LedgerTypes.Interface = actor (Principal.toText(canister));
             switch (await interface.transfer({
               memo = 0;
               amount = { e8s = Nat64.fromNat(amount); }; // This will trap on overflow/underflow
@@ -260,17 +264,20 @@ module {
           };
         };
       };
-      case(#DIP721({interface})){
+      case(#DIP721){
         switch(id){
           case(null){
+            // DIP721 requires a token identifier
             #err(#DAOTokenCanisterMintError);
           };
           case(?id){
             switch(id){
               case(#text(_)){
+                // EXT cannot use text as token identifier, only nat
                 #err(#DAOTokenCanisterMintError);
               };
               case(#nat(id_nft)){
+                let interface : DIP721Types.Interface = actor (Principal.toText(canister));
                 switch (await interface.transfer(to, id_nft)){
                   case(#Err(_)){
                     #err(#DAOTokenCanisterMintError);
@@ -284,54 +291,36 @@ module {
           };
         };
       };
-      case(#EXT({interface; token_identifier; is_fungible})){
-        if (is_fungible){
-          switch (await interface.transfer({
-            from = #principal(from);
-            to = #principal(to);
-            token = token_identifier;
-            amount = amount;
-            memo = Blob.fromArray([]);
-            notify = false;
-            subaccount = null;
-          })){
-            case (#err(_)){
-              #err(#DAOTokenCanisterMintError);      
-            };
-            // @todo: see the archive extention from the EXT standard. One could use
-            // it to add the transfer and get a transcation ID
-            case (#ok(_)){
-              #ok(null);
-            };
+      case(#EXT){
+        switch(id){
+          case(null){
+            // EXT requires a token identifier
+            #err(#DAOTokenCanisterMintError);
           };
-        } else {
-          switch(id){
-            case(null){
-              #err(#DAOTokenCanisterMintError);
-            };
-            case(?id){
-              switch(id){
-                case(#nat(_)){
-                  #err(#DAOTokenCanisterMintError);
-                };
-                case(#text(nft_identifier)){ // EXT uses a text as NFT identifier
-                  switch (await interface.transfer({
-                    from = #principal(from);
-                    to = #principal(to);
-                    token = nft_identifier;
-                    amount = 1;
-                    memo = Blob.fromArray([]);
-                    notify = false;
-                    subaccount = null;
-                  })){
-                    case(#err(_)){
-                      #err(#DAOTokenCanisterMintError);
-                    };
-                    // @todo: see the archive extention from the EXT standard. One could use
-                    // it to add the transfer and get a transcation ID
-                    case(#ok(_)){
-                      #ok(null);
-                    };
+          case(?id){
+            switch(id){
+              case(#nat(_)){
+                // EXT cannot use nat as token identifier, only text
+                #err(#DAOTokenCanisterMintError);
+              };
+              case(#text(token_identifier)){
+                let interface : EXTTypes.Interface = actor (Principal.toText(canister));
+                switch (await interface.transfer({
+                  from = #principal(from);
+                  to = #principal(to);
+                  token = token_identifier;
+                  amount = amount;
+                  memo = Blob.fromArray([]);
+                  notify = false;
+                  subaccount = null;
+                })){
+                  case(#err(_)){
+                    #err(#DAOTokenCanisterMintError);
+                  };
+                  // @todo: see the archive extention from the EXT standard. One could use
+                  // it to add the transfer and get a transcation ID.
+                  case(#ok(_)){
+                    #ok(null);
                   };
                 };
               };
@@ -339,7 +328,7 @@ module {
           };
         };
       };
-      case(#NFT_ORIGYN(_)){
+      case(#NFT_ORIGYN){
         // @todo: implement the NFT_ORIGYN standard
         Debug.trap("The NFT_ORIGYN standard is not implemented yet!");
       };

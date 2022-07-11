@@ -72,6 +72,13 @@ function installExtf(owner, total_supply){
   install(wasm, args, 0);
 };
 
+function installExtNft(owner){
+  import interface = "2vxsx-fae" as "../../ExtNft/extNft.did";
+  let args = encode interface.__init_args(owner);
+  let wasm = file "../../ExtNft/extNft.wasm";
+  install(wasm, args, 0);
+};
+
 function installDip20(owner, total_supply){
   import interface = "2vxsx-fae" as "../../DIP20/dip20.did";
   let args = encode interface.__init_args(

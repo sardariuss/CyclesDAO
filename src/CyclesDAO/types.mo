@@ -21,13 +21,11 @@ module{
     #SetCycleExchangeConfig: [ExchangeLevel];
     //sends any balance of a token/NFT to the provided principal
     #DistributeBalance: {
+      standard: TokenStandard;
+      canister: Principal;
       to: Principal;
-      token_canister: Principal;
       amount: Nat; //1 for NFT
       id: ?{#text: Text; #nat: Nat}; //used for nfts
-      standard: TokenStandard;
-      token_identifier: ?Text;
-      is_fungible: Bool;
     };
     #SetToken: {
       standard: TokenStandard;
@@ -64,11 +62,13 @@ module{
     #NFT_ORIGYN;
   };
 
+  // Required for frontend
   public type TokenInfo = {
     standard: TokenStandard;
     principal: Principal;    
   };
 
+  // @todo: check usage of Token VS TokenInterface
   public type Token = {
     standard: TokenStandard;
     principal: Principal;
@@ -88,7 +88,6 @@ module{
     #EXT : {
       interface: EXTTypes.Interface;
       token_identifier: Text;
-      is_fungible: Bool;
     };
     #NFT_ORIGYN : {
       interface: OrigynTypes.Interface;

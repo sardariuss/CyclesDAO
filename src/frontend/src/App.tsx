@@ -5,8 +5,34 @@ import Contribute from "./components/Contribute";
 
 import { HttpAgent, Actor, AnonymousIdentity } from "@dfinity/agent";
 import { Link, Route, Routes, HashRouter } from "react-router-dom";
+import { Principal } from '@dfinity/principal';
+import {Buffer} from 'buffer';
 
 function App() {
+
+  const to32bits = num => {
+      let b = new ArrayBuffer(4);
+      new DataView(b).setUint32(0, num);
+      let index = Array.from(new Uint8Array(b));
+      console.log("index is: " + index);
+      return index;
+    }
+
+  const computeTokenIdentifier = (principal, index) => {
+      const padding = new Buffer("\x0Atid");
+      const array = new Uint8Array([
+          ...padding,
+          ...Principal.fromText(principal).toUint8Array(),
+          ...to32bits(index)
+      ])
+
+      console.log(Principal.fromUint8Array(array).toText());
+  }
+
+  // Insert the canister ID and the token index as arguments
+  // This will print the result to console
+  // Result should look something like this: cso6j-aaaaa-uwiaa-aaaaa-amcay-maqca-aaaad-c
+  computeTokenIdentifier("rkp4c-7iaaa-aaaaa-aaaca-cai", 0);
 
   const HOST = "http://127.0.0.1:8000/"; // @todo: remove hard-coded values
 
