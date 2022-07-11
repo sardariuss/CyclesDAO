@@ -1,4 +1,4 @@
-# CyclesDAO
+# [![Battery icon](src/frontend/battery.svg)] CyclesDAO
 
 On-going implementation of IC-Devs' Bounty #17: A DAO for cycles: https://icdevs.org/bounties/2022/02/25/A-DAO-for-Cycles.html
 
@@ -34,8 +34,8 @@ The cycles DAO uses the basic DAO generated from the dfinity examples: https://g
 | configure(#RemoveAllowList) | addAndRemoveAllowList.test.sh.test.sh | N/A | 100% |
 | configure(#SetGovernance) | setGovernance.test.sh | N/A | 100% |
 | configure(#SetMinimumBalance) | setMinimumBalance.test.sh | N/A | 100% |
-| distributeCycles | distributeCycles.test.sh | the test shall probably be split in multiple small tests to reduce the risk of potential side effects - test update of histories | 80% |
-| requestCycles | requestCycles.test.sh | test update of histories | 90% |
+| distributeCycles | distributeCycles.test.sh | split test to avoid risk of side effects - add test of histories | 80% |
+| requestCycles | requestCycles.test.sh | add test of histories | 90% |
 | *upgrade* | | to test | 0% |
 
 ### Credits
