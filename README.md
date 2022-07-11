@@ -1,10 +1,10 @@
-<style>
-div {
-  display: flex;
-  align-items: center;
-}
-</style>
 <div>
+  <style>
+  div {
+    display: flex;
+    align-items: center;
+  }
+  </style>
   <img src="src/frontend/battery.svg" style="vertical-align:middle" alt="" width="8%"/>
   <h1>CyclesDAO</h1>
 </div>
