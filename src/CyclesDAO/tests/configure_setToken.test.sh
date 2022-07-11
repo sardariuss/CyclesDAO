@@ -14,22 +14,25 @@ let utilities = installUtilities();
 
 // Test dip20
 let dip20 = installDip20(cyclesDao, 1_000_000_000_000_000);
-call cyclesDao.configure(variant {SetToken = record {standard = variant{DIP20}; canister = dip20; token_identifier=opt("")}});
+let dip20_token = record {standard = variant{DIP20}; canister = dip20; identifier=opt("")};
+call cyclesDao.configure(variant {SetToken = dip20_token });
 assert _ == variant { ok };
 call cyclesDao.getToken();
-assert _ == opt record { "principal" = dip20; standard = variant { DIP20 }; };
+assert _ == opt dip20_token;
 
 // Test EXT fungible
 let extf = installExtf(cyclesDao, 1_000_000_000_000_000);
 let token_identifier = call utilities.getPrincipalAsText(extf);
-call cyclesDao.configure(variant {SetToken = record {standard = variant{EXT}; canister = extf; token_identifier=opt(token_identifier)}});
+let extf_token = record {standard = variant{EXT}; canister = extf; identifier=opt(token_identifier)};
+call cyclesDao.configure(variant {SetToken = extf_token });
 assert _ == variant { ok };
 call cyclesDao.getToken();
-assert _ == opt record { "principal" = extf; standard = variant { EXT }; };
+assert _ == opt extf_token;
 
 // Test Ledger
 let ledger = installLedger(cyclesDao);
-call cyclesDao.configure(variant {SetToken = record {standard = variant{LEDGER}; canister = ledger; token_identifier=opt("")}});
+let ledger_token = record {standard = variant{LEDGER}; canister = ledger; identifier=opt("")};
+call cyclesDao.configure(variant {SetToken = ledger_token });
 assert _ == variant { ok };
 call cyclesDao.getToken();
-assert _ == opt record { "principal" = ledger; standard = variant { LEDGER }; };
+assert _ == opt ledger_token;

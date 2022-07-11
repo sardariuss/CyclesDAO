@@ -23,7 +23,7 @@ let utilities = installUtilities();
 
 let extf = installExtf(cyclesDao, 1_000_000_000_000_000);
 let token_identifier = call utilities.getPrincipalAsText(extf);
-call cyclesDao.configure(variant {SetToken = record {standard = variant{EXT}; canister = extf; token_identifier=opt(token_identifier)}});
+call cyclesDao.configure(variant {SetToken = record {standard = variant{EXT}; canister = extf; identifier=opt(token_identifier)}});
 assert _ == variant { ok };
 
 // Verify the original balance

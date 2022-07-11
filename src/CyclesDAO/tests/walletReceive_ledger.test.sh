@@ -23,7 +23,7 @@ let utilities = installUtilities();
 
 let ledger = installLedger(cyclesDao);
 let default_account = call utilities.getAccountIdentifierAsBlob(default_wallet, ledger);
-call cyclesDao.configure(variant {SetToken = record {standard = variant{LEDGER}; canister = ledger; token_identifier=opt("")}});
+call cyclesDao.configure(variant {SetToken = record {standard = variant{LEDGER}; canister = ledger; identifier=opt("")}});
 assert _ == variant { ok };
 
 // Verify the original balance

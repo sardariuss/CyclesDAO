@@ -20,7 +20,7 @@ let initial_balance = (0 : nat);
 let cyclesDao = installCyclesDao(initial_governance, minimum_cycles_balance, init_cycles_config, initial_balance);
 
 let dip20 = installDip20(cyclesDao, 1_000_000_000_000_000);
-call cyclesDao.configure(variant {SetToken = record {standard = variant{DIP20}; canister = dip20; token_identifier=opt("")}});
+call cyclesDao.configure(variant {SetToken = record {standard = variant{DIP20}; canister = dip20; identifier=opt("")}});
 assert _ == variant { ok };
 
 // Verify the original balance

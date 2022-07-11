@@ -21,7 +21,7 @@ let cyclesDao = installCyclesDao(initial_governance, minimum_cycles_balance, ini
 
 // Setup a token (arbitrary dip20 here) to be able to call walletReceive and feed cycles to the cycles DAO
 let dip20 = installDip20(cyclesDao, 1_000_000_000_000_000);
-call cyclesDao.configure(variant {SetToken = record {standard = variant{DIP20}; canister = dip20; token_identifier=opt("")}});
+call cyclesDao.configure(variant {SetToken = record {standard = variant{DIP20}; canister = dip20; identifier=opt("")}});
 assert _ == variant { ok };
 
 // Add a first canister to the cyclesDAO allow list
