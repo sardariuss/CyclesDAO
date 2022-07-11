@@ -27,7 +27,13 @@ The cycles DAO uses the basic DAO generated from the dfinity examples: https://g
 | ------ | ------ | ------ | ------ |
 | *constructor* | constructor.test.sh | N/A |  100% |
 | walletReceive | walletReceive_dip20.test.sh, walletReceive_errors.test.sh, walletReceive_extf.test.sh, walletReceive_ledger.test.sh | fix ledger canister initialization, see function intallLedger in install.sh | 75% | 
-| configure | configure_addAndRemoveAllowList.test.sh, configure_setCycleExchangeConfig.test.sh, configure_setGovernance.test.sh, configure_setMinimumBalance.test.sh, configure_setToken.test.sh | DistributeBalance not tested, SetToken errors not tested | 65% |
+| configure(#SetCycleExchangeConfig) | setCycleExchangeConfig.test.sh | N/A | 100% |
+| configure(#DistributeBalance) | distributeBalance_dip20.test.sh, distributeBalance_ledger.test.sh, distributeBalance_extNft.test.sh, distributeBalance_extf.test.sh, distributeBalance_dip721.test.sh | Only EXT NFT is tested | 30% |
+| configure(#SetToken) | setToken.test.sh | errors not tested | 70% |
+| configure(#AddAllowList) | addAndRemoveAllowList.test.sh.test.sh | N/A | 100% |
+| configure(#RemoveAllowList) | addAndRemoveAllowList.test.sh.test.sh | N/A | 100% |
+| configure(#SetGovernance) | setGovernance.test.sh | N/A | 100% |
+| configure(#SetMinimumBalance) | setMinimumBalance.test.sh | N/A | 100% |
 | distributeCycles | distributeCycles.test.sh | the test shall probably be split in multiple small tests to reduce the risk of potential side effects - test update of histories | 80% |
 | requestCycles | requestCycles.test.sh | test update of histories | 90% |
 | *upgrade* | | to test | 0% |
