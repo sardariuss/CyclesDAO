@@ -65,8 +65,8 @@ shared actor class CyclesDAO(create_cycles_dao_args: Types.CreateCyclesDaoArgs) 
     return governance_;
   };
 
-  public query func getToken() : async ?Types.TokenInfo {
-    return Token.getTokenInfo(token_);
+  public query func getToken() : async ?Types.Token {
+    return token_;
   };
 
   public query func getCycleExchangeConfig() : async [Types.ExchangeLevel] {
@@ -141,7 +141,7 @@ shared actor class CyclesDAO(create_cycles_dao_args: Types.CreateCyclesDaoArgs) 
           cycles_exchange_config_, originalBalance, acceptedCycles);
         // Mint the tokens
         // @todo: discuss what to do if the minting ever fails
-        let block_index = await Token.mintToken(token_.interface, Principal.fromActor(this), msg.caller, amount_tokens);
+        let block_index = await Token.mint(token_, Principal.fromActor(this), msg.caller, amount_tokens);
         // Update the registers
         cycles_balance_register_.add({date = now; balance = ExperimentalCycles.balance()});
         cycles_received_register_.add({
@@ -150,7 +150,7 @@ shared actor class CyclesDAO(create_cycles_dao_args: Types.CreateCyclesDaoArgs) 
           cycle_amount = acceptedCycles;
           token_amount = amount_tokens;
           token_standard = token_.standard;
-          token_principal = token_.principal;
+          token_principal = token_.canister;
           block_index = block_index;
         });
         // Return the resulting block index
@@ -160,7 +160,7 @@ shared actor class CyclesDAO(create_cycles_dao_args: Types.CreateCyclesDaoArgs) 
   };
 
   public shared(msg) func configure(
-    command: Types.ConfigureDAOCommand
+    command: Types.CyclesDaoCommand
   ) : async Result.Result<(), Types.DAOCyclesError> {
     // Check if the call comes from the governance DAO canister
     if (msg.caller != governance_) {
@@ -175,7 +175,7 @@ shared actor class CyclesDAO(create_cycles_dao_args: Types.CreateCyclesDaoArgs) 
         cycles_exchange_config_ := cycles_exchange_config;
       };
       case(#DistributeBalance {standard; canister; to; amount; id; }){
-        switch (await Token.transferToken(standard, canister, Principal.fromActor(this), to, amount, id)){
+        switch (await Token.transfer(standard, canister, Principal.fromActor(this), to, amount, id)){
           case (#err(err)){
             return #err(err);
           };
@@ -183,26 +183,19 @@ shared actor class CyclesDAO(create_cycles_dao_args: Types.CreateCyclesDaoArgs) 
           };
         };
       };
-      case(#SetToken {standard; canister; token_identifier}){
+      case(#SetToken(token)){
         token_ := null;
-        switch(await Token.getToken(standard, canister, token_identifier)){
+        switch (await Token.isFungible(token)){
           case(#err(err)){
             return #err(err);
           };
-          case(#ok(token)){
-            switch (await Token.isFungible(token.interface)){
-              case(#err(err)){
-                return #err(err);
-              };
-              case(#ok(is_fungible)){
-                if (not is_fungible){
-                  return #err(#NotEnoughCycles);
-                } else if (not (await Token.isOwner(token.interface, Principal.fromActor(this)))) {
-                  return #err(#NotEnoughCycles);
-                };
-                token_ := ?token;
-              };
+          case(#ok(is_fungible)){
+            if (not is_fungible){
+              return #err(#NotEnoughCycles);
+            } else if (not (await Token.isOwner(token, Principal.fromActor(this)))) {
+              return #err(#NotEnoughCycles);
             };
+            token_ := ?token;
           };
         };
       };

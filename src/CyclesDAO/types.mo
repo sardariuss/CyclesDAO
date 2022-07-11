@@ -9,15 +9,13 @@ import Result    "mo:base/Result";
 
 module{
 
-  // @todo: some types shouldn't be public
-
   public type CreateCyclesDaoArgs = {
     governance: Principal;
     minimum_cycles_balance: Nat;
     cycles_exchange_config: [ExchangeLevel];
   };
 
-  public type ConfigureDAOCommand = {
+  public type CyclesDaoCommand = {
     #SetCycleExchangeConfig: [ExchangeLevel];
     //sends any balance of a token/NFT to the provided principal
     #DistributeBalance: {
@@ -27,11 +25,7 @@ module{
       amount: Nat; //1 for NFT
       id: ?{#text: Text; #nat: Nat}; //used for nfts
     };
-    #SetToken: {
-      standard: TokenStandard;
-      canister: Principal;
-      token_identifier: ?Text;
-    };
+    #SetToken: Token;
     #AddAllowList: {
       canister: Principal;
       balance_threshold: Nat;
@@ -62,36 +56,10 @@ module{
     #NFT_ORIGYN;
   };
 
-  // Required for frontend
-  public type TokenInfo = {
-    standard: TokenStandard;
-    principal: Principal;    
-  };
-
-  // @todo: check usage of Token VS TokenInterface
   public type Token = {
     standard: TokenStandard;
-    principal: Principal;
-    interface: TokenInterface;
-  };
-
-  public type TokenInterface = {
-    #DIP20 : {
-      interface: DIP20Types.Interface;
-    };
-    #LEDGER : {
-      interface: LedgerTypes.Interface;
-    };
-    #DIP721 : {
-      interface: DIP721Types.Interface;
-    };
-    #EXT : {
-      interface: EXTTypes.Interface;
-      token_identifier: Text;
-    };
-    #NFT_ORIGYN : {
-      interface: OrigynTypes.Interface;
-    };
+    canister: Principal;
+    identifier: ?Text;
   };
 
   // @todo: review naming of errors
@@ -144,7 +112,7 @@ module{
   public type ConfigureCommandRecord = {
     date: Int;
     governance: Principal;
-    command: ConfigureDAOCommand;
+    command: CyclesDaoCommand;
   };
 
   public type CyclesProfile = {

@@ -1,5 +1,5 @@
 import { toMilliSeconds } from "./../../utils/conversion";
-import { ConfigureCommandRecord, ConfigureDAOCommand } from "../../../declarations/cyclesDAO/cyclesDAO.did.js";
+import { ConfigureCommandRecord, CyclesDaoCommand } from "../../../declarations/cyclesDAO/cyclesDAO.did.js";
 
 import { useEffect, useState } from "react";
 
@@ -25,7 +25,7 @@ function ConfigureHistory({cyclesDAOActor}: any) {
     return date.toLocaleDateString('en-US');
   }
 
-  const commandToString = (commandType: ConfigureDAOCommand) => {
+  const commandToString = (commandType: CyclesDaoCommand) => {
     if ('SetCycleExchangeConfig' in commandType){
       return 'SetCycleExchangeConfig';
     }
