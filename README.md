@@ -1,13 +1,4 @@
-<div>
-  <style>
-  div {
-    display: flex;
-    align-items: center;
-  }
-  </style>
-  <img src="src/frontend/battery.svg" style="vertical-align:middle" alt="" width="8%"/>
-  <h1>CyclesDAO</h1>
-</div>
+# <img src="src/frontend/battery.svg" alt="" width="8%"/> CyclesDAO
 
 On-going implementation of IC-Devs' Bounty #17: A DAO for cycles: https://icdevs.org/bounties/2022/02/25/A-DAO-for-Cycles.html
 
