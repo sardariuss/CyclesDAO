@@ -2,26 +2,26 @@
 
 On-going implementation of IC-Devs' Bounty #17: A DAO for cycles: https://icdevs.org/bounties/2022/02/25/A-DAO-for-Cycles.html
 
-## Prerequisites
+### Prerequisites
 
 * You have downloaded and installed the [DFINITY Canister SDK](https://sdk.dfinity.org).
 * To run the test scripts, you need to download [ic-repl](https://github.com/chenyan2002/ic-repl/releases) and install it in /usr/bin.
 
-## DAO
+### DAO
 
 The cycles DAO uses the basic DAO generated from the dfinity examples: https://github.com/dfinity/examples/tree/master/motoko/basic_dao
 
-## Token standards used
+### Token standards used
 
-### DIP 20: https://github.com/Psychedelic/DIP20
-### LEDGER: https://github.com/dfinity/ic/tree/master/rs/rosetta-api/ledger_canister
-### EXT: https://github.com/Toniq-Labs/extendable-token/
-- The fungible EXT (ExtF) used in the test has been generated from /blob/main/examples/standard.mo
-- The NFT EXT (ExtNft) used in the test has been generated from /blob/main/examples/erc721.mo
-### DIP721: https://github.com/Psychedelic/DIP721/tree/develop
-### NFT_ORIGYN: *coming soon*
+- DIP 20: https://github.com/Psychedelic/DIP20
+- LEDGER: https://github.com/dfinity/ic/tree/master/rs/rosetta-api/ledger_canister
+- EXT: https://github.com/Toniq-Labs/extendable-token/
+  - The fungible EXT wasm used in the test has been generated from /blob/main/examples/standard.mo
+  - The NFT EXT wasm used in the test has been generated from /blob/main/examples/erc721.mo
+- DIP721: https://github.com/Psychedelic/DIP721/tree/develop
+- NFT_ORIGYN: *coming soon*
 
-## Test Coverage
+### Test Coverage
 
 | function | test scripts | left to do | complete |
 | ------ | ------ | ------ | ------ |
@@ -32,6 +32,6 @@ The cycles DAO uses the basic DAO generated from the dfinity examples: https://g
 | requestCycles | requestCycles.test.sh | test update of histories | 90% |
 | *upgrade* | | to test | 0% |
 
-## Credits
+### Credits
 
 * Battery svg: https://www.svgrepo.com/svg/219834/battery
