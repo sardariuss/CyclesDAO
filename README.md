@@ -1,4 +1,5 @@
-# [![Battery icon](src/frontend/battery.svg)] CyclesDAO
+# CyclesDAO
+<img src="src/frontend/battery.svg" alt="" width="10%"/>
 
 On-going implementation of IC-Devs' Bounty #17: A DAO for cycles: https://icdevs.org/bounties/2022/02/25/A-DAO-for-Cycles.html
 
