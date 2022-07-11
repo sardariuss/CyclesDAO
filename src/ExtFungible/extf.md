@@ -1,1 +1,0 @@
-### This canister has been generated from https://github.com/Toniq-Labs/extendable-token/blob/main/examples/standard.mo
