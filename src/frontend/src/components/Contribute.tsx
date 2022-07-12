@@ -190,7 +190,7 @@ function Contribute({cyclesDAOActor}: any) {
             <p className="font-semibold text-xl text-gray-900 dark:text-white text-start m-5">Exchange configuration</p>
             {chartExchangeConfig()}
           </div>
-          <div className="flex flex-col w-1/2 space-y-10">
+          <div className="flex flex-col w-2/3 space-y-10">
             <div className="flex flex-col bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700">
               <p className="font-semibold text-xl text-gray-900 dark:text-white text-start m-5">Preview tokens to exchange</p>
               <div className="flex flex-row justify-center mt-10 mb-5">

@@ -26,6 +26,9 @@ function CyclesSent({cyclesDAOActor}: any) {
       if (accumulatedCyclesDataset.length === 1) {
         accumulatedCyclesDataset.push({x: accumulatedCyclesDataset[0].x, y: 0});
       }
+      // Add a point for now to be able to better see the current total
+      const now : number = Date.now();
+      accumulatedCyclesDataset.push({x: now, y: toTrillions(accumulatedCyclesAmount)});
       
       setChartData({
         datasets: [

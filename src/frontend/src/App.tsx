@@ -5,6 +5,7 @@ import Contribute from "./components/Contribute";
 
 import { HttpAgent, Actor, AnonymousIdentity } from "@dfinity/agent";
 import { Link, Route, Routes, HashRouter } from "react-router-dom";
+import { useEffect } from "react";
 
 function App() {
 
@@ -24,6 +25,14 @@ function App() {
     agent: agent,
     canisterId: `${process.env.CYCLESDAO_CANISTER_ID}`
   });
+
+  // Call the method distributeCycles every 2 seconds
+  useEffect(() => {
+		const interval = setInterval(() => {
+      cyclesDAOActor.distributeCycles();
+		}, 2000);
+		return () => clearInterval(interval);
+	}, []);
 
   return (
 		<>
