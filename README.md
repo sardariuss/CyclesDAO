@@ -68,7 +68,11 @@ The cycles DAO uses the basic DAO from the dfinity examples: https://github.com/
 | requestCycles | requestCycles.test.sh | add test of histories | 90% |
 | *upgrade* | | to test | 0% |
 
-## Known limitations
+## Known bugs
+
+- *npm run build* currently fails (though *npm run dev* works!) with the error "ERROR: Big integer literals are not available in the configured target environment ("chrome87", "edge88", "es2019", "firefox78", "safari13.1")" even if ES2020 is specified. Tested on wsl2 run in a windows 10 environment. Maybe it is linked to the bug reported here: https://github.com/vercel/next.js/issues/37271.
+
+## Limitations
 
 - In *walletReceive*, there is no absolute guarentee that after the cycles have been accepted, the minting of the token cannot fail. In this case the loses his cycles and receive no token in exchange (see main.mo:143)
 - In *distributeCycles*, if one call to *fillWithCycles* function traps, it will prevent other allowed canisters from receiving cycles. (see main.mo:232)
