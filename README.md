@@ -69,13 +69,14 @@ The cycles DAO uses the basic DAO from the dfinity examples: https://github.com/
 | *upgrade* | | to test | 0% |
 
 ## Known limitations
+
 - In walletReceive, there is no absolute guarentee that after the cycles have been accepted, the minting of the token cannot fail. In this case the loses his cycles and receive no token in exchange (see main.mo:143)
 - In distributeCycles, if one call to fillWithCycles function traps, it will prevent other allowed canisters from receiving cycles. (see main.mo:232)
 
 ## Ressources
 
-https://icdevs.org/bounties/2022/02/25/A-DAO-for-Cycles.html
-https://forum.dfinity.org/t/icdevs-org-bounty-17-a-dao-for-cycles-10-000-ht-cycle-dao/11427
+- Initial bounty: https://icdevs.org/bounties/2022/02/25/A-DAO-for-Cycles.html
+- Forum discussion: https://forum.dfinity.org/t/icdevs-org-bounty-17-a-dao-for-cycles-10-000-ht-cycle-dao/11427
 
 ## License
 
@@ -83,4 +84,4 @@ GNU General Public License v3.0
 
 ## Credits
 
-* Battery svg: https://www.svgrepo.com/svg/219834/battery
+Battery svg: https://www.svgrepo.com/svg/219834/battery
