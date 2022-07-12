@@ -9,7 +9,7 @@ The Cycles DAO collects cycles for a configured set of canisters and rewards use
 
 ## Interface (non-exhaustive)
 
-### - **configure**: ( *CyclesDaoCommand* ) -> ( variant { ok; err: *ConfigureError* } )
+### **configure**: ( *CyclesDaoCommand* ) -> ( variant { ok; err: *ConfigureError* } )
 Update the configuration of the cycles DAO. Only the governance is allowed to call this function.
 - ***SetCycleExchangeConfig***: Set the cycles exchange configuration.
 - ***DistributeBalance***: Sends any balance of a token/NFT to the provided principal.
@@ -19,22 +19,22 @@ Update the configuration of the cycles DAO. Only the governance is allowed to ca
 - ***SetGovernance***: Set the governance of the cycles DAO.
 - ***SetMinimumBalance***: Set the minimum balance of cycles that the cycles DAO will keep for itself.
 
-### - **walletReceive**: () -> ( variant { ok: *opt nat*; err: *WalletReceiveError* } )
+### **walletReceive**: () -> ( variant { ok: *opt nat*; err: *WalletReceiveError* } )
 Accept the cycles given by the caller and transfer freshly minted tokens in exchange. This function is intended to be called from a cycle wallet that can pass cycles. The amount of tokens exchanged depends on the configured cycles exchange configuration. If the current cycles balance exceeds the greatest exchange level from the configuration, refund all the cycles. See the functions *getCycleExchangeConfig*, *cyclesBalance* and *computeTokensInExchange* for more info.
 
-### - **distributeCycles**: () -> ( *bool* )
+### **distributeCycles**: () -> ( *bool* )
 Distribute the cycles to the canister in the allowed list. Does nothing if all canister already have a cycles amount greater than their minimum thresholds.
 
-### - **requestCycles**: () -> ( variant { ok; err: *CyclesTransferError* } )
+### **requestCycles**: () -> ( variant { ok; err: *CyclesTransferError* } )
 Request the cyclesDao to send cycles up to the cycles *balance_target*. This function is intended to be called from a canister that has been added via the method *configure(#AddAllowList)*, with *pull_authorized* set to true. Does nothing if the canister has a already a cycles amount greater than the minimum threshold.
 
-### - **getCycleExchangeConfig**: () -> ( vec *ExchangeLevel* )
+### **getCycleExchangeConfig**: () -> ( vec *ExchangeLevel* )
 Return the current cycles exchange configuration
 
-### - **cyclesBalance**: () -> ( *nat* )
+### **cyclesBalance**: () -> ( *nat* )
 Get the current cycles balance.
 
-### - **computeTokensInExchange**: ( *nat* ) -> ( *nat* )
+### **computeTokensInExchange**: ( *nat* ) -> ( *nat* )
 Compute the amount of tokens that walletReceive will return in exhange of the given cycles at the time this function is called.
 
 ## DAO
