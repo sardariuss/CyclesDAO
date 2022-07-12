@@ -101,7 +101,7 @@ function Dashboard({cyclesDAOActor}: any) {
           </span>
           <span className="grow w-1/2">
           <div className="flex flex-col bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 h-128">
-            <p className="font-normal text-gray-700 dark:text-gray-400 text-start m-5">Total tokens minted (in T cycles)</p>
+            <p className="font-normal text-gray-700 dark:text-gray-400 text-start m-5">Total tokens minted (in T tokens)</p>
             <div className="App m-5">
               <TokensMinted cyclesDAOActor={cyclesDAOActor}/>
             </div>

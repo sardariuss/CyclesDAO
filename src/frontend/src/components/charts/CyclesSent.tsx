@@ -21,8 +21,7 @@ function CyclesSent({cyclesDAOActor}: any) {
           {
             label: "Cycles sent",
             data: cyclesSent.map((transfer) => {
-                console.log("HAS SENT! " + toMilliSeconds(transfer.date)); // @todo: fix chart limits (min Y: 0, min/max X: depend on data)
-                return {x: toMilliSeconds(transfer.date), y: toTrillions(transfer.amount)};
+              return {x: toMilliSeconds(transfer.date), y: toTrillions(transfer.amount)};
             })
           }
         ]

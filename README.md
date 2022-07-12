@@ -70,8 +70,8 @@ The cycles DAO uses the basic DAO from the dfinity examples: https://github.com/
 
 ## Known limitations
 
-- In walletReceive, there is no absolute guarentee that after the cycles have been accepted, the minting of the token cannot fail. In this case the loses his cycles and receive no token in exchange (see main.mo:143)
-- In distributeCycles, if one call to fillWithCycles function traps, it will prevent other allowed canisters from receiving cycles. (see main.mo:232)
+- In *walletReceive*, there is no absolute guarentee that after the cycles have been accepted, the minting of the token cannot fail. In this case the loses his cycles and receive no token in exchange (see main.mo:143)
+- In *distributeCycles*, if one call to *fillWithCycles* function traps, it will prevent other allowed canisters from receiving cycles. (see main.mo:232)
 
 ## Ressources
 

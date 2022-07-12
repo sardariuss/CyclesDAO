@@ -1,5 +1,5 @@
-import { toMilliSeconds, blockIndexToString, toTrillions, standardToString } from "./../../utils/conversion";
-import { CyclesReceivedRecord, DAOCyclesError } from "../../../declarations/cyclesDAO/cyclesDAO.did.js";
+import { toMilliSeconds, toTrillions, standardToString } from "./../../utils/conversion";
+import { CyclesReceivedRecord } from "../../../declarations/cyclesDAO/cyclesDAO.did.js";
 
 import { useEffect, useState } from "react";
 
@@ -41,7 +41,7 @@ function TradeHistory({cyclesDAOActor}: any) {
                     Sent (in T cycles)
                   </th>
                   <th scope="col" className="px-6 py-3 text-center">
-                    Received (in T cycles)
+                    Received (in T tokens)
                   </th>
                   <th scope="col" className="px-6 py-3 text-center">
                     Token standard
@@ -77,7 +77,7 @@ function TradeHistory({cyclesDAOActor}: any) {
                   { record.token_principal.toString() }
                 </td>
                 <td className="px-6 py-4 text-center">
-                  {blockIndexToString(record.block_index)}
+                  { record.block_index.toString() }
                 </td>
               </tr>)})}
           </tbody>

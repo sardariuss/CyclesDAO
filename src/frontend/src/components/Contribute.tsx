@@ -1,6 +1,5 @@
-import CyclesExchangeConfig from './charts/CyclesExchangeConfig'
 import TradeHistory from './tables/TradeHistory'
-import { TokenInfo, TokenStandard, ExchangeLevel } from "../../declarations/cyclesDAO/cyclesDAO.did.js";
+import { Token, TokenStandard, ExchangeLevel } from "../../declarations/cyclesDAO/cyclesDAO.did.js";
 
 import { useEffect, useState } from "react";
 import { toTrillions, fromTrillions } from '../utils/conversion';
@@ -95,7 +94,7 @@ function Contribute({cyclesDAOActor}: any) {
   const fetch_data = async () => {
 		try {
       // Token info
-      let token = await cyclesDAOActor.getToken() as Array<TokenInfo>;
+      let token = await cyclesDAOActor.getToken() as Array<Token>;
       if (token.length != 0){
         setTokenStandard(Object.entries(token[0].standard as TokenStandard)[0][0]);
       } else {

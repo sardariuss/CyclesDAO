@@ -1,4 +1,3 @@
-import { ExchangeLevel } from "../../../declarations/cyclesDAO/cyclesDAO.did.js";
 import { useEffect, useState } from "react";
 import { toTrillions } from "../../utils/conversion";
 
@@ -78,7 +77,6 @@ function CyclesExchangeConfig({exchangeConfig, cyclesBalance}: any) {
       let listAnnotations: any = [];
 
       exchangeConfig.map((exchangeLevel) => {
-        console.log()
         let previousThreshold = currentThreshold;
         currentThreshold = exchangeLevel.threshold;
         listDatasets.push({

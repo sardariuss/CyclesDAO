@@ -21,7 +21,6 @@ function CyclesBalance({cyclesDAOActor}: any) {
 
       const currentCyclesBalance : bigint = await cyclesDAOActor.cyclesBalance();
       const now : number = Date.now();
-      console.log("NOW IS: " + now);
       data.push({x: now, y: toTrillions(currentCyclesBalance)});
       
       setChartData({
