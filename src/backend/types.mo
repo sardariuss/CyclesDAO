@@ -4,8 +4,8 @@ import LedgerTypes       "standards/ledger/types";
 import DIP721Types       "standards/dip721/types";
 import OrigynTypes       "standards/origyn/types";
 
-import Principal "mo:base/Principal";
-import Result    "mo:base/Result";
+import Principal         "mo:base/Principal";
+import Result            "mo:base/Result";
 
 module{
 

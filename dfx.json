@@ -3,47 +3,10 @@
   "canisters": {
     "cyclesDAO": {
       "type": "motoko",
-      "main": "src/CyclesDAO/main.mo",
+      "main": "src/backend/main.mo",
       "declarations": {
 				"output": "src/frontend/declarations/cyclesDAO"
 			}
-    },
-    "toPowerUp": {
-      "type": "motoko",
-      "main": "src/ToPowerUp/toPowerUp.mo"
-    },
-    "toPowerUpFactory": {
-      "type": "motoko",
-      "main": "src/ToPowerUp/toPowerUpFactory.mo"
-    },
-    "utilities": {
-      "type": "motoko",
-      "main": "src/ToPowerUp/utilities.mo"
-    },
-    "dip20": {
-      "type": "custom",
-      "candid": "src/DIP20/dip20.did",
-      "wasm": "src/DIP20/dip20.wasm"
-    },
-    "ledger": {
-      "type": "custom",
-      "candid": "src/Ledger/ledger.did",
-      "wasm": "src/Ledger/ledger.wasm"
-    },
-    "extf":{
-      "type": "custom",
-      "candid": "src/ExtFungible/extf.did",
-      "wasm": "src/ExtFungible/extf.wasm"
-    },
-    "extNft":{
-      "type": "custom",
-      "candid": "src/ExtNft/extNft.did",
-      "wasm": "src/ExtNft/extNft.wasm"
-    },
-    "basicDAO": {
-      "type": "custom",
-      "candid": "src/BasicDAO/basicDAO.did",
-      "wasm": "src/Ledger/basicDAO.wasm"
     },
     "frontend": {
       "frontend": {
@@ -51,6 +14,43 @@
       },
       "source": ["src/frontend/dist/"],
       "type": "assets"
+    },
+    "utilities": {
+      "type": "motoko",
+      "main": "tests/utilities/utilities.mo"
+    },
+    "toPowerUp": {
+      "type": "motoko",
+      "main": "tests/utilities/toPowerUp.mo"
+    },
+    "toPowerUpFactory": {
+      "type": "motoko",
+      "main": "tests/utilities/toPowerUpFactory.mo"
+    },
+    "dip20": {
+      "type": "custom",
+      "candid": "tests/wasm/DIP20/dip20.did",
+      "wasm": "tests/wasm/DIP20/dip20.wasm"
+    },
+    "ledger": {
+      "type": "custom",
+      "candid": "tests/wasm/Ledger/ledger.did",
+      "wasm": "tests/wasm/Ledger/ledger.wasm"
+    },
+    "extf":{
+      "type": "custom",
+      "candid": "tests/wasm/ExtFungible/extf.did",
+      "wasm": "tests/wasm/ExtFungible/extf.wasm"
+    },
+    "extNft":{
+      "type": "custom",
+      "candid": "tests/wasm/ExtNft/extNft.did",
+      "wasm": "tests/wasm/ExtNft/extNft.wasm"
+    },
+    "basicDAO": {
+      "type": "custom",
+      "candid": "tests/wasm/BasicDAO/basicDAO.did",
+      "wasm": "tests/wasm/BasicDAO/basicDAO.wasm"
     }
   },
   "defaults": {

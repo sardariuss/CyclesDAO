@@ -12,11 +12,11 @@ export DEFAULT_WALLET_ACCOUNT_ID=$(dfx ledger account-id --of-principal ${DEFAUL
 export CYCLES_DAO_ACCOUNT_ID=$(dfx ledger account-id --of-canister cyclesDAO)
 
 # Deploy Ledger canister, put CyclesDAO as minting account, give 1000 tokens to the default user
-rm src/Ledger/ledger.did
-cp src/Ledger/ledger.private.did src/Ledger/ledger.did
+rm tests/wasm/Ledger/ledger.did
+cp tests/wasm/Ledger/ledger.private.did tests/wasm/Ledger/ledger.did
 dfx deploy ledger --argument '(record {minting_account = "'${CYCLES_DAO_ACCOUNT_ID}'"; initial_values = vec { record { "'${DEFAULT_WALLET_ACCOUNT_ID}'"; record { e8s=100_000_000_000 } } }; send_whitelist = vec {}})'
-rm src/Ledger/ledger.did
-cp src/Ledger/ledger.public.did src/Ledger/ledger.did
+rm tests/wasm/Ledger/ledger.did
+cp tests/wasm/Ledger/ledger.public.did tests/wasm/Ledger/ledger.did
 
 # Configure CyclesDAO to use Ledger as token
 export LEDGER_PRINCIPAL=$(dfx canister id ledger)
