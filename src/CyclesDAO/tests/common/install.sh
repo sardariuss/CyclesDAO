@@ -28,7 +28,7 @@ function installCyclesDao(initial_governance, minimum_cycles_balance, init_cycle
   install(wasm, args, initial_balance);
 };
 
-function installLedger(owner) {
+function installLedger(owner, amount_e8s) {
   let argsRecord = ( 
     record {
       send_whitelist = vec { owner };
@@ -42,7 +42,7 @@ function installLedger(owner) {
         node_max_memory_size_bytes = opt(100_000);
         controller_id = owner;
       };
-      initial_values = vec { record {"initial_text"; record { e8s = 500 };}};
+      initial_values = vec { record {"initial_values"; record { e8s = amount_e8s };}};
     } : record {
       send_whitelist : vec principal;
       minting_account : text;
@@ -84,6 +84,20 @@ function installDip20(owner, total_supply){
   let args = encode interface.__init_args(
     "Test Token Logo", "Test Token Name", "Test Token Symbol", 3, total_supply, owner, 10000);
   let wasm = file "../../DIP20/dip20.wasm";
+  install(wasm, args, 0);
+};
+
+function installCap(){
+  let wasm = file "../../DIP721/cap/ic-history-router.wasm";
+  install(wasm, vec{}, 0);
+};
+
+function installDip721(owner){
+  let cap = installCap();
+  import interface = "2vxsx-fae" as "../../DIP721/nft.did";
+  let args = encode interface.__init_args(
+    opt record { custodians = opt vec { owner }; cap = opt cap; } );
+  let wasm = file "../../DIP721/nft.wasm";
   install(wasm, args, 0);
 };
 

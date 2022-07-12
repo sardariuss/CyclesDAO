@@ -109,7 +109,7 @@ shared actor class CyclesDAO(create_cycles_dao_args: Types.CreateCyclesDaoArgs) 
   };
 
   public shared(msg) func walletReceive() : 
-    async Result.Result<?Nat, Types.DAOCyclesError> {
+    async Result.Result<?Nat, Types.WalletReceiveError> {
     // Check if cycles are available
     let availableCycles = ExperimentalCycles.available();
     if (availableCycles == 0) {
@@ -128,7 +128,7 @@ shared actor class CyclesDAO(create_cycles_dao_args: Types.CreateCyclesDaoArgs) 
     // Check if the token has been set
     switch(token_) {
       case null {
-        return #err(#DAOTokenCanisterNull);
+        return #err(#TokenNotSet);
       };
       case (?token_) {
         let now = Time.now();
@@ -141,27 +141,33 @@ shared actor class CyclesDAO(create_cycles_dao_args: Types.CreateCyclesDaoArgs) 
           cycles_exchange_config_, originalBalance, acceptedCycles);
         // Mint the tokens
         // @todo: discuss what to do if the minting ever fails
-        let block_index = await Token.mint(token_, Principal.fromActor(this), msg.caller, amount_tokens);
-        // Update the registers
-        cycles_balance_register_.add({date = now; balance = ExperimentalCycles.balance()});
-        cycles_received_register_.add({
-          date = now;
-          from = msg.caller;
-          cycle_amount = acceptedCycles;
-          token_amount = amount_tokens;
-          token_standard = token_.standard;
-          token_principal = token_.canister;
-          block_index = block_index;
-        });
-        // Return the resulting block index
-        return block_index;
+        switch(await Token.mint(token_, Principal.fromActor(this), msg.caller, amount_tokens)){
+          case(#err(mint_error)){
+            return #err(#MintError(mint_error));
+          };
+          case(#ok(block_index)){
+            // Update the registers
+            cycles_balance_register_.add({date = now; balance = ExperimentalCycles.balance()});
+            cycles_received_register_.add({
+              date = now;
+              from = msg.caller;
+              cycle_amount = acceptedCycles;
+              token_amount = amount_tokens;
+              token_standard = token_.standard;
+              token_principal = token_.canister;
+              block_index = block_index;
+            });
+            // Return the resulting block index
+            return #ok(block_index);
+          };
+        };
       };
     };
   };
 
   public shared(msg) func configure(
     command: Types.CyclesDaoCommand
-  ) : async Result.Result<(), Types.DAOCyclesError> {
+  ) : async Result.Result<(), Types.ConfigureError> {
     // Check if the call comes from the governance DAO canister
     if (msg.caller != governance_) {
       return #err(#NotAllowed);
@@ -177,7 +183,7 @@ shared actor class CyclesDAO(create_cycles_dao_args: Types.CreateCyclesDaoArgs) 
       case(#DistributeBalance {standard; canister; to; amount; id; }){
         switch (await Token.transfer(standard, canister, Principal.fromActor(this), to, amount, id)){
           case (#err(err)){
-            return #err(err);
+            return #err(#TransferError(err));
           };
           case (#ok(_)){
           };
@@ -185,29 +191,31 @@ shared actor class CyclesDAO(create_cycles_dao_args: Types.CreateCyclesDaoArgs) 
       };
       case(#SetToken(token)){
         token_ := null;
-        switch (await Token.isFungible(token)){
+        switch (await Token.verifyIsFungible(token)){
           case(#err(err)){
-            return #err(err);
+            return #err(#SetTokenError(err));
           };
-          case(#ok(is_fungible)){
-            if (not is_fungible){
-              return #err(#NotEnoughCycles);
-            } else if (not (await Token.isOwner(token, Principal.fromActor(this)))) {
-              return #err(#NotEnoughCycles);
+          case(#ok()){
+            switch (await Token.verifyIsOwner(token, Principal.fromActor(this))) {
+              case(#err(err)){
+                return #err(#SetTokenError(err));
+              };
+              case (#ok()){
+                token_ := ?token;
+              };
             };
-            token_ := ?token;
           };
         };
       };
       case(#AddAllowList {canister; balance_threshold; balance_target; pull_authorized;}){
         if (balance_threshold >= balance_target) {
-          return #err(#InvalidCycleConfig);
+          return #err(#InvalidBalanceArguments);
         };
         allow_list_.put(canister, {balance_threshold = balance_threshold; balance_target = balance_target; pull_authorized = pull_authorized;});
       };
       case(#RemoveAllowList {canister}){
         if (allow_list_.remove(canister) == null){
-          return #err(#NotFound);
+          return #err(#NotInAllowList);
         };
       };
       case(#SetGovernance {canister}){

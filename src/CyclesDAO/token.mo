@@ -19,35 +19,35 @@ import Time              "mo:base/Time";
 
 module {
 
-  public func isFungible(token: Types.Token) : async Result.Result<Bool, Types.DAOCyclesError> {
+  public func verifyIsFungible(token: Types.Token) : async Result.Result<(), Types.TokenError> {
     switch(token.standard){
       case(#DIP20){
-        #ok(true);
+        #ok();
       };
       case(#LEDGER){
-        #ok(true);
+        #ok();
       };
       case(#DIP721){
-        #ok(false);
+        #err(#NftNotSupported);
       };
       case(#EXT){
         switch(token.identifier){
           case(null){
-            #err(#DAOTokenCanisterMintError);
+            #err(#TokenIdMissing);
           };
           case(?identifier){
             let interface : EXTTypes.Interface = actor (Principal.toText(token.canister));
             switch (await interface.metadata(identifier)){
               case(#err(_)){
-                #err(#DAOTokenCanisterMintError);
+                #err(#TokenInterfaceError);
               };
               case(#ok(meta_data)){
                 switch (meta_data){
                   case(#fungible(_)){
-                    #ok(true);
+                    #ok();
                   };
                   case(#nonfungible(_)){
-                    #ok(false);
+                    #err(#NftNotSupported);
                   };
                 };
               };
@@ -56,35 +56,39 @@ module {
         };
       };
       case(#NFT_ORIGYN){
-        #ok(false);
+        #err(#NftNotSupported);
       };
     };
   };
 
-  public func isOwner(token: Types.Token, principal: Principal): async Bool {
+  public func verifyIsOwner(token: Types.Token, principal: Principal): async Result.Result<(), Types.TokenError> {
     switch(token.standard){
-      case(#DIP20()){
+      case(#DIP20){
         let interface : DIP20Types.Interface = actor (Principal.toText(token.canister));
         let metaData = await interface.getMetadata();
-        metaData.owner == principal;
+        if (metaData.owner != principal) {
+          #err(#TokenNotOwned);
+        } else {
+          #ok;
+        };
       };
-      case(#LEDGER()){
+      case(#LEDGER){
         // There is no way to check the owner of the ledger canister
         // Hence assume the given principal is the owner
-        true;
+        #ok;
       };
-      case(#DIP721()){
+      case(#DIP721){
         // @todo: investigate why it's not possible to use the tokenMetadata interface of the
         // dip721 canister (it uses a 'vec record' in Candid that cannot be used in Motoko?)
         // For now assume the given principal is the owner
-        true;
+        #ok;
       };
-      case(#EXT()){
+      case(#EXT){
         // There is no way to check the owner of the EXT canister
         // Hence assume the given principal is the owner
-        true;
+        #ok;
       };
-      case(#NFT_ORIGYN()){
+      case(#NFT_ORIGYN){
         // @todo: implement the NFT_ORIGYN standard
         Debug.trap("The NFT_ORIGYN standard is not implemented yet!");
       };
@@ -96,13 +100,13 @@ module {
     from: Principal,
     to: Principal, 
     amount: Nat
-  ) : async Result.Result<?Nat, Types.DAOCyclesError> {
+  ) : async Result.Result<?Nat, Types.TokenError> {
     switch(token.standard){
       case(#DIP20){
         let interface : DIP20Types.Interface = actor (Principal.toText(token.canister));
         switch (await interface.mint(to, amount)){
           case(#Err(_)){
-            #err(#DAOTokenCanisterMintError);
+            #err(#TokenInterfaceError);
           };
           case(#Ok(tx_counter)){
             #ok(?tx_counter);
@@ -112,7 +116,7 @@ module {
       case(#LEDGER){
         switch (Utils.getAccountIdentifier(to, token.canister)){
           case(null){
-            #err(#DAOTokenCanisterMintError);
+            #err(#ComputeAccountIdFailed);
           };
           case(?account_identifier){
             let interface : LedgerTypes.Interface = actor (Principal.toText(token.canister));
@@ -125,7 +129,7 @@ module {
               created_at_time = ?{ timestamp_nanos = Nat64.fromNat(Int.abs(Time.now())); };
             })){
               case(#Err(_)){
-                #err(#DAOTokenCanisterMintError);
+                #err(#TokenInterfaceError);
               };
               case(#Ok(block_index)){
                 #ok(?Nat64.toNat(block_index));
@@ -135,25 +139,23 @@ module {
         };
       };
       case(#DIP721){
-        // Minting of NFTs is not supported!
-        #err(#DAOTokenCanisterMintError);
+        #err(#NftNotSupported);
       };
       case(#EXT){
         switch(token.identifier){
           case(null){
-            #err(#DAOTokenCanisterMintError);
+            #err(#TokenIdMissing);
           };
           case(?identifier){
             let interface : EXTTypes.Interface = actor (Principal.toText(token.canister));
             switch (await interface.metadata(identifier)){
               case(#err(_)){
-                #err(#DAOTokenCanisterMintError);
+                #err(#TokenInterfaceError);
               };
               case(#ok(meta_data)){
                 switch (meta_data){
                   case(#nonfungible(_)){
-                    // Minting of NFTs is not supported!
-                    #err(#DAOTokenCanisterMintError);
+                    #err(#NftNotSupported);
                   };
                   case(#fungible(_)){
                     // There is no mint interface in EXT standard, perform a simple transfer
@@ -167,7 +169,7 @@ module {
                       subaccount = null;
                     })){
                       case (#err(_)){
-                        #err(#DAOTokenCanisterMintError);
+                        #err(#TokenInterfaceError);
                       };
                       // @todo: see the archive extention from the EXT standard. One could use
                       // it to add the transfer and get a transcation ID
@@ -183,8 +185,7 @@ module {
         };
       };
       case(#NFT_ORIGYN){
-        // Minting of NFTs is not supported!
-        #err(#DAOTokenCanisterMintError);
+        #err(#NftNotSupported);
       };
     };
   };
@@ -196,13 +197,13 @@ module {
     to: Principal, 
     amount: Nat,
     id: ?{#text: Text; #nat: Nat}
-  ) : async Result.Result<?Nat, Types.DAOCyclesError> {
+  ) : async Result.Result<?Nat, Types.TokenError> {
     switch(standard){
       case(#DIP20){
         let interface : DIP20Types.Interface = actor (Principal.toText(canister));
         switch (await interface.transfer(to, amount)){
           case(#Err(_)){
-            #err(#DAOTokenCanisterMintError);
+            #err(#TokenInterfaceError);
           };
           case(#Ok(tx_counter)){
             #ok(?tx_counter);
@@ -212,7 +213,7 @@ module {
       case(#LEDGER){
         switch (Utils.getAccountIdentifier(to, canister)){
           case(null){
-            #err(#DAOTokenCanisterMintError);
+            #err(#ComputeAccountIdFailed);
           };
           case(?account_identifier){
             let interface : LedgerTypes.Interface = actor (Principal.toText(canister));
@@ -225,7 +226,7 @@ module {
               created_at_time = ?{ timestamp_nanos = Nat64.fromNat(Int.abs(Time.now())); };
             })){
               case(#Err(_)){
-                #err(#DAOTokenCanisterMintError);
+                #err(#TokenInterfaceError);
               };
               case(#Ok(block_index)){
                 #ok(?Nat64.toNat(block_index));
@@ -238,19 +239,19 @@ module {
         switch(id){
           case(null){
             // DIP721 requires a token identifier
-            #err(#DAOTokenCanisterMintError);
+            #err(#TokenIdMissing);
           };
           case(?id){
             switch(id){
               case(#text(_)){
                 // EXT cannot use text as token identifier, only nat
-                #err(#DAOTokenCanisterMintError);
+                #err(#TokenIdInvalidType);
               };
               case(#nat(id_nft)){
                 let interface : DIP721Types.Interface = actor (Principal.toText(canister));
                 switch (await interface.transfer(to, id_nft)){
                   case(#Err(_)){
-                    #err(#DAOTokenCanisterMintError);
+                    #err(#TokenInterfaceError);
                   };
                   case(#Ok(tx_counter)){
                     #ok(?tx_counter);
@@ -265,13 +266,13 @@ module {
         switch(id){
           case(null){
             // EXT requires a token identifier
-            #err(#DAOTokenCanisterMintError);
+            #err(#TokenIdMissing);
           };
           case(?id){
             switch(id){
               case(#nat(_)){
                 // EXT cannot use nat as token identifier, only text
-                #err(#DAOTokenCanisterMintError);
+                #err(#TokenIdInvalidType);
               };
               case(#text(token_identifier)){
                 let interface : EXTTypes.Interface = actor (Principal.toText(canister));
@@ -285,7 +286,7 @@ module {
                   subaccount = null;
                 })){
                   case(#err(_)){
-                    #err(#DAOTokenCanisterMintError);
+                    #err(#TokenInterfaceError);
                   };
                   // @todo: see the archive extention from the EXT standard. One could use
                   // it to add the transfer and get a transcation ID.

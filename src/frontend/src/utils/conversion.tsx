@@ -20,8 +20,8 @@ export const errorToString = (errorType: DAOCyclesError) => {
 	if ('MaxCyclesReached' in errorType){
 		return 'MaxCyclesReached';
 	}
-	if ('DAOTokenCanisterNull' in errorType){
-		return 'DAOTokenCanisterNull';
+	if ('TokenNotSet' in errorType){
+		return 'TokenNotSet';
 	}
 	if ('DAOTokenCanisterNotOwned' in errorType){
 		return 'DAOTokenCanisterNotOwned';

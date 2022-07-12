@@ -26,10 +26,10 @@ The cycles DAO uses the basic DAO generated from the dfinity examples: https://g
 | function | test scripts | left to do | complete |
 | ------ | ------ | ------ | ------ |
 | *constructor* | constructor.test.sh | N/A |  100% |
-| walletReceive | walletReceive_dip20.test.sh, walletReceive_errors.test.sh, walletReceive_extf.test.sh, walletReceive_ledger.test.sh | fix ledger canister initialization, see function intallLedger in install.sh | 75% | 
+| walletReceive | walletReceive_dip20.test.sh, walletReceive_errors.test.sh, walletReceive_extf.test.sh, walletReceive_ledger.test.sh | fix ledger canister initialization (see install.sh) | 75% | 
 | configure(#SetCycleExchangeConfig) | setCycleExchangeConfig.test.sh | N/A | 100% |
-| configure(#DistributeBalance) | distributeBalance_dip20.test.sh, distributeBalance_ledger.test.sh, distributeBalance_extNft.test.sh, distributeBalance_extf.test.sh, distributeBalance_dip721.test.sh | Only EXT NFT is tested | 30% |
-| configure(#SetToken) | setToken.test.sh | errors not tested | 70% |
+| configure(#DistributeBalance) | distributeBalance_dip20.test.sh, distributeBalance_ledger.test.sh, distributeBalance_extNft.test.sh, distributeBalance_extf.test.sh, distributeBalance_dip721.test.sh | fix DIP721 type warning preventing some asserts, fix ledger canister initialization (see install.sh) | 75% |
+| configure(#SetToken) | setToken.test.sh | fix ledger canister initialization (see install.sh) | 80% |
 | configure(#AddAllowList) | addAndRemoveAllowList.test.sh.test.sh | N/A | 100% |
 | configure(#RemoveAllowList) | addAndRemoveAllowList.test.sh.test.sh | N/A | 100% |
 | configure(#SetGovernance) | setGovernance.test.sh | N/A | 100% |

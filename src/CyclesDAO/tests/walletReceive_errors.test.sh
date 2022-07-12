@@ -47,6 +47,6 @@ call cyclesDao.configure( variant { SetCycleExchangeConfig = vec {
 assert _ == variant { ok };
 
 // Verify that if no token has been set, the function walletReceive 
-// returns the error #DAOTokenCanisterNull 
+// returns the error #TokenNotSet 
 walletReceive(default_wallet, cyclesDao, 1_000_000_000);
-assert _ == variant { err = variant { DAOTokenCanisterNull } };
+assert _ == variant { err = variant { TokenNotSet } };

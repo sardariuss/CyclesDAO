@@ -17,13 +17,12 @@ module{
 
   public type CyclesDaoCommand = {
     #SetCycleExchangeConfig: [ExchangeLevel];
-    //sends any balance of a token/NFT to the provided principal
     #DistributeBalance: {
       standard: TokenStandard;
       canister: Principal;
       to: Principal;
-      amount: Nat; //1 for NFT
-      id: ?{#text: Text; #nat: Nat}; //used for nfts
+      amount: Nat;
+      id: ?{#text: Text; #nat: Nat};
     };
     #SetToken: Token;
     #AddAllowList: {
@@ -62,17 +61,30 @@ module{
     identifier: ?Text;
   };
 
-  // @todo: review naming of errors
-  public type DAOCyclesError = {
+  public type WalletReceiveError = {
     #NoCyclesAdded;
-    #MaxCyclesReached;
-    #DAOTokenCanisterNull;
-    #DAOTokenCanisterNotOwned;
-    #DAOTokenCanisterMintError;
-    #NotAllowed;
-    #NotFound;
-    #NotEnoughCycles;
     #InvalidCycleConfig;
+    #MaxCyclesReached;
+    #TokenNotSet;
+    #MintError: TokenError;
+  };
+
+  public type ConfigureError = {
+    #NotAllowed;
+    #InvalidCycleConfig;
+    #InvalidBalanceArguments;
+    #NotInAllowList;
+    #TransferError: TokenError;
+    #SetTokenError: TokenError;
+  };
+
+  public type TokenError = {
+    #TokenInterfaceError;
+    #ComputeAccountIdFailed;
+    #TokenIdMissing;
+    #NftNotSupported;
+    #TokenIdInvalidType;
+    #TokenNotOwned;
   };
 
   public type CyclesTransferError = {
@@ -106,7 +118,7 @@ module{
     token_amount: Nat;
     token_standard: TokenStandard;
     token_principal: Principal;
-    block_index: Result.Result<?Nat, DAOCyclesError>;
+    block_index: ?Nat;
   };
 
   public type ConfigureCommandRecord = {

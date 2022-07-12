@@ -27,6 +27,16 @@ let cycles_dao_account = call utilities.getAccountIdentifierAsText(cyclesDao);
 call extNft.bearer(nftIdentifier);
 assert _ == variant { ok = default_user_account };
 
+// Test that the command fails if the nft does not belong to the cyclesDao
+call cyclesDao.configure(variant { DistributeBalance = record {
+  standard = variant { EXT };
+  canister = extNft;
+  to = default;
+  amount = 1;
+  id = opt variant { text = nftIdentifier };
+}});
+assert _ == variant { err = variant { TransferError = variant { TokenInterfaceError } } };
+
 call extNft.transfer(record {
   amount = 1;
   from = variant {"principal" = default};
@@ -40,6 +50,26 @@ call extNft.transfer(record {
 call extNft.bearer(nftIdentifier);
 assert _ == variant { ok = cycles_dao_account };
 
+// Test that the command fails if the identifier is missing
+call cyclesDao.configure(variant { DistributeBalance = record {
+  standard = variant { EXT };
+  canister = extNft;
+  to = default;
+  amount = 1;
+}});
+assert _ == variant { err = variant { TransferError = variant { TokenIdMissing } } };
+
+// Test that the command fails if the nft is identified with nat
+call cyclesDao.configure(variant { DistributeBalance = record {
+  standard = variant { EXT };
+  canister = extNft;
+  to = default;
+  amount = 1;
+  id = opt variant { nat = 0 };
+}});
+assert _ == variant { err = variant { TransferError = variant { TokenIdInvalidType } } };
+
+// Test that the command fails if the nft is identified with text
 call cyclesDao.configure(variant { DistributeBalance = record {
   standard = variant { EXT };
   canister = extNft;

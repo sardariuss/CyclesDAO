@@ -68,11 +68,11 @@ assert _ == vec {convertType(toPowerUp1); convertType(toPowerUp2); convertType(t
 
 // Try to add a canister with balance_threshold < balance_target shall fail
 call cyclesDao.configure(variant {AddAllowList = toPowerUpInvalid});
-assert _ == variant { err = variant { InvalidCycleConfig } };
+assert _ == variant { err = variant { InvalidBalanceArguments } };
 
 // Try to remove a canister that has not been added shall fail
 call cyclesDao.configure(variant {RemoveAllowList = record { canister = toPowerUpInvalid.canister }});
-assert _ == variant { err = variant { NotFound } };
+assert _ == variant { err = variant { NotInAllowList } };
 
 // Remove the three canister one by one
 call cyclesDao.configure(variant {RemoveAllowList = record { canister = toPowerUp3.canister }});

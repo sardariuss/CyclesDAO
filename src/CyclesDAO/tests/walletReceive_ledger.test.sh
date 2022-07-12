@@ -21,7 +21,7 @@ let cyclesDao = installCyclesDao(initial_governance, minimum_cycles_balance, ini
 
 let utilities = installUtilities();
 
-let ledger = installLedger(cyclesDao);
+let ledger = installLedger(cyclesDao, 0);
 let default_account = call utilities.getAccountIdentifierAsBlob(default_wallet, ledger);
 call cyclesDao.configure(variant {SetToken = record {standard = variant{LEDGER}; canister = ledger; identifier=opt("")}});
 assert _ == variant { ok };

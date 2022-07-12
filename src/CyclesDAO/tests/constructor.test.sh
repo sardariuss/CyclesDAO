@@ -12,16 +12,7 @@ let cyclesDao = installCyclesDao(initial_governance, minimum_cycles_balance, ini
 
 // Test the cyclesDAO getters after construction
 call cyclesDao.getToken();
-assert _ == ( null : opt record {
-  standard: variant {
-    DIP20;
-    LEDGER;
-    DIP721;
-    EXT;
-    NFT_ORIGYN;
-  };
-  "principal": principal;
-});
+assert _ == ( null : opt record {});
 call cyclesDao.cyclesBalance();
 assert _ == initial_balance;
 call cyclesDao.getGovernance();
