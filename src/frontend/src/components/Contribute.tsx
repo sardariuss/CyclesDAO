@@ -1,8 +1,8 @@
 import TradeHistory from './tables/TradeHistory'
+import { toTrillions, fromTrillions } from '../utils/conversion';
 import { Token, TokenStandard, ExchangeLevel } from "../../declarations/cyclesDAO/cyclesDAO.did.js";
 
 import { useEffect, useState } from "react";
-import { toTrillions, fromTrillions } from '../utils/conversion';
 import { Bar }            from 'react-chartjs-2'
 import { Chart, registerables } from 'chart.js';
 import annotationPlugin, { AnnotationOptions, AnnotationPluginOptions, AnnotationTypeRegistry } from 'chartjs-plugin-annotation';
@@ -131,41 +131,40 @@ function Contribute({cyclesDAOActor}: any) {
     computeTokensExchange();
   }, [cyclesPreview]);
 
-  const refreshGraph = async () => {
-		try {
-      var currentThreshold : bigint = 0n;
-      let listDatasets : any = [];
-      let listAnnotations: any = [];
-
-      exchangeConfig.map((exchangeLevel) => {
-        let previousThreshold = currentThreshold;
-        currentThreshold = exchangeLevel.threshold;
-        listDatasets.push({
-          label: exchangeLevel.rate_per_t.toString(),
-          data: [toTrillions(currentThreshold - previousThreshold)]
-        });
-        listAnnotations.push(getLabel(toTrillions(previousThreshold + (exchangeLevel.threshold - previousThreshold) / 2n ), exchangeLevel.rate_per_t));
-      })
-
-      listAnnotations.push(getBox(toTrillions(cyclesBalance), toTrillions(cyclesPreview)));
-
-      setChartData({
-        labels: ["Cycles exchange config"],
-        datasets: listDatasets
-      });
-
-      setAnnotation({ annotations : listAnnotations });
-        
-      setHaveData(true);
-
-    } catch (err) {
-      console.error(err);
-      setHaveData(false);
-		}
-  }
-
   useEffect(() => {
-    refreshGraph()
+    const refreshGraph = async () => {
+      try {
+        var currentThreshold : bigint = 0n;
+        let listDatasets : any = [];
+        let listAnnotations: any = [];
+  
+        exchangeConfig.map((exchangeLevel) => {
+          let previousThreshold = currentThreshold;
+          currentThreshold = exchangeLevel.threshold;
+          listDatasets.push({
+            label: exchangeLevel.rate_per_t.toString(),
+            data: [toTrillions(currentThreshold - previousThreshold)]
+          });
+          listAnnotations.push(getLabel(toTrillions(previousThreshold + (exchangeLevel.threshold - previousThreshold) / 2n ), exchangeLevel.rate_per_t));
+        })
+  
+        listAnnotations.push(getBox(toTrillions(cyclesBalance), toTrillions(cyclesPreview)));
+  
+        setChartData({
+          labels: ["Cycles exchange config"],
+          datasets: listDatasets
+        });
+  
+        setAnnotation({ annotations : listAnnotations });
+          
+        setHaveData(true);
+  
+      } catch (err) {
+        console.error(err);
+        setHaveData(false);
+      }
+    };
+    refreshGraph();
   }, [exchangeConfig, cyclesBalance, cyclesPreview]);
 
   const chartExchangeConfig = () => {
@@ -214,7 +213,7 @@ function Contribute({cyclesDAOActor}: any) {
                 <input type="range" min={toTrillions(cyclesBalance)} max={toTrillions(maxCyclesBalance)} value={toTrillions(cyclesBalance + cyclesPreview)} onChange={(e) => refreshCyclesPreview(e)} className="w-5/6 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"/>
               </div>
             </div>
-            <div>
+            <div className="flex">
               <TradeHistory cyclesDAOActor={cyclesDAOActor}/>
             </div>
           </div>
