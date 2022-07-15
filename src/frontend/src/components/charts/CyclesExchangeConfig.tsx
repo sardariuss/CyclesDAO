@@ -68,7 +68,7 @@ function CyclesExchangeConfig({exchangeConfig, cyclesBalance}: any) {
 
   const [chartData, setChartData] = useState({})
   const [haveData, setHaveData] = useState(false);
-  const [annotation, setAnnotation] = useState<AnnotationPluginOptions>({annotations: []}); // @todo
+  const [annotation, setAnnotation] = useState<AnnotationPluginOptions>({annotations: []});
 
   const fetch_data = async () => {
 		try {

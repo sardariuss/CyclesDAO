@@ -1,4 +1,3 @@
-import Accounts          "standards/ledger/accounts";
 import Types             "types";
 
 import Buffer            "mo:base/Buffer";
@@ -71,15 +70,6 @@ module {
       });
     };
     buffer.toArray();
-  };
-
-  public func getAccountIdentifier(account: Principal, ledger: Principal) : ?Accounts.AccountIdentifier {
-    let identifier = Accounts.accountIdentifier(ledger, Accounts.principalToSubaccount(account));
-    if(Accounts.validateAccountIdentifier(identifier)){
-      ?identifier;
-    } else {
-      null;
-    };
   };
 
 };

@@ -1,30 +1,17 @@
-import DIP20Types        "standards/dip20/types";
-import EXTTypes          "standards/ext/types";
-import LedgerTypes       "standards/ledger/types";
-import DIP721Types       "standards/dip721/types";
-import OrigynTypes       "standards/origyn/types";
-
 import Principal         "mo:base/Principal";
 import Result            "mo:base/Result";
 
 module{
 
-  public type CreateCyclesDaoArgs = {
-    governance: Principal;
+  public type CreateCyclesDispenserArgs = {
+    admin: Principal;
     minimum_cycles_balance: Nat;
+    token_accessor: Principal;
     cycles_exchange_config: [ExchangeLevel];
   };
 
-  public type CyclesDaoCommand = {
+  public type CyclesDispenserCommand = {
     #SetCycleExchangeConfig: [ExchangeLevel];
-    #DistributeBalance: {
-      standard: TokenStandard;
-      canister: Principal;
-      to: Principal;
-      amount: Nat;
-      id: ?{#text: Text; #nat: Nat};
-    };
-    #SetToken: Token;
     #AddAllowList: {
       canister: Principal;
       balance_threshold: Nat;
@@ -34,7 +21,7 @@ module{
     #RemoveAllowList: {
       canister: Principal;
     };
-    #SetGovernance: {
+    #SetAdmin: {
       canister: Principal;
     };
     #SetMinimumBalance: {
@@ -47,26 +34,11 @@ module{
     rate_per_t: Float;
   };
 
-  public type TokenStandard = {
-    #DIP20;
-    #LEDGER;
-    #DIP721;
-    #EXT;
-    #NFT_ORIGYN;
-  };
-
-  public type Token = {
-    standard: TokenStandard;
-    canister: Principal;
-    identifier: ?Text;
-  };
-
   public type WalletReceiveError = {
     #NoCyclesAdded;
     #InvalidCycleConfig;
     #MaxCyclesReached;
-    #TokenNotSet;
-    #MintError: TokenError;
+    #TokenAccessorError: TokenError;
   };
 
   public type ConfigureError = {
@@ -76,15 +48,6 @@ module{
     #NotInAllowList;
     #TransferError: TokenError;
     #SetTokenError: TokenError;
-  };
-
-  public type TokenError = {
-    #TokenInterfaceError;
-    #ComputeAccountIdFailed;
-    #TokenIdMissing;
-    #NftNotSupported;
-    #TokenIdInvalidType;
-    #TokenNotOwned;
   };
 
   public type CyclesTransferError = {
@@ -115,16 +78,13 @@ module{
     date: Int;
     from: Principal;
     cycle_amount: Nat;
-    token_amount: Nat;
-    token_standard: TokenStandard;
-    token_principal: Principal;
-    block_index: ?Nat;
+    mint_index: Nat;
   };
 
   public type ConfigureCommandRecord = {
     date: Int;
-    governance: Principal;
-    command: CyclesDaoCommand;
+    admin: Principal;
+    command: CyclesDispenserCommand;
   };
 
   public type CyclesProfile = {
@@ -140,8 +100,27 @@ module{
   };
 
   public type ToPowerUpInterface = actor {
-    setCyclesDAO: shared (Principal) -> async ();
+    setCyclesDispenser: shared (Principal) -> async ();
     cyclesBalance: shared query () -> async (Nat);
     acceptCycles: shared () -> async ();
   };
-}
+
+  // From the token accessor
+
+  public type TokenError = {
+    #ComputeAccountIdFailed;
+    #NftNotSupported;
+    #NotAuthorized;
+    #TokenIdMissing;
+    #TokenIdInvalidType;
+    #TokenInterfaceError;
+    #TokenNotOwned;
+    #TokenNotSet;
+  };
+
+  public type MintFunction = shared (Principal, Nat) -> async Nat;
+
+  public type TokenAccessorInterface = actor {
+    getMintFunction: shared() -> async (Result.Result<MintFunction, TokenError>);
+  };
+};

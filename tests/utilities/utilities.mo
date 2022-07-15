@@ -1,6 +1,5 @@
-// @todo: find out if there is a way to remove this dependency on source files
-import Accounts            "../../src/backend/standards/ledger/accounts";
 import AccountIdentifier   "./ExtUtils/AccountIdentifier";
+import Accounts            "./LedgerUtils/accounts";
 
 import Array               "mo:base/Array";
 import Blob                "mo:base/Blob";

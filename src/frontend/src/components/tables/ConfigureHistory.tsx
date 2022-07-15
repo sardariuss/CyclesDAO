@@ -1,5 +1,5 @@
 import { toMilliSeconds } from "./../../utils/conversion";
-import { ConfigureCommandRecord, CyclesDaoCommand } from "../../../declarations/cyclesDAO/cyclesDAO.did.js";
+import { ConfigureCommandRecord, CyclesDispenserCommand } from "../../../declarations/cyclesDAO/cyclesDAO.did.js";
 
 import { useEffect, useState } from "react";
 
@@ -25,7 +25,7 @@ function ConfigureHistory({cyclesDAOActor}: any) {
     return date.toLocaleDateString('en-US');
   }
 
-  const commandToString = (commandType: CyclesDaoCommand) => {
+  const commandToString = (commandType: CyclesDispenserCommand) => {
     if ('SetCycleExchangeConfig' in commandType){
       return 'SetCycleExchangeConfig';
     }
@@ -41,8 +41,8 @@ function ConfigureHistory({cyclesDAOActor}: any) {
     if ('RemoveAllowList' in commandType){
       return 'RemoveAllowList';
     }
-    if ('SetGovernance' in commandType){
-      return 'SetGovernance';
+    if ('SetAdmin' in commandType){
+      return 'SetAdmin';
     }
     if ('SetMinimumBalance' in commandType){
       return 'SetMinimumBalance';
@@ -74,7 +74,7 @@ function ConfigureHistory({cyclesDAOActor}: any) {
                     { formatDate(record.date) }
                 </th>
                 <td className="px-6 py-4">
-                    { record.governance.toString() }
+                    { record.admin.toString() }
                 </td>
                 <td className="px-6 py-4">
                     { commandToString(record.command) }

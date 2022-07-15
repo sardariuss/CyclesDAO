@@ -7,26 +7,24 @@ The Cycles DAO collects cycles for a configured set of canisters and rewards use
 * You have downloaded and installed the [DFINITY Canister SDK](https://sdk.dfinity.org).
 * To run the test scripts, you need to download [ic-repl](https://github.com/chenyan2002/ic-repl/releases) and install it in /usr/bin.
 
-## Interface (non-exhaustive)
+## CyclesDispenser interface (non-exhaustive)
 
-### **configure**: ( *CyclesDaoCommand* ) -> ( variant { ok; err: *ConfigureError* } )
-Update the configuration of the cycles DAO. Only the governance is allowed to call this function.
+### **configure**: ( *CyclesDispenserCommand* ) -> ( variant { ok; err: *ConfigureError* } )
+Update the configuration of the cycles DAO. Only the admin is allowed to call this function.
 - ***SetCycleExchangeConfig***: Set the cycles exchange configuration.
-- ***DistributeBalance***: Sends any balance of a token/NFT to the provided principal.
-- ***SetToken***: Set the token to mint in exchange of provided cycles in *walletReceive*.
 - ***AddAllowList***: Add the canister to the list of canisters that receive cycles from *distributeCycles*.
 - ***RemoveAllowList***: Remove a canister from the list of canisters that receive cycles from *distributeCycles*.
-- ***SetGovernance***: Set the governance of the cycles DAO.
+- ***SetAdmin***: Set the admin of the cycles DAO.
 - ***SetMinimumBalance***: Set the minimum balance of cycles that the cycles DAO will keep for itself.
 
-### **walletReceive**: () -> ( variant { ok: *opt nat*; err: *WalletReceiveError* } )
-Accept the cycles given by the caller and transfer freshly minted tokens in exchange. This function is intended to be called from a cycle wallet that can pass cycles. The amount of tokens exchanged depends on the configured cycles exchange configuration. If the current cycles balance exceeds the greatest exchange level from the configuration, refund all the cycles. See the functions *getCycleExchangeConfig*, *cyclesBalance* and *computeTokensInExchange* for more info.
+### **walletReceive**: () -> ( variant { ok: *nat*; err: *WalletReceiveError* } )
+Accept the cycles given by the caller and transfer freshly minted tokens in exchange. This function is intended to be called from a cycle wallet that can pass cycles. The amount of tokens exchanged depends on the configured cycles exchange configuration. If the current cycles balance exceeds the greatest exchange level from the configuration, refund all the cycles. Return a mint index identifier on success. See the functions *getCycleExchangeConfig*, *cyclesBalance* and *computeTokensInExchange* for more info.
 
 ### **distributeCycles**: () -> ( *bool* )
 Distribute the cycles to the canister in the allowed list. Does nothing if all canister already have a cycles amount greater than their minimum thresholds.
 
 ### **requestCycles**: () -> ( variant { ok; err: *CyclesTransferError* } )
-Request the cyclesDao to send cycles up to the cycles *balance_target*. This function is intended to be called from a canister that has been added via the method *configure(#AddAllowList)*, with *pull_authorized* set to true. Does nothing if the canister has a already a cycles amount greater than the minimum threshold.
+Request to send cycles up to the cycles *balance_target*. This function is intended to be called from a canister that has been added via the method *configure(#AddAllowList)*, with *pull_authorized* set to true. Does nothing if the canister has a already a cycles amount greater than the minimum threshold.
 
 ### **getCycleExchangeConfig**: () -> ( vec *ExchangeLevel* )
 Return the current cycles exchange configuration
@@ -36,6 +34,10 @@ Get the current cycles balance.
 
 ### **computeTokensInExchange**: ( *nat* ) -> ( *nat* )
 Compute the amount of tokens that walletReceive will return in exhange of the given cycles at the time this function is called.
+
+## TokenAccessor interface
+
+@todo
 
 ## DAO
 
@@ -53,20 +55,19 @@ The cycles DAO uses the basic DAO from the dfinity examples: https://github.com/
 
 ## Test Coverage
 
-| function | test scripts | left to do | complete |
+| canister | function | test scripts | left to do | complete |
 | ------ | ------ | ------ | ------ |
-| *constructor* | constructor.test.sh | N/A |  100% |
-| walletReceive | walletReceive_dip20.test.sh, walletReceive_errors.test.sh, walletReceive_extf.test.sh, walletReceive_ledger.test.sh | fix ledger canister initialization (see install.sh) | 75% | 
-| configure(#SetCycleExchangeConfig) | setCycleExchangeConfig.test.sh | N/A | 100% |
-| configure(#DistributeBalance) | distributeBalance_dip20.test.sh, distributeBalance_ledger.test.sh, distributeBalance_extNft.test.sh, distributeBalance_extf.test.sh, distributeBalance_dip721.test.sh | fix DIP721 type warning preventing some asserts, fix ledger canister initialization (see install.sh) | 75% |
-| configure(#SetToken) | setToken.test.sh | fix ledger canister initialization (see install.sh) | 80% |
-| configure(#AddAllowList) | addAndRemoveAllowList.test.sh.test.sh | N/A | 100% |
-| configure(#RemoveAllowList) | addAndRemoveAllowList.test.sh.test.sh | N/A | 100% |
-| configure(#SetGovernance) | setGovernance.test.sh | N/A | 100% |
-| configure(#SetMinimumBalance) | setMinimumBalance.test.sh | N/A | 100% |
-| distributeCycles | distributeCycles.test.sh | split test to avoid risk of side effects - add test of histories | 80% |
-| requestCycles | requestCycles.test.sh | add test of histories | 90% |
-| *upgrade* | | to test | 0% |
+| CyclesProvider | *constructor* | constructor.test.sh | N/A |  100% |
+| CyclesProvider | walletReceive | walletReceive_dip20.test.sh, walletReceive_errors.test.sh, walletReceive_extf.test.sh, walletReceive_ledger.test.sh | fix ledger canister initialization | CyclesProvider (see install.sh) | 75% | 
+| CyclesProvider | configure(#SetCycleExchangeConfig) | setCycleExchangeConfig.test.sh | N/A | 100% |
+| CyclesProvider | configure(#AddAllowList) | addAndRemoveAllowList.test.sh.test.sh | N/A | 100% |
+| CyclesProvider | configure(#RemoveAllowList) | addAndRemoveAllowList.test.sh.test.sh | N/A | 100% |
+| CyclesProvider | configure(#SetAdmin) | setAdmin.test.sh | N/A | 100% |
+| CyclesProvider | configure(#SetMinimumBalance) | setMinimumBalance.test.sh | N/A | 100% |
+| CyclesProvider | distributeCycles | distributeCycles.test.sh | split test to avoid risk of side effects - add test of histories | 80% |
+| CyclesProvider | requestCycles | requestCycles.test.sh | add test of histories | 90% |
+| CyclesProvider | *upgrade* | | to test | 0% |
+| TokenAccessor | setTokenToMint | setTokenToMint.test.sh | fix ledger canister initialization (see install.sh) | 80% |
 
 ## Known bugs
 
@@ -74,8 +75,8 @@ The cycles DAO uses the basic DAO from the dfinity examples: https://github.com/
 
 ## Limitations
 
-- In *walletReceive*, there is no absolute guarentee that after the cycles have been accepted, the minting of the token cannot fail. In this case the loses his cycles and receive no token in exchange (see main.mo:143)
 - In *distributeCycles*, if one call to *fillWithCycles* function traps, it will prevent other allowed canisters from receiving cycles. (see main.mo:232)
+- Ledger uses e8s, while DIP20 and EXT standard use e0s
 
 ## Ressources
 

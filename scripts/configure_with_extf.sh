@@ -1,35 +1,35 @@
 #!/bin/bash
 
-# Assume dfx is already running and the cyclesDAO canister is governed by the default user
+# Assume dfx is already running and the cyclesDispenser and tokenAccessor canisters are governed by the default user
 
 # Change directory to dfx directory
 # @todo: this script shall be callable from anywhere!
 cd ..
 
 dfx identity use default
-export CYCLES_DAO_PRINCIPAL=$(dfx canister id cyclesDAO)
+export TOKEN_ACCESSOR=$(dfx canister id tokenAccessor)
 
-# Deploy EXTF canister, put CyclesDAO as "minting" account
-dfx deploy extf --argument="(\"EXT FUNGIBLE EXAMPLE\", \"EXTF\", 8, 100_000_000_000_000_000_000, principal \"$CYCLES_DAO_PRINCIPAL\")"
+# Deploy EXTF canister, put TokenAccessor as "minting" account
+dfx deploy extf --argument="(\"EXT FUNGIBLE EXAMPLE\", \"EXTF\", 8, 100_000_000_000_000_000_000, principal \"$TOKEN_ACCESSOR\")"
 
-# Configure CyclesDAO to use EXTF as token
-export EXTF_PRINCIPAL=$(dfx canister id extf)
-dfx canister call cyclesDAO configure '(variant { SetToken = record { standard = variant {EXT}; canister = principal "'${EXTF_PRINCIPAL}'"; identifier = opt("'${EXTF_PRINCIPAL}'") } })'
+# Configure TokenAccessor to mint the EXTF token
+export EXTF_TOKEN=$(dfx canister id extf)
+dfx canister call tokenAccessor setTokenToMint '(variant {EXT}, principal "'${EXTF_TOKEN}'", opt("'${EXTF_TOKEN}'"))'
 
 # To verify if it worked you can perform a first wallet_receive and then
 # check the account balance by uncommenting the following lines!
 
 #export DEFAULT_WALLET_ID=$(dfx identity get-wallet)
-#echo "CyclesDAO cycles balance before wallet receive:"
-#dfx canister call cyclesDAO cyclesBalance
+#echo "CyclesDispenser cycles balance before wallet receive:"
+#dfx canister call cyclesDispenser cyclesBalance
 #echo "Default wallet EXTF balance before wallet receive:"
-#dfx canister call extf balance '(record { token = "'${EXTF_PRINCIPAL}'"; user = variant { "principal" = principal "'${DEFAULT_WALLET_ID}'" }})'
-#echo "Feed 8 trillions cycles to the cyclesDAO:"
-#dfx canister --wallet ${DEFAULT_WALLET_ID} call cyclesDAO walletReceive --with-cycles 8000000000000
-#echo "CyclesDAO cycles balance after wallet receive:"
-#dfx canister call cyclesDAO cyclesBalance
+#dfx canister call extf balance '(record { token = "'${EXTF_TOKEN}'"; user = variant { "principal" = principal "'${DEFAULT_WALLET_ID}'" }})'
+#echo "Feed 8 trillions cycles to the cyclesDispenser:"
+#dfx canister --wallet ${DEFAULT_WALLET_ID} call cyclesDispenser walletReceive --with-cycles 8000000000000
+#echo "CyclesDispenser cycles balance after wallet receive:"
+#dfx canister call cyclesDispenser cyclesBalance
 #echo "Default wallet EXTF balance after wallet receive:"
-#dfx canister call extf balance '(record { token = "'${EXTF_PRINCIPAL}'"; user = variant { "principal" = principal "'${DEFAULT_WALLET_ID}'" }})'
+#dfx canister call extf balance '(record { token = "'${EXTF_TOKEN}'"; user = variant { "principal" = principal "'${DEFAULT_WALLET_ID}'" }})'
 
 # Go back to initial directory
 cd scripts

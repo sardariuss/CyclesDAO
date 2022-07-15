@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Assume dfx is already running and the cyclesDAO canister is governed by the default user
+# Assume dfx is already running and the cyclesDispenser canister is governed by the default user
 
 # Change directory to dfx directory
 # @todo: this script shall be callable from anywhere!
@@ -26,10 +26,10 @@ dfx deploy basicDAO --argument="(record {
  };
 })"
 
-# Configure the CyclesDAO canister to be governed by the BasicDAO
+# Configure the cyclesDispenser canister to be governed by the BasicDAO
 dfx identity use default
 export BASIC_DAO=$(dfx canister id basicDAO)
-dfx canister call cyclesDAO configure "(variant {SetGovernance = record {canister = principal \"$BASIC_DAO\"}})"
+dfx canister call cyclesDispenser configure "(variant {SetAdmin = record {canister = principal \"$BASIC_DAO\"}})"
 
 # Go back to initial directory
 cd scripts

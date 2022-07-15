@@ -1,11 +1,18 @@
 {
   "version": 1,
   "canisters": {
-    "cyclesDAO": {
+    "cyclesDispenser": {
       "type": "motoko",
-      "main": "src/backend/main.mo",
+      "main": "src/CyclesDispenser/cyclesDispenser.mo",
       "declarations": {
-				"output": "src/frontend/declarations/cyclesDAO"
+        "output": "src/frontend/declarations/cyclesDispenser"
+      }
+    },
+    "tokenAccessor": {
+      "type": "motoko",
+      "main": "src/TokenAccessor/tokenAccessor.mo",
+      "declarations": {
+				"output": "src/frontend/declarations/tokenAccessor"
 			}
     },
     "frontend": {

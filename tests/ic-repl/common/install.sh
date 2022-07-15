@@ -15,17 +15,25 @@ function install(wasm, args, cycle) {
   S
 };
 
-function installCyclesDao(initial_governance, minimum_cycles_balance, init_cycles_config, initial_balance) {
-  import interface = "2vxsx-fae" as "../../.dfx/local/canisters/cyclesDAO/cyclesDAO.did";
+function installTokenAccessor(admin) {
+  import interface = "2vxsx-fae" as "../../.dfx/local/canisters/tokenAccessor/tokenAccessor.did";
+  let args = encode interface.__init_args(admin);
+  let wasm = file "../../.dfx/local/canisters/tokenAccessor/tokenAccessor.wasm";
+  install(wasm, args, 0);
+};
+
+function installCyclesDispenser(admin, minimum_cycles_balance, token_accessor, cycles_exchange_config, cycles_balance) {
+  import interface = "2vxsx-fae" as "../../.dfx/local/canisters/cyclesDispenser/cyclesDispenser.did";
   let args = encode interface.__init_args(
     record {
-      governance = initial_governance;
-      minimum_cycles_balance = minimum_cycles_balance; 
-      cycles_exchange_config = init_cycles_config;
+      admin = admin;
+      minimum_cycles_balance = minimum_cycles_balance;
+      token_accessor = token_accessor;
+      cycles_exchange_config = cycles_exchange_config;
     }
   );
-  let wasm = file "../../.dfx/local/canisters/cyclesDAO/cyclesDAO.wasm";
-  install(wasm, args, initial_balance);
+  let wasm = file "../../.dfx/local/canisters/cyclesDispenser/cyclesDispenser.wasm";
+  install(wasm, args, cycles_balance);
 };
 
 function installLedger(owner, amount_e8s) {
@@ -59,9 +67,9 @@ function installLedger(owner, amount_e8s) {
     }
   );
   // @todo: fix 'Deserialization Failed: "No more values on the wire, the expected type record [...] is not opt, reserved or null"'
-  import interface = "2vxsx-fae" as "../Ledger/ledger.did";
+  import interface = "2vxsx-fae" as "../wasm/Ledger/ledger.did";
   let args = encode interface.__init_args(argsRecord);
-  let wasm = file "../Ledger/ledger.wasm";
+  let wasm = file "../wasm/Ledger/ledger.wasm";
   install(wasm, args, 0);
 };
 

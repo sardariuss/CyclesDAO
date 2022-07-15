@@ -4,11 +4,11 @@ load "common/install.sh";
 
 identity default "~/.config/dfx/identity/default/identity.pem";
 
-let initial_governance = default;
+let admin = default;
 let minimum_cycles_balance = (0 : nat);
 let init_cycles_config = vec {record { threshold = 1_000_000_000_000_000 : nat; rate_per_t = 1.0 : float64 };};
 let initial_balance = (0 : nat);
-let cyclesDao = installCyclesDao(initial_governance, minimum_cycles_balance, init_cycles_config, initial_balance);
+let cycles_dispenser = installCyclesDispenser(admin, minimum_cycles_balance, token_accessor, init_cycles_config, initial_balance);
 
 let utilities = installUtilities();
 
@@ -17,11 +17,11 @@ let token_identifier = call utilities.getPrincipalAsText(extf);
 
 call extf.balance(record { token = token_identifier; user = variant { "principal" = default }});
 assert _ == variant { ok = 2_000_000_000 : nat };
-call extf.balance(record { token = token_identifier; user = variant { "principal" = cyclesDao }});
+call extf.balance(record { token = token_identifier; user = variant { "principal" = cycles_dispenser }});
 assert _ == variant { ok = 0 : nat };
 
-// Test that the command fails if the cyclesDao does not have any extf token
-call cyclesDao.configure(variant { DistributeBalance = record {
+// Test that the command fails if the cycles_dispenser does not have any extf token
+call cycles_dispenser.configure(variant { DistributeBalance = record {
   standard = variant { EXT };
   canister = extf;
   to = default;
@@ -30,24 +30,24 @@ call cyclesDao.configure(variant { DistributeBalance = record {
 }});
 assert _ == variant { err = variant { TransferError = variant { TokenInterfaceError } } };
 
-// Transfer half the tokens to the cyclesDao
+// Transfer half the tokens to the cycles_dispenser
 call extf.transfer(record {
   amount = 1_000_000_000;
   from = variant {"principal" = default};
   memo = vec {};
   notify = false;
   subaccount = null;
-  to = variant {"principal" = cyclesDao};
+  to = variant {"principal" = cycles_dispenser};
   token = token_identifier;
 });
 assert _ == variant { ok = 1_000_000_000 : nat };
 call extf.balance(record { token = token_identifier; user = variant { "principal" = default }});
 assert _ == variant { ok = 1_000_000_000 : nat };
-call extf.balance(record { token = token_identifier; user = variant { "principal" = cyclesDao }});
+call extf.balance(record { token = token_identifier; user = variant { "principal" = cycles_dispenser }});
 assert _ == variant { ok = 1_000_000_000 : nat };
 
 // Test that distribute balance succeeds
-call cyclesDao.configure(variant { DistributeBalance = record {
+call cycles_dispenser.configure(variant { DistributeBalance = record {
   standard = variant { EXT };
   canister = extf;
   to = default;
@@ -57,5 +57,5 @@ call cyclesDao.configure(variant { DistributeBalance = record {
 assert _ == variant { ok };
 call extf.balance(record { token = token_identifier; user = variant { "principal" = default }});
 assert _ == variant { ok = 1_500_000_000 : nat };
-call extf.balance(record { token = token_identifier; user = variant { "principal" = cyclesDao }});
+call extf.balance(record { token = token_identifier; user = variant { "principal" = cycles_dispenser }});
 assert _ == variant { ok = 500_000_000 : nat };
