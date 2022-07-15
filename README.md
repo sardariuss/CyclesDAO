@@ -56,7 +56,7 @@ The cycles DAO uses the basic DAO from the dfinity examples: https://github.com/
 ## Test Coverage
 
 | canister | function | test scripts | left to do | complete |
-| ------ | ------ | ------ | ------ |
+| ------ | ------ | ------ | ------ | ------ |
 | CyclesProvider | *constructor* | constructor.test.sh | N/A |  100% |
 | CyclesProvider | walletReceive | walletReceive_dip20.test.sh, walletReceive_errors.test.sh, walletReceive_extf.test.sh, walletReceive_ledger.test.sh | fix ledger canister initialization | CyclesProvider (see install.sh) | 75% | 
 | CyclesProvider | configure(#SetCycleExchangeConfig) | setCycleExchangeConfig.test.sh | N/A | 100% |
