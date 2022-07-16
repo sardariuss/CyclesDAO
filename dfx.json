@@ -15,6 +15,13 @@
 				"output": "src/frontend/declarations/tokenAccessor"
 			}
     },
+    "dao": {
+      "type": "motoko",
+      "main": "src/DAO/dao.mo",
+      "declarations": {
+				"output": "src/frontend/declarations/dao"
+			}
+    },
     "frontend": {
       "frontend": {
         "entrypoint": "index.html"
@@ -53,11 +60,6 @@
       "type": "custom",
       "candid": "tests/wasm/ExtNft/extNft.did",
       "wasm": "tests/wasm/ExtNft/extNft.wasm"
-    },
-    "basicDAO": {
-      "type": "custom",
-      "candid": "tests/wasm/BasicDAO/basicDAO.did",
-      "wasm": "tests/wasm/BasicDAO/basicDAO.wasm"
     }
   },
   "defaults": {
