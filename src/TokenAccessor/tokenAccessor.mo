@@ -113,31 +113,31 @@ shared actor class TokenAccessor(admin: Principal) = this {
             case(#err(err)){
               return #err(err);
             };
-            case (#ok()){
+            case (#ok(_)){
               token_ := ?token;
+              return #ok;
             };
           };
         };
       };
-      return #ok;
     };
   };
 
   // This allows to call a mint function that does not return an error, but still perform check on authorization
   public shared(msg) func getMintFunction() : async Result.Result<Types.MintFunction, Types.TokenError> {
     // Check authorization here to prevent potential spamers to increase the register size
-    if (Trie.find<Principal, ()>(minters_, {hash = Principal.hash(msg.caller); key = msg.caller}, Principal.equal) == null){
+    if (not (await isAuthorizedMinter(msg.caller))){
       return #err(#NotAuthorized);
     };
-
     return #ok(mint);
   };
 
+  // @todo: put this function as private and remove the condition on authorization as soon as the compiler
+  // supports private shared function (in dfx 0.10.0, this return error [M0126], which says
+  // it is a limitation of the current version)
   public shared(msg) func mint(to: Principal, amount: Nat) : async Nat {
-    // @todo: remove this condition and put the mint function private as soon as the compiler
-    // supports private shared function (in dfx 0.10.0, this return error [M0126], which says
-    // it is a limitation of the current version)
-    if (Trie.find<Principal, ()>(minters_, {hash = Principal.hash(msg.caller); key = msg.caller}, Principal.equal) == null){
+    // Function is public for now, trap if not authorized
+    if (not (await isAuthorizedMinter(msg.caller))){
       Debug.trap("Not authorized!")
     };
     // Try to mint
@@ -465,9 +465,12 @@ shared actor class TokenAccessor(admin: Principal) = this {
   };
 
   system func postupgrade() {
+    // Restore register from temporary stable array
     for (record in Array.vals(mint_register_array_)){
       mint_register_.add(record);
     };
+    // Empty temporary stable array
+    mint_register_array_ := [];
   };
 
 };
