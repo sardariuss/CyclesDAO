@@ -55,7 +55,7 @@ module {
     // otherwise it is lost. This prevents users from submitting superfluous proposals.
     proposal_submission_deposit: Nat;
   };
-  public type CreateDaoArgs = {
+  public type CreateGovernanceArgs = {
     proposals: [Proposal];
     token_accessor: Principal;
     system_params: SystemParams;
@@ -89,7 +89,7 @@ module {
 
   public type MintFunction = shared (Principal, Nat) -> async Nat;
 
-  public type TokenAccessorInterface = actor {
+  public type MintAccessControllerInterface = actor {
     getMintFunction: shared() -> async (Result.Result<MintFunction, TokenError>);
   };  
 };

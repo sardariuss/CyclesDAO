@@ -38,7 +38,10 @@ module{
     #NoCyclesAdded;
     #InvalidCycleConfig;
     #MaxCyclesReached;
-    #TokenAccessorError: TokenError;
+    #MintAccessControllerError: {
+      #TokenNotSet;
+      #MintNotAuthorized;
+    };
   };
 
   public type ConfigureError = {
@@ -105,20 +108,24 @@ module{
 
   // From the token accessor
 
-  public type TokenError = {
-    #ComputeAccountIdFailed;
-    #NftNotSupported;
-    #NotAuthorized;
-    #ExtTokenIdMissing;
-    #TokenIdInvalidType;
-    #TokenInterfaceError;
-    #TokenNotOwned;
-    #TokenNotSet;
+  public type Token = {
+    standard: TokenStandard;
+    canister: Principal;
+    identifier: ?{#text: Text; #nat: Nat};
   };
 
-  public type MintFunction = shared (Principal, Nat) -> async Nat;
-
-  public type TokenAccessorInterface = actor {
-    getMintFunction: shared() -> async (Result.Result<MintFunction, TokenError>);
+  public type TokenStandard = {
+    #DIP20;
+    #LEDGER;
+    #DIP721;
+    #EXT;
+    #NFT_ORIGYN;
   };
+
+  public type MintAccessControllerInterface = actor {
+    mint: shared(Principal, Nat) -> async (Nat);
+    getToken: shared () -> async (?Token);
+    isAuthorizedMinter: shared (Principal) -> async (Bool);
+  };
+
 };

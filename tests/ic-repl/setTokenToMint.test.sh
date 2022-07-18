@@ -5,7 +5,7 @@ load "common/install.sh";
 identity default "~/.config/dfx/identity/default/identity.pem";
 
 // Create the token accessor
-let token_accessor = installTokenAccessor(default);
+let token_accessor = installMintAccessController(default);
 
 let utilities = installUtilities();
 

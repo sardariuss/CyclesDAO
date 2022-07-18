@@ -15,10 +15,10 @@ function install(wasm, args, cycle) {
   S
 };
 
-function installTokenAccessor(admin) {
-  import interface = "2vxsx-fae" as "../../.dfx/local/canisters/tokenAccessor/tokenAccessor.did";
+function installMintAccessController(admin) {
+  import interface = "2vxsx-fae" as "../../.dfx/local/canisters/mintAccessController/mintAccessController.did";
   let args = encode interface.__init_args(admin);
-  let wasm = file "../../.dfx/local/canisters/tokenAccessor/tokenAccessor.wasm";
+  let wasm = file "../../.dfx/local/canisters/mintAccessController/mintAccessController.wasm";
   install(wasm, args, 0);
 };
 

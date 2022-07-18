@@ -5,7 +5,7 @@ load "common/install.sh";
 identity default "~/.config/dfx/identity/default/identity.pem";
 
 // Create the token accessor
-let token_accessor = installTokenAccessor(default);
+let token_accessor = installMintAccessController(default);
 
 // Create the cycles dispenser
 let admin = default;
@@ -15,7 +15,7 @@ let initial_balance = (0 : nat);
 let cycles_dispenser = installCyclesDispenser(admin, minimum_cycles_balance, token_accessor, init_cycles_config, initial_balance);
 
 // Test the cyclesDAO getters after construction
-call cycles_dispenser.getTokenAccessor();
+call cycles_dispenser.getMintAccessController();
 assert _ == token_accessor;
 call cycles_dispenser.cyclesBalance();
 assert _ == initial_balance;

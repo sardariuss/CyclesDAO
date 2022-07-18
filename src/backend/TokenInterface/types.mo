@@ -23,17 +23,6 @@ module{
     identifier: ?{#text: Text; #nat: Nat};
   };
 
-  public type NotAuthorizedError = {
-    #NotAuthorized;
-  };
-
-  public type SetTokenToMintError = {
-    #NotAuthorized;
-    #TokenNotFungible;
-    #TokenNotOwned;
-    #IsFungibleError: IsFungibleError;
-  };
-
   public type IsFungibleError = {
     #TokenIdMissing;
     #TokenIdInvalidType;
@@ -41,7 +30,6 @@ module{
   };
 
   public type MintError = {
-    #TokenNotSet;
     #ComputeAccountIdFailed;
     #NftNotSupported;
     #TokenIdMissing;
@@ -54,7 +42,6 @@ module{
   };
 
   public type AcceptError = {
-    #TokenNotSet;
     #ComputeAccountIdFailed;
     #NftNotSupported;
     #TokenIdMissing;
@@ -84,17 +71,5 @@ module{
   public type Dip721Interface = Dip721.Interface;
   public type ExtInterface = Ext.Interface;
   public type LedgerInterface = Ledger.Interface;
-  public type OrigynInterface = Origyn.Interface;
-
-  public type MintFunction = shared (Principal, Nat) -> async Nat;
-
-  public type MintRecord = {
-    index: Nat;
-    date: Int;
-    amount: Nat;
-    to: Principal;
-    token: ?Token;
-    result: Result.Result<?Nat, MintError>;
-  };
-  
+  public type OrigynInterface = Origyn.Interface; 
 };

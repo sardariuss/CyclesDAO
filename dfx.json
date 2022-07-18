@@ -3,24 +3,24 @@
   "canisters": {
     "cyclesDispenser": {
       "type": "motoko",
-      "main": "src/CyclesDispenser/cyclesDispenser.mo",
+      "main": "src/backend/CyclesDispenser/cyclesDispenser.mo",
       "declarations": {
         "output": "src/frontend/declarations/cyclesDispenser"
       }
     },
-    "tokenAccessor": {
+    "mintAccessController": {
       "type": "motoko",
-      "main": "src/TokenAccessor/tokenAccessor.mo",
+      "main": "src/backend/MintAccessController/mintAccessController.mo",
       "declarations": {
-				"output": "src/frontend/declarations/tokenAccessor"
-			}
+        "output": "src/frontend/declarations/mintAccessController"
+      }
     },
-    "dao": {
+    "governance": {
       "type": "motoko",
-      "main": "src/DAO/dao.mo",
+      "main": "src/backend/Governance/governance.mo",
       "declarations": {
-				"output": "src/frontend/declarations/dao"
-			}
+        "output": "src/frontend/declarations/governance"
+      }
     },
     "frontend": {
       "frontend": {

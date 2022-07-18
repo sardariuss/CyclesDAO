@@ -13,15 +13,15 @@ import Trie        "mo:base/Trie";
 
 // @todo: remove snake case from functions
 
-shared actor class DAO(create_dao_args : Types.CreateDaoArgs) = this {
+shared actor class Governance(create_governance_args : Types.CreateGovernanceArgs) = this {
   
-  private stable var proposals_ = Types.proposals_fromArray(create_dao_args.proposals);
+  private stable var proposals_ = Types.proposals_fromArray(create_governance_args.proposals);
 
   private stable var proposal_index_ : Nat = 0;
 
-  private stable var system_params_ : Types.SystemParams = create_dao_args.system_params;
+  private stable var system_params_ : Types.SystemParams = create_governance_args.system_params;
 
-  private stable var token_accessor_ : Types.TokenAccessorInterface = actor (Principal.toText(create_dao_args.token_accessor));
+  private stable var token_accessor_ : Types.MintAccessControllerInterface = actor (Principal.toText(create_governance_args.token_accessor));
   
   // @todo: remove
   system func heartbeat() : async () {

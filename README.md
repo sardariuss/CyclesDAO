@@ -35,7 +35,7 @@ Get the current cycles balance.
 ### **computeTokensInExchange**: ( *nat* ) -> ( *nat* )
 Compute the amount of tokens that walletReceive will return in exhange of the given cycles at the time this function is called.
 
-## TokenAccessor interface
+## MintAccessController interface
 
 @todo
 
@@ -67,7 +67,7 @@ The cycles DAO uses the basic DAO from the dfinity examples: https://github.com/
 | CyclesProvider | distributeCycles | distributeCycles.test.sh | split test to avoid risk of side effects - add test of histories | 80% |
 | CyclesProvider | requestCycles | requestCycles.test.sh | add test of histories | 90% |
 | CyclesProvider | *upgrade* | | to test | 0% |
-| TokenAccessor | setTokenToMint | setTokenToMint.test.sh | fix ledger canister initialization (see install.sh) | 80% |
+| MintAccessController | setTokenToMint | setTokenToMint.test.sh | fix ledger canister initialization (see install.sh) | 80% |
 
 ## Known bugs
 

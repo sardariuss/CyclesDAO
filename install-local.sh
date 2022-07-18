@@ -7,9 +7,9 @@ dfx identity use default
 export DEFAULT_PRINCIPAL=$(dfx identity get-principal)
 
 # Deploy the token accessor canister
-dfx deploy tokenAccessor --argument="(principal \"$DEFAULT_PRINCIPAL\")"
-dfx generate tokenAccessor
-export TOKEN_ACCESSOR=$(dfx canister id tokenAccessor)
+dfx deploy mintAccessController --argument="(principal \"$DEFAULT_PRINCIPAL\")"
+dfx generate mintAccessController
+export TOKEN_ACCESSOR=$(dfx canister id mintAccessController)
 
 # Deploy cycles dispenser canister, with 1 trillion minimum cycles, and 1 trillion cycles
 dfx deploy cyclesDispenser --with-cycles 1000000000000 --argument="(record {

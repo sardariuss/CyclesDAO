@@ -20,7 +20,7 @@ shared actor class CyclesDispenser(create_cycles_dispenser_args: Types.CreateCyc
 
   private stable var minimum_cycles_balance_ : Nat = create_cycles_dispenser_args.minimum_cycles_balance;
 
-  private stable var token_accessor_ : Types.TokenAccessorInterface = actor (Principal.toText(create_cycles_dispenser_args.token_accessor));
+  private stable var token_accessor_ : Types.MintAccessControllerInterface = actor (Principal.toText(create_cycles_dispenser_args.token_accessor));
 
   private stable var cycles_exchange_config_ : [Types.ExchangeLevel] = [];
   if (Utils.isValidExchangeConfig(create_cycles_dispenser_args.cycles_exchange_config)) {
@@ -61,7 +61,7 @@ shared actor class CyclesDispenser(create_cycles_dispenser_args: Types.CreateCyc
     return admin_;
   };
 
-  public query func getTokenAccessor() : async Principal {
+  public query func getMintAccessController() : async Principal {
     return Principal.fromActor(token_accessor_);
   };
 
@@ -121,36 +121,36 @@ shared actor class CyclesDispenser(create_cycles_dispenser_args: Types.CreateCyc
     if (original_balance > max_cycles) {
       return #err(#MaxCyclesReached);
     };
-    // Get the mint function
-    switch(await token_accessor_.getMintFunction()){
-      case(#err(err)){
-        return #err(#TokenAccessorError(err));
-      };
-      case(#ok(mint)){
-        // Accept the cycles up to the maximum cycles possible
-        let accepted_cycles = ExperimentalCycles.accept(
-          Nat.min(available_cycles, max_cycles - original_balance));
-        // Compute the amount of tokens to mint in exchange 
-        // of the accepted cycles
-        let token_amount = Utils.computeTokensInExchange(
-          cycles_exchange_config_, original_balance, accepted_cycles);
-        // Mint the token
-        let mint_index = await mint(msg.caller, token_amount);
-        // Update the registers
-        let now = Time.now();
-        cycles_balance_register_.add({
-          date = now; 
-          balance = ExperimentalCycles.balance();
-        });
-        cycles_received_register_.add({
-          date = now;
-          from = msg.caller;
-          cycle_amount = accepted_cycles;
-          mint_index = mint_index;
-        });
-        return #ok(mint_index);
-      };
+    // Check if the token accessor has a configured token
+    if ((await token_accessor_.getToken()) == null) {
+      return #err(#MintAccessControllerError(#TokenNotSet));
     };
+    // Check if the cycles dispenser is authorized to mint
+    if (not (await token_accessor_.isAuthorizedMinter(Principal.fromActor(this)))) {
+      return #err(#MintAccessControllerError(#MintNotAuthorized));
+    };
+    // Accept the cycles up to the maximum cycles possible
+    let accepted_cycles = ExperimentalCycles.accept(
+      Nat.min(available_cycles, max_cycles - original_balance));
+    // Compute the amount of tokens to mint in exchange 
+    // of the accepted cycles
+    let token_amount = Utils.computeTokensInExchange(
+      cycles_exchange_config_, original_balance, accepted_cycles);
+    // Mint the token
+    let mint_index = await token_accessor_.mint(msg.caller, token_amount);
+    // Update the registers
+    let now = Time.now();
+    cycles_balance_register_.add({
+      date = now; 
+      balance = ExperimentalCycles.balance();
+    });
+    cycles_received_register_.add({
+      date = now;
+      from = msg.caller;
+      cycle_amount = accepted_cycles;
+      mint_index = mint_index;
+    });
+    return #ok(mint_index);
   };
 
   public shared(msg) func configure(
