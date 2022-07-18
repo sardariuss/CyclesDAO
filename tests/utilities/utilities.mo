@@ -1,5 +1,5 @@
-import AccountIdentifier   "./ExtUtils/AccountIdentifier";
 import Accounts            "./LedgerUtils/accounts";
+import Hex                 "./ExtUtils/Hex";
 
 import Array               "mo:base/Array";
 import Blob                "mo:base/Blob";
@@ -12,11 +12,10 @@ import Principal           "mo:base/Principal";
 
 shared actor class Utilities() {
 
-  public query func getAccountIdentifierAsBlob(
-    account: Principal,
-    ledger: Principal
+  public query func getDefaultAccountIdentifierAsBlob(
+    principal: Principal,
   ) : async Accounts.AccountIdentifier {
-    let identifier = Accounts.accountIdentifier(ledger, Accounts.principalToSubaccount(account));
+    let identifier = Accounts.accountIdentifier(principal, Accounts.defaultSubaccount());
     if(Accounts.validateAccountIdentifier(identifier)){
       return identifier;
     } else {
@@ -24,8 +23,39 @@ shared actor class Utilities() {
     };
   };
 
-  public query func getAccountIdentifierAsText(principal: Principal) : async Text {
-    return AccountIdentifier.fromPrincipal(principal, null);
+  public query func getAccountIdentifierAsBlob(
+    main_principal: Principal,
+    sub_principal: Principal,
+  ) : async Accounts.AccountIdentifier {
+    let identifier = Accounts.accountIdentifier(main_principal, Accounts.principalToSubaccount(sub_principal));
+    if(Accounts.validateAccountIdentifier(identifier)){
+      return identifier;
+    } else {
+      Debug.trap("Could not get account identifier");
+    };
+  };
+
+  public query func getDefaultAccountIdentifierAsText(
+    principal: Principal,
+  ) : async Text {
+    let identifier = Accounts.accountIdentifier(principal, Accounts.defaultSubaccount());
+    if(Accounts.validateAccountIdentifier(identifier)){
+      return Hex.encode(Blob.toArray(identifier));
+    } else {
+      Debug.trap("Could not get account identifier");
+    };
+  };
+
+  public query func getAccountIdentifierAsText(
+    main_principal: Principal,
+    sub_principal: Principal,
+  ) : async Text {
+    let identifier = Accounts.accountIdentifier(main_principal, Accounts.principalToSubaccount(sub_principal));
+    if(Accounts.validateAccountIdentifier(identifier)){
+      return Hex.encode(Blob.toArray(identifier));
+    } else {
+      Debug.trap("Could not get account identifier");
+    };
   };
 
   public query func getPrincipalAsText(principal: Principal) : async Text {

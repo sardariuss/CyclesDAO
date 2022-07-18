@@ -1,22 +1,22 @@
 
 module {
-  type Token = {
+  public type Token = {
     e8s : Nat64;
   };
   
-  type TimeStamp = {
+  public type TimeStamp = {
     timestamp_nanos: Nat64;
   };
   
-  type Address = Blob;
+  public type Address = Blob;
   
-  type SubAccount = Blob;
+  public type SubAccount = Blob;
   
-  type BlockIndex = Nat64;
+  public type BlockIndex = Nat64;
   
-  type Memo = Nat64;
+  public type Memo = Nat64;
   
-  type TransferArgs = {
+  public type TransferArgs = {
     memo: Memo;
     amount: Token;
     fee: Token;
@@ -25,20 +25,20 @@ module {
     created_at_time: ?TimeStamp;
   };
   
-  type TransferError = {
+  public type TransferError = {
     #BadFee : { expected_fee : Token; };
     #InsufficientFunds : { balance: Token; };
     #TxTooOld : { allowed_window_nanos: Nat64 };
-    #TxCreatedInFutur;
+    #TxCreatedInFuture;
     #TxDuplicate : { duplicate_of: BlockIndex; }
   };
   
-  type TransferResult = {
+  public type TransferResult = {
     #Ok : BlockIndex;
     #Err : TransferError;
   };
   
-  type AccountBalanceArgs = {
+  public type AccountBalanceArgs = {
     account: Address;
   };
   

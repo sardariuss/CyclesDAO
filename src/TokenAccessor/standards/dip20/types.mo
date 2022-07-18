@@ -1,19 +1,21 @@
 
 module {
 
+  public type TxError = {
+    #InsufficientAllowance;
+    #InsufficientBalance;
+    #ErrorOperationStyle;
+    #Unauthorized;
+    #LedgerTrap;
+    #ErrorTo;
+    #Other: Text;
+    #BlockUsed;
+    #AmountTooSmall;
+  };
+
   public type TxReceipt = {
     #Ok: Nat;
-    #Err: {
-      #InsufficientAllowance;
-      #InsufficientBalance;
-      #ErrorOperationStyle;
-      #Unauthorized;
-      #LedgerTrap;
-      #ErrorTo;
-      #Other;
-      #BlockUsed;
-      #AmountTooSmall;
-    };
+    #Err: TxError;
   };
 
   public type Metadata = {
@@ -32,6 +34,7 @@ module {
     allowance : (Principal, Principal) -> async Nat;
     getMetadata: () -> async Metadata;
     mint : (Principal, Nat) -> async TxReceipt;
+    balanceOf: (Principal) -> async Nat;
   };
 
 }

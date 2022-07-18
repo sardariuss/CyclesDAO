@@ -27,7 +27,7 @@ assert _ == opt dip20_token;
 let extf = installExtf(token_accessor, 1_000_000_000_000_000);
 let extf_token_no_id = record {standard = variant{EXT}; canister = extf; identifier = null : opt text};
 call token_accessor.setTokenToMint(extf_token_no_id);
-assert _ == variant { err = variant { TokenIdMissing } };
+assert _ == variant { err = variant { ExtTokenIdMissing } };
 call token_accessor.getToken();
 assert _ == ( null : opt record {});
 let token_identifier = call utilities.getPrincipalAsText(extf);

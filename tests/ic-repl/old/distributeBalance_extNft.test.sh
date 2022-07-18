@@ -21,8 +21,8 @@ let nftIndex = call extNft.mintNFT(record {
 
 let nftIdentifier = call utilities.computeExtTokenIdentifier(extNft, nftIndex);
 
-let default_user_account = call utilities.getAccountIdentifierAsText(default);
-let cycles_dao_account = call utilities.getAccountIdentifierAsText(cycles_dispenser);
+let default_user_account = call utilities.getDefaultAccountIdentifierAsText(default);
+let cycles_dao_account = call utilities.getDefaultAccountIdentifierAsText(cycles_dispenser);
 
 call extNft.bearer(nftIdentifier);
 assert _ == variant { ok = default_user_account };
@@ -57,7 +57,7 @@ call cycles_dispenser.configure(variant { DistributeBalance = record {
   to = default;
   amount = 1;
 }});
-assert _ == variant { err = variant { TransferError = variant { TokenIdMissing } } };
+assert _ == variant { err = variant { TransferError = variant { ExtTokenIdMissing } } };
 
 // Test that the command fails if the nft is identified with nat
 call cycles_dispenser.configure(variant { DistributeBalance = record {

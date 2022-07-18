@@ -1,11 +1,5 @@
 import Types             "types";
-
-import Accounts          "standards/ledger/accounts";
-import DIP20Types        "standards/dip20/types";
-import DIP721Types       "standards/dip721/types";
-import EXTTypes          "standards/ext/types";
-import LedgerTypes       "standards/ledger/types";
-import OrigynTypes       "standards/origyn/types";
+import Utils             "utils";
 
 import Array             "mo:base/Array";
 import Blob              "mo:base/Blob";
@@ -60,7 +54,7 @@ shared actor class TokenAccessor(admin: Principal) = this {
     return mint_register_.toArray();
   };
 
-  public shared(msg) func setAdmin(admin: Principal): async Result.Result<(), Types.TokenError> {
+  public shared(msg) func setAdmin(admin: Principal): async Result.Result<(), Types.NotAuthorizedError> {
     if (msg.caller != admin_){
       return #err(#NotAuthorized);
     } else {
@@ -75,7 +69,7 @@ shared actor class TokenAccessor(admin: Principal) = this {
     };
   };
 
-  public shared(msg) func addMinter(principal: Principal): async Result.Result<(), Types.TokenError> {
+  public shared(msg) func addMinter(principal: Principal): async Result.Result<(), Types.NotAuthorizedError> {
     if (msg.caller != admin_){
       return #err(#NotAuthorized);
     } else {
@@ -84,7 +78,7 @@ shared actor class TokenAccessor(admin: Principal) = this {
     };
   };
 
-  public shared(msg) func removeMinter(principal: Principal): async Result.Result<(), Types.TokenError> {
+  public shared(msg) func removeMinter(principal: Principal): async Result.Result<(), Types.NotAuthorizedError> {
     if (msg.caller != admin_){
       return #err(#NotAuthorized);
     } else {
@@ -97,26 +91,25 @@ shared actor class TokenAccessor(admin: Principal) = this {
     return Trie.get<Principal, ()>(minters_, {hash = Principal.hash(principal); key = principal}, Principal.equal) != null;
   };
 
-  public shared(msg) func setTokenToMint(token: Types.Token) : async Result.Result<(), Types.TokenError>{
+  public shared(msg) func setTokenToMint(token: Types.Token) : async Result.Result<(), Types.SetTokenToMintError>{
     if (msg.caller != admin_){
       return #err(#NotAuthorized);
     } else {
       // Unset current token
       token_ := null;
       // Verify given token
-      switch (await verifyIsFungible(token)){
+      switch (await isTokenFungible(token)){
         case(#err(err)){
-          return #err(err);
+          return #err(#IsFungibleError(err));
         };
-        case(#ok()){
-          switch (await verifyIsOwner(token, Principal.fromActor(this))) {
-            case(#err(err)){
-              return #err(err);
-            };
-            case (#ok(_)){
-              token_ := ?token;
-              return #ok;
-            };
+        case(#ok(is_fungible)){
+          if (not is_fungible) {
+            return #err(#TokenNotFungible);
+          } else if (not (await isTokenOwned(token, Principal.fromActor(this)))){
+            return #err(#TokenNotOwned);
+          } else {
+            token_ := ?token;
+            return #ok;
           };
         };
       };
@@ -124,7 +117,7 @@ shared actor class TokenAccessor(admin: Principal) = this {
   };
 
   // This allows to call a mint function that does not return an error, but still perform check on authorization
-  public shared(msg) func getMintFunction() : async Result.Result<Types.MintFunction, Types.TokenError> {
+  public shared(msg) func getMintFunction() : async Result.Result<Types.MintFunction, Types.NotAuthorizedError> {
     // Check authorization here to prevent potential spamers to increase the register size
     if (not (await isAuthorizedMinter(msg.caller))){
       return #err(#NotAuthorized);
@@ -158,7 +151,7 @@ shared actor class TokenAccessor(admin: Principal) = this {
     return mint_record.index;
   };
 
-  private func tryMint(to: Principal, amount: Nat) : async Result.Result<?Nat, Types.TokenError> {
+  private func tryMint(to: Principal, amount: Nat) : async Result.Result<?Nat, Types.MintError> {
     switch(token_){
       case(null){
         return #err(#TokenNotSet);
@@ -166,10 +159,10 @@ shared actor class TokenAccessor(admin: Principal) = this {
       case(?token){
         switch(token.standard){
           case(#DIP20){
-            let interface : DIP20Types.Interface = actor (Principal.toText(token.canister));
+            let interface : Types.Dip20Interface = actor (Principal.toText(token.canister));
             switch (await interface.mint(to, amount)){
-              case(#Err(_)){
-                return #err(#TokenInterfaceError);
+              case(#Err(err)){
+                return #err(#InterfaceError(#DIP20(err)));
               };
               case(#Ok(tx_counter)){
                 return #ok(?tx_counter);
@@ -177,12 +170,12 @@ shared actor class TokenAccessor(admin: Principal) = this {
             };
           };
           case(#LEDGER){
-            switch (getAccountIdentifier(to, token.canister)){
+            switch (Utils.getDefaultAccountIdentifier(to)){
               case(null){
                 return #err(#ComputeAccountIdFailed);
               };
               case(?account_identifier){
-                let interface : LedgerTypes.Interface = actor (Principal.toText(token.canister));
+                let interface : Types.LedgerInterface = actor (Principal.toText(token.canister));
                 switch (await interface.transfer({
                   memo = 0;
                   amount = { e8s = Nat64.fromNat(amount); }; // This will trap on overflow/underflow
@@ -191,8 +184,8 @@ shared actor class TokenAccessor(admin: Principal) = this {
                   to = account_identifier;
                   created_at_time = ?{ timestamp_nanos = Nat64.fromNat(Int.abs(Time.now())); };
                 })){
-                  case(#Err(_)){
-                    return #err(#TokenInterfaceError);
+                  case(#Err(err)){
+                    return #err(#InterfaceError(#LEDGER(err)));
                   };
                   case(#Ok(block_index)){
                     return #ok(?Nat64.toNat(block_index));
@@ -210,34 +203,117 @@ shared actor class TokenAccessor(admin: Principal) = this {
                 return #err(#TokenIdMissing);
               };
               case(?identifier){
-                let interface : EXTTypes.Interface = actor (Principal.toText(token.canister));
-                switch (await interface.metadata(identifier)){
-                  case(#err(_)){
-                    return #err(#TokenInterfaceError);
+                switch(identifier){
+                  case(#nat(_)){
+                    // EXT cannot use nat as token identifier, only text
+                    return #err(#TokenIdInvalidType);
                   };
-                  case(#ok(meta_data)){
-                    switch (meta_data){
-                      case(#nonfungible(_)){
-                        return #err(#NftNotSupported);
+                  case(#text(text_identifier)){
+                    let interface : Types.ExtInterface = actor (Principal.toText(token.canister));
+                    switch (await interface.transfer({
+                      from = #principal(Principal.fromActor(this));
+                      to = #principal(to);
+                      token = text_identifier;
+                      amount = amount;
+                      memo = Blob.fromArray([]);
+                      notify = false;
+                      subaccount = null;
+                    })){
+                      case(#err(err)){
+                        return #err(#InterfaceError(#EXT(err)));
                       };
-                      case(#fungible(_)){
-                        // There is no mint interface in EXT standard, perform a simple transfer
-                        switch (await interface.transfer({
-                          from = #principal(Principal.fromActor(this));
-                          to = #principal(to);
-                          token = identifier;
-                          amount = amount;
-                          memo = Blob.fromArray([]);
-                          notify = false;
-                          subaccount = null;
+                      // @todo: see the archive extention from the EXT standard. One could use
+                      // it to add the transfer and get a transcation ID.
+                      case(#ok(_)){
+                        return #ok(null);
+                      };
+                    };
+                  };
+                };
+              };
+            };
+          };
+          case(#NFT_ORIGYN){
+            return #err(#NftNotSupported);
+          };
+        };
+      };
+    };
+  };
+
+  public shared func accept(
+    from: Principal,
+    current_balance: Nat,
+    amount: Nat,
+  ) : async Result.Result<(), Types.AcceptError> {
+    switch(token_){
+      case(null){
+        return #err(#TokenNotSet);
+      };
+      case(?token){
+        switch(token.standard){
+          case(#DIP20){
+            let interface : Types.Dip20Interface = actor (Principal.toText(token.canister));
+            switch (await interface.transferFrom(from, Principal.fromActor(this), amount)){
+              case(#Err(err)){
+                return #err(#InterfaceError(#DIP20(err)));
+              };
+              case(#Ok(_)){
+                return #ok;
+              };
+            };
+          };
+          case(#LEDGER){
+            switch (Utils.getAccountIdentifier(Principal.fromActor(this), from)){
+              case(null){
+                return #err(#ComputeAccountIdFailed);
+              };
+              case(?account_identifier){
+                let interface : Types.LedgerInterface = actor (Principal.toText(token.canister));
+                let balance = Nat64.toNat((await interface.account_balance({account = account_identifier})).e8s);
+                if (balance < current_balance + amount) {
+                  return #err(#InsufficientBalance);
+                } else {
+                  return #ok;
+                };
+              };
+            };
+          };
+          case(#DIP721){
+            return #err(#NftNotSupported);
+          };
+          case(#EXT){
+            switch(token.identifier){
+              case(null){
+                // EXT requires a token identifier
+                return #err(#TokenIdMissing);
+              };
+              case(?identifier){
+                switch(identifier){
+                  case(#nat(_)){
+                    // EXT cannot use nat as token identifier, only text
+                    return #err(#TokenIdInvalidType);
+                  };
+                  case(#text(text_identifier)){
+                    switch (Utils.getAccountIdentifier(Principal.fromActor(this), from)){
+                      case(null){
+                        return #err(#ComputeAccountIdFailed);
+                      };
+                      case(?account_identifier){
+                        let interface : Types.ExtInterface = actor (Principal.toText(token.canister));
+                        switch (await interface.balance({
+                          token = text_identifier;
+                          user = #address(Utils.accountToText(account_identifier));
                         })){
-                          case (#err(_)){
-                            return #err(#TokenInterfaceError);
+                          case(#err(err)){
+                            return #err(#ExtCommonError(err));
                           };
-                          // @todo: see the archive extention from the EXT standard. One could use
-                          // it to add the transfer and get a transcation ID
-                          case (#ok(_)){
-                            return #ok(null);
+                          case(#ok(balance)){
+                            if (balance < current_balance + amount) {
+                              return #err(#InsufficientBalance);
+                            } else {
+                              return #ok;
+                            };
                           };
                         };
                       };
@@ -255,6 +331,106 @@ shared actor class TokenAccessor(admin: Principal) = this {
     };
   };
 
+//  public shared func refund(
+//    to: Principal,
+//    amount: Nat,
+//  ) : async Result.Result<?Nat, Types.RefundError> {
+//    switch(token_){
+//      case(null){
+//        return #err(#TokenNotSet);
+//      };
+//      case(?token){
+//        switch(token.standard){
+//          case(#DIP20){
+//            let interface : Types.Dip20Interface = actor (Principal.toText(token.canister));
+//            switch (await interface.transfer(to, amount)){
+//              case(#Err(err)){
+//                return #err(#InterfaceError(#DIP20(err)));
+//              };
+//              case(#Ok(tx_counter)){
+//                return #ok(?tx_counter);
+//              };
+//            };
+//          };
+//          case(#LEDGER){
+//            switch (Utils.getAccountIdentifier(Principal.fromActor(this), to)){
+//              case(null){
+//                return #err(#ComputeAccountIdFailed);
+//              };
+//              case(?subaccount_identifier){
+//                switch (Utils.getDefaultAccountIdentifier(to)){
+//                  case(null){
+//                    return #err(#ComputeAccountIdFailed);
+//                  };
+//                  case(?account_identifier){
+//                    let interface : Types.LedgerInterface = actor (Principal.toText(token.canister));
+//                    switch (await interface.transfer({
+//                      memo = 0;
+//                      amount = { e8s = Nat64.fromNat(amount); }; // This will trap on overflow/underflow
+//                      fee = { e8s = 10_000; }; // The standard ledger fee
+//                      from_subaccount = ?subaccount_identifier;
+//                      to = account_identifier;
+//                      created_at_time = ?{ timestamp_nanos = Nat64.fromNat(Int.abs(Time.now())); };
+//                    })){
+//                      case(#Err(err)){
+//                        return #err(#InterfaceError(#LEDGER(err)));
+//                      };
+//                      case(#Ok(block_index)){
+//                        return #ok(?Nat64.toNat(block_index));
+//                      };
+//                    };
+//                  };
+//                };
+//              };
+//            };
+//          };
+//          case(#DIP721){
+//            return #err(#NftNotSupported);
+//          };
+//          case(#EXT){
+//            switch(token.identifier){
+//              case(null){
+//                // EXT requires a token identifier
+//                return #err(#ExtTokenError(#TokenIdMissing));
+//              };
+//              case(?identifier){
+//                switch (Utils.getAccountIdentifier(Principal.fromActor(this), to)){
+//                  case(null){
+//                    return #err(#ComputeAccountIdFailed);
+//                  };
+//                  case(?subaccount_identifier){
+//                    let interface : Types.ExtInterface = actor (Principal.toText(token.canister));
+//                    switch (await interface.transfer({
+//                      from = #address(Utils.accountToText(subaccount_identifier));
+//                      subaccount = ?Blob.toArray(Utils.principalToSubaccount(to));
+//                      to = #principal(to);
+//                      token = identifier;
+//                      amount = amount;
+//                      memo = Blob.fromArray([]);
+//                      notify = false;
+//                    })){
+//                      case(#err(err)){
+//                        return #err(#InterfaceError(#EXT(err)));
+//                      };
+//                      // @todo: see the archive extention from the EXT standard. One could use
+//                      // it to add the transfer and get a transcation ID.
+//                      case(#ok(_)){
+//                        return #ok(null);
+//                      };
+//                    };
+//                  };
+//                };
+//              };
+//            };
+//          };
+//          case(#NFT_ORIGYN){
+//            return #err(#NftNotSupported);
+//          };
+//        };
+//      };
+//    };
+//  };
+
   public shared func transfer(
     standard: Types.TokenStandard,
     canister: Principal,
@@ -262,13 +438,13 @@ shared actor class TokenAccessor(admin: Principal) = this {
     to: Principal, 
     amount: Nat,
     id: ?{#text: Text; #nat: Nat}
-  ) : async Result.Result<?Nat, Types.TokenError> {
+  ) : async Result.Result<?Nat, Types.TransferError> {
     switch(standard){
       case(#DIP20){
-        let interface : DIP20Types.Interface = actor (Principal.toText(canister));
+        let interface : Types.Dip20Interface = actor (Principal.toText(canister));
         switch (await interface.transfer(to, amount)){
-          case(#Err(_)){
-            return #err(#TokenInterfaceError);
+          case(#Err(err)){
+            return #err(#InterfaceError(#DIP20(err)));
           };
           case(#Ok(tx_counter)){
             return #ok(?tx_counter);
@@ -276,12 +452,12 @@ shared actor class TokenAccessor(admin: Principal) = this {
         };
       };
       case(#LEDGER){
-        switch (getAccountIdentifier(to, canister)){
+        switch (Utils.getAccountIdentifier(to, canister)){
           case(null){
             return #err(#ComputeAccountIdFailed);
           };
           case(?account_identifier){
-            let interface : LedgerTypes.Interface = actor (Principal.toText(canister));
+            let interface : Types.LedgerInterface = actor (Principal.toText(canister));
             switch (await interface.transfer({
               memo = 0;
               amount = { e8s = Nat64.fromNat(amount); }; // This will trap on overflow/underflow
@@ -290,8 +466,8 @@ shared actor class TokenAccessor(admin: Principal) = this {
               to = account_identifier;
               created_at_time = ?{ timestamp_nanos = Nat64.fromNat(Int.abs(Time.now())); };
             })){
-              case(#Err(_)){
-                return #err(#TokenInterfaceError);
+              case(#Err(err)){
+                return #err(#InterfaceError(#LEDGER(err)));
               };
               case(#Ok(block_index)){
                 return #ok(?Nat64.toNat(block_index));
@@ -313,10 +489,10 @@ shared actor class TokenAccessor(admin: Principal) = this {
                 return #err(#TokenIdInvalidType);
               };
               case(#nat(id_nft)){
-                let interface : DIP721Types.Interface = actor (Principal.toText(canister));
+                let interface : Types.Dip721Interface = actor (Principal.toText(canister));
                 switch (await interface.transfer(to, id_nft)){
-                  case(#Err(_)){
-                    return #err(#TokenInterfaceError);
+                  case(#Err(err)){
+                    return #err(#InterfaceError(#DIP721(err)));
                   };
                   case(#Ok(tx_counter)){
                     return #ok(?tx_counter);
@@ -339,19 +515,19 @@ shared actor class TokenAccessor(admin: Principal) = this {
                 // EXT cannot use nat as token identifier, only text
                 return #err(#TokenIdInvalidType);
               };
-              case(#text(token_identifier)){
-                let interface : EXTTypes.Interface = actor (Principal.toText(canister));
+              case(#text(text_identifier)){
+                let interface : Types.ExtInterface = actor (Principal.toText(canister));
                 switch (await interface.transfer({
                   from = #principal(from);
                   to = #principal(to);
-                  token = token_identifier;
+                  token = text_identifier;
                   amount = amount;
                   memo = Blob.fromArray([]);
                   notify = false;
                   subaccount = null;
                 })){
-                  case(#err(_)){
-                    return #err(#TokenInterfaceError);
+                  case(#err(err)){
+                    return #err(#InterfaceError(#EXT(err)));
                   };
                   // @todo: see the archive extention from the EXT standard. One could use
                   // it to add the transfer and get a transcation ID.
@@ -371,16 +547,16 @@ shared actor class TokenAccessor(admin: Principal) = this {
     };
   };
 
-  private func verifyIsFungible(token: Types.Token) : async Result.Result<(), Types.TokenError> {
+  private func isTokenFungible(token: Types.Token) : async Result.Result<Bool, Types.IsFungibleError> {
     switch(token.standard){
       case(#DIP20){
-        return #ok;
+        return #ok(true);
       };
       case(#LEDGER){
-        return #ok;
+        return #ok(true);
       };
       case(#DIP721){
-        return #err(#NftNotSupported);
+        return #ok(false);
       };
       case(#EXT){
         switch(token.identifier){
@@ -388,18 +564,26 @@ shared actor class TokenAccessor(admin: Principal) = this {
             return #err(#TokenIdMissing);
           };
           case(?identifier){
-            let interface : EXTTypes.Interface = actor (Principal.toText(token.canister));
-            switch (await interface.metadata(identifier)){
-              case(#err(_)){
-                return #err(#TokenInterfaceError);
+            switch(identifier){
+              case(#nat(_)){
+                // EXT cannot use nat as token identifier, only text
+                return #err(#TokenIdInvalidType);
               };
-              case(#ok(meta_data)){
-                switch (meta_data){
-                  case(#fungible(_)){
-                    return #ok;
+              case(#text(text_identifier)){
+                let interface : Types.ExtInterface = actor (Principal.toText(token.canister));
+                switch (await interface.metadata(text_identifier)){
+                  case(#err(err)){
+                    return #err(#ExtCommonError(err));
                   };
-                  case(#nonfungible(_)){
-                    return #err(#NftNotSupported);
+                  case(#ok(meta_data)){
+                    switch (meta_data){
+                      case(#fungible(_)){
+                        return #ok(true);
+                      };
+                      case(#nonfungible(_)){
+                        return #ok(false);
+                      };
+                    };
                   };
                 };
               };
@@ -408,52 +592,39 @@ shared actor class TokenAccessor(admin: Principal) = this {
         };
       };
       case(#NFT_ORIGYN){
-        #err(#NftNotSupported);
+        return #ok(false);
       };
     };
   };
 
-  private func verifyIsOwner(token: Types.Token, principal: Principal): async Result.Result<(), Types.TokenError> {
+  private func isTokenOwned(token: Types.Token, principal: Principal) : async Bool {
     switch(token.standard){
       case(#DIP20){
-        let interface : DIP20Types.Interface = actor (Principal.toText(token.canister));
+        let interface : Types.Dip20Interface = actor (Principal.toText(token.canister));
         let metaData = await interface.getMetadata();
-        if (metaData.owner != principal) {
-          return #err(#TokenNotOwned);
-        } else {
-          return #ok;
-        };
+        return metaData.owner == principal;
       };
       case(#LEDGER){
         // There is no way to check the owner of the ledger canister
         // Hence assume the given principal is the owner
-        return #ok;
+        return true;
       };
       case(#DIP721){
         // @todo: investigate why it's not possible to use the tokenMetadata interface of the
         // dip721 canister (it uses a 'vec record' in Candid that cannot be used in Motoko?)
         // For now assume the given principal is the owner
-        return #ok;
+        return true;
       };
       case(#EXT){
         // There is no way to check the owner of the EXT canister
         // Hence assume the given principal is the owner
-        return #ok;
+        return true;
       };
       case(#NFT_ORIGYN){
         // @todo: implement the NFT_ORIGYN standard
         Debug.trap("The NFT_ORIGYN standard is not implemented yet!");
       };
     }; 
-  };
-
-  private func getAccountIdentifier(account: Principal, ledger: Principal) : ?Accounts.AccountIdentifier {
-    let identifier = Accounts.accountIdentifier(ledger, Accounts.principalToSubaccount(account));
-    if(Accounts.validateAccountIdentifier(identifier)){
-      ?identifier;
-    } else {
-      null;
-    };
   };
 
   

@@ -46,7 +46,7 @@ call cycles_dispenser.configure(variant { DistributeBalance = record {
   to = default;
   amount = 1;
 }});
-assert _ == variant { err = variant { TransferError = variant { TokenIdMissing } } };
+assert _ == variant { err = variant { TransferError = variant { ExtTokenIdMissing } } };
 
 // Test that the command fails if the nft is identified with text
 call cycles_dispenser.configure(variant { DistributeBalance = record {

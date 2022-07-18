@@ -36,7 +36,6 @@ module {
     hash.write(Blob.toArray(subaccount));
     let hashSum = hash.sum();
     let crc32Bytes = beBytes(CRC32.ofArray(hashSum));
-    let buf = Buffer.Buffer<Nat8>(32);
     Blob.fromArray(Array.append(crc32Bytes, hashSum))
   };
 
@@ -56,7 +55,6 @@ module {
     idHash.write(Blob.toArray(Principal.toBlob(principal)));
     let hashSum = idHash.sum();
     let crc32Bytes = beBytes(CRC32.ofArray(hashSum));
-    let buf = Buffer.Buffer<Nat8>(32);
     Blob.fromArray(Array.append(crc32Bytes, hashSum));
   };
 }

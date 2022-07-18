@@ -11,15 +11,21 @@ import Result      "mo:base/Result";
 import Time        "mo:base/Time";
 import Trie        "mo:base/Trie";
 
-shared actor class DAO(init : Types.BasicDaoStableStorage) = Self {
+// @todo: remove snake case from functions
+
+shared actor class DAO(create_dao_args : Types.CreateDaoArgs) = this {
   
-  stable var accounts = Types.accounts_fromArray(init.accounts);
-  stable var proposals = Types.proposals_fromArray(init.proposals);
-  stable var next_proposal_id : Nat = 0;
-  stable var system_params : Types.SystemParams = init.system_params;
+  private stable var proposals_ = Types.proposals_fromArray(create_dao_args.proposals);
+
+  private stable var proposal_index_ : Nat = 0;
+
+  private stable var system_params_ : Types.SystemParams = create_dao_args.system_params;
+
+  private stable var token_accessor_ : Types.TokenAccessorInterface = actor (Principal.toText(create_dao_args.token_accessor));
   
+  // @todo: remove
   system func heartbeat() : async () {
-      await execute_accepted_proposals();
+    await execute_accepted_proposals();
   };
   
   func account_get(id : Principal) : ?Types.Tokens = Trie.get(accounts, Types.account_key(id), Principal.equal);
@@ -28,9 +34,9 @@ shared actor class DAO(init : Types.BasicDaoStableStorage) = Self {
     accounts := Trie.put(accounts, Types.account_key(id), Principal.equal, tokens).0;
   };
   
-  func proposal_get(id : Nat) : ?Types.Proposal = Trie.get(proposals, Types.proposal_key(id), Nat.equal);
+  func proposal_get(id : Nat) : ?Types.Proposal = Trie.get(proposals_, Types.proposal_key(id), Nat.equal);
   func proposal_put(id : Nat, proposal : Types.Proposal) {
-    proposals := Trie.put(proposals, Types.proposal_key(id), Nat.equal, proposal).0;
+    proposals_ := Trie.put(proposals_, Types.proposal_key(id), Nat.equal, proposal).0;
   };
   
   /// Transfer tokens from the caller's account to another account
@@ -38,7 +44,7 @@ shared actor class DAO(init : Types.BasicDaoStableStorage) = Self {
     switch (account_get caller) {
       case null { #err "Caller needs an account to transfer funds" };
       case (?from_tokens) {
-        let fee = system_params.transfer_fee.amount_e8s;
+        let fee = system_params_.transfer_fee.amount_e8s;
         let amount = transfer.amount.amount_e8s;
         if (from_tokens.amount_e8s < amount + fee) {
           #err ("Caller's account has insufficient funds to transfer " # debug_show(amount));
@@ -73,8 +79,8 @@ shared actor class DAO(init : Types.BasicDaoStableStorage) = Self {
   /// args on the given canister.
   public shared({caller}) func submit_proposal(payload: Types.ProposalPayload) : async Types.Result<Nat, Text> {
     Result.chain(deduct_proposal_submission_deposit(caller), func (()) : Types.Result<Nat, Text> {
-      let proposal_id = next_proposal_id;
-      next_proposal_id += 1;
+      let proposal_id = proposal_index_;
+      proposal_index_ += 1;
       let proposal : Types.Proposal = {
         id = proposal_id;
         timestamp = Time.now();
@@ -97,7 +103,7 @@ shared actor class DAO(init : Types.BasicDaoStableStorage) = Self {
 
   /// Return the list of all proposals
   public query func list_proposals() : async [Types.Proposal] {
-    Iter.toArray(Iter.map(Trie.iter(proposals), func (kv : (Nat, Types.Proposal)) : Types.Proposal = kv.1))
+    Iter.toArray(Iter.map(Trie.iter(proposals_), func (kv : (Nat, Types.Proposal)) : Types.Proposal = kv.1))
   };
 
   // Vote on an open proposal
@@ -122,17 +128,17 @@ shared actor class DAO(init : Types.BasicDaoStableStorage) = Self {
               case (#no) { votes_no += voting_tokens };
             };
             let voters = List.push(caller, proposal.voters);
-            if (votes_yes >= system_params.proposal_vote_threshold.amount_e8s) {
+            if (votes_yes >= system_params_.proposal_vote_threshold.amount_e8s) {
               // Refund the proposal deposit when the proposal is accepted
               ignore do ? {
                 let account = account_get(proposal.proposer)!;
-                let refunded = account.amount_e8s + system_params.proposal_submission_deposit.amount_e8s;
+                let refunded = account.amount_e8s + system_params_.proposal_submission_deposit.amount_e8s;
                 account_put(proposal.proposer, { amount_e8s = refunded });
               };
               state := #accepted;
             };
             
-            if (votes_no >= system_params.proposal_vote_threshold.amount_e8s) {
+            if (votes_no >= system_params_.proposal_vote_threshold.amount_e8s) {
               state := #rejected;
             };
             let updated_proposal = {
@@ -154,19 +160,19 @@ shared actor class DAO(init : Types.BasicDaoStableStorage) = Self {
   };
 
   /// Get the current system params
-  public query func get_system_params() : async Types.SystemParams { system_params };
+  public query func get_system_params() : async Types.SystemParams { system_params_ };
 
   /// Update system params
   ///
   /// Only callable via proposal execution
   public shared({caller}) func update_system_params(payload: Types.UpdateSystemParamsPayload) : async () {
-    if (caller != Principal.fromActor(Self)) {
+    if (caller != Principal.fromActor(this)) {
       return;
     };
-    system_params := {
-      transfer_fee = Option.get(payload.transfer_fee, system_params.transfer_fee);
-      proposal_vote_threshold = Option.get(payload.proposal_vote_threshold, system_params.proposal_vote_threshold);
-      proposal_submission_deposit = Option.get(payload.proposal_submission_deposit, system_params.proposal_submission_deposit);
+    system_params_ := {
+      transfer_fee = Option.get(payload.transfer_fee, system_params_.transfer_fee);
+      proposal_vote_threshold = Option.get(payload.proposal_vote_threshold, system_params_.proposal_vote_threshold);
+      proposal_submission_deposit = Option.get(payload.proposal_submission_deposit, system_params_.proposal_submission_deposit);
     };
   };
 
@@ -175,7 +181,7 @@ shared actor class DAO(init : Types.BasicDaoStableStorage) = Self {
     switch (account_get(caller)) {
       case null { #err "Caller needs an account to submit a proposal" };
       case (?from_tokens) {
-        let threshold = system_params.proposal_submission_deposit.amount_e8s;
+        let threshold = system_params_.proposal_submission_deposit.amount_e8s;
         if (from_tokens.amount_e8s < threshold) {
           #err ("Caller's account must have at least " # debug_show(threshold) # " to submit a proposal")
         } else {
@@ -189,7 +195,7 @@ shared actor class DAO(init : Types.BasicDaoStableStorage) = Self {
 
   /// Execute all accepted proposals
   func execute_accepted_proposals() : async () {
-    let accepted_proposals = Trie.filter(proposals, func (_ : Nat, proposal : Types.Proposal) : Bool = proposal.state == #accepted);
+    let accepted_proposals = Trie.filter(proposals_, func (_ : Nat, proposal : Types.Proposal) : Bool = proposal.state == #accepted);
     // Update proposal state, so that it won't be picked up by the next heartbeat
     for ((id, proposal) in Trie.iter(accepted_proposals)) {
       update_proposal_state(proposal, #executing);

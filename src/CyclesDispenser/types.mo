@@ -46,8 +46,6 @@ module{
     #InvalidCycleConfig;
     #InvalidBalanceArguments;
     #NotInAllowList;
-    #TransferError: TokenError;
-    #SetTokenError: TokenError;
   };
 
   public type CyclesTransferError = {
@@ -111,7 +109,7 @@ module{
     #ComputeAccountIdFailed;
     #NftNotSupported;
     #NotAuthorized;
-    #TokenIdMissing;
+    #ExtTokenIdMissing;
     #TokenIdInvalidType;
     #TokenInterfaceError;
     #TokenNotOwned;

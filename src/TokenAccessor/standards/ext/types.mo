@@ -6,8 +6,8 @@ module{
   //and move transfer into a "transfer" extension?
 
   //SubAccount and AID to support native addresses
-  type AccountIdentifier = Text;
-  type SubAccount = [Nat8];
+  public type AccountIdentifier = Text;
+  public type SubAccount = [Nat8];
 
   // A user can be any principal or canister, which can hold a balance
   public type User = {
@@ -16,41 +16,42 @@ module{
   };
 
   // An amount of tokens, unbound
-  type Balance = Nat;
+  public type Balance = Nat;
 
   // A global uninque id for a token
   //hex encoded, domain seperator + canister id + token index, variable length
-  type TokenIdentifier  = Text;
+  public type TokenIdentifier  = Text;
 
   //A canister unique index of each token. This allows for 2**32 individual tokens
-  type TokenIndex = Nat32;
+  public type TokenIndex = Nat32;
 
   // Extension nane, e.g. 'batch' for batch requests
-  type Extension = Text;
+  public type Extension = Text;
 
   // Additional data field for transfers to describe the tx
   // Data will also be forwarded to notify callback
-  type Memo = Blob;
+  public type Memo = Blob;
 
   //Call back for notifications
-  type NotifyCallback = shared (TokenIdentifier, User, Balance, Memo) -> async ?Balance;
-  type NotifyService = actor { tokenTransferNotification : NotifyCallback};
+  public type NotifyCallback = shared (TokenIdentifier, User, Balance, Memo) -> async ?Balance;
+  public type NotifyService = actor { tokenTransferNotification : NotifyCallback};
 
 
   //Common error respone
-  type CommonError = {
+  public type CommonError = {
     #InvalidToken: TokenIdentifier;
     #Other : Text;
   };
 
   //Requests and Responses
-  type BalanceRequest = { 
+  public type BalanceRequest = { 
     user : User; 
     token: TokenIdentifier;
   };
-  type BalanceResponse = Result.Result<Balance, CommonError>;
 
-  type TransferRequest = {
+  public type BalanceResponse = Result.Result<Balance, CommonError>;
+
+  public type TransferRequest = {
     from : User;
     to : User;
     token : TokenIdentifier;
@@ -59,14 +60,17 @@ module{
     notify : Bool;
     subaccount : ?SubAccount;
   };
-  type TransferResponse = Result.Result<Balance, {
+
+  public type TransferResponse = Result.Result<Balance, TransferError>;
+
+  public type TransferError = {
     #Unauthorized: AccountIdentifier;
     #InsufficientBalance;
     #Rejected; //Rejected by canister
     #InvalidToken: TokenIdentifier;
     #CannotNotify: AccountIdentifier;
     #Other : Text;
-  }>;
+  };
 
   public type Metadata = {
     #fungible : {

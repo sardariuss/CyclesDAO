@@ -1,7 +1,7 @@
 
 module {
 
-  type NftError = {
+  public type NftError = {
     #UnauthorizedOperator;
     #SelfTransfer;
     #TokenNotFound;
@@ -14,7 +14,7 @@ module {
     #Other : Text;
   };
 
-  type TransferResult = { 
+  public type TransferResult = { 
     #Ok : Nat;
     #Err : NftError;
   };
