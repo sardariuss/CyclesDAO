@@ -63,6 +63,8 @@ module{
 
   public type RefundError = MintError;
 
+  public type ChargeError = MintError;
+
   public type TransferError = {
     #ComputeAccountIdFailed;
     #TokenIdMissing;

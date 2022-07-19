@@ -24,7 +24,7 @@ shared actor class CyclesDispenser(create_cycles_dispenser_args: Types.CreateCyc
     = actor (Principal.toText(create_cycles_dispenser_args.token_accessor));
 
   private stable var cycles_exchange_config_ : [Types.ExchangeLevel] = [];
-  if (Utils.isValidExchangeConfig(create_cycles_dispenser_args.cycles_exchange_config)) {
+  if (Utils.isValidExchangeConfig(create_cycles_dispenser_args.cycles_exchange_config)){
     cycles_exchange_config_ := create_cycles_dispenser_args.cycles_exchange_config;
   };
 
@@ -109,7 +109,7 @@ shared actor class CyclesDispenser(create_cycles_dispenser_args: Types.CreateCyc
     async Result.Result<Nat, Types.WalletReceiveError> {
     // Check if cycles are available
     let available_cycles = ExperimentalCycles.available();
-    if (available_cycles == 0) {
+    if (available_cycles == 0){
       return #err(#NoCyclesAdded);
     };
     // Check if the cycles exchange config is set
@@ -119,15 +119,15 @@ shared actor class CyclesDispenser(create_cycles_dispenser_args: Types.CreateCyc
     // Check if the max cycles has been reached
     let original_balance = ExperimentalCycles.balance();
     let max_cycles = cycles_exchange_config_[cycles_exchange_config_.size() - 1].threshold;
-    if (original_balance > max_cycles) {
+    if (original_balance > max_cycles){
       return #err(#MaxCyclesReached);
     };
     // Check if the token accessor has a configured token
-    if ((await mint_access_controller_.getToken()) == null) {
+    if ((await mint_access_controller_.getToken()) == null){
       return #err(#MintAccessControllerError(#TokenNotSet));
     };
     // Check if the cycles dispenser is authorized to mint
-    if (not (await mint_access_controller_.isAuthorizedMinter(Principal.fromActor(this)))) {
+    if (not (await mint_access_controller_.isAuthorizedMinter(Principal.fromActor(this)))){
       return #err(#MintAccessControllerError(#MintNotAuthorized));
     };
     // Accept the cycles up to the maximum cycles possible
@@ -158,20 +158,20 @@ shared actor class CyclesDispenser(create_cycles_dispenser_args: Types.CreateCyc
     command: Types.CyclesDispenserCommand
   ) : async Result.Result<(), Types.ConfigureError> {
     // Check if the call comes from the admin DAO canister
-    if (msg.caller != admin_) {
+    if (msg.caller != admin_){
       return #err(#NotAllowed);
     };
     // Execute the command
     switch (command){
       case(#SetCycleExchangeConfig cycles_exchange_config){
-        if (not Utils.isValidExchangeConfig(cycles_exchange_config)) {
+        if (not Utils.isValidExchangeConfig(cycles_exchange_config)){
           cycles_exchange_config_ := [];
           return #err(#InvalidCycleConfig);
         };
         cycles_exchange_config_ := cycles_exchange_config;
       };
       case(#AddAllowList {canister; balance_threshold; balance_target; pull_authorized;}){
-        if (balance_threshold >= balance_target) {
+        if (balance_threshold >= balance_target){
           return #err(#InvalidBalanceArguments);
         };
         allow_list_.put(canister, {balance_threshold = balance_threshold; balance_target = balance_target; pull_authorized = pull_authorized;});
@@ -212,7 +212,7 @@ shared actor class CyclesDispenser(create_cycles_dispenser_args: Types.CreateCyc
         return #err(#CanisterNotAllowed);
       };
       case(?{balance_threshold; balance_target; pull_authorized}){
-        if (not pull_authorized) {
+        if (not pull_authorized){
           return #err(#PullNotAuthorized);
         } else {
           return await fillWithCycles(msg.caller, balance_threshold, balance_target, #RequestCycles);
@@ -230,13 +230,13 @@ shared actor class CyclesDispenser(create_cycles_dispenser_args: Types.CreateCyc
     let canister : Types.ToPowerUpInterface = actor(Principal.toText(principal));
     let current_balance = await canister.cyclesBalance();
     let difference : Int = balance_threshold - current_balance;
-    if (difference <= 0) {
+    if (difference <= 0){
       // Canister balance is already above threshold, return ok
       return #ok;
     };
     let refill_amount : Int = balance_target - current_balance;
     let available_cycles : Int = ExperimentalCycles.balance() - minimum_cycles_balance_;
-    if (available_cycles < refill_amount) {
+    if (available_cycles < refill_amount){
       // Available cycles is less than the amount to refill, return an error
       return #err(#InsufficientCycles);
     };
@@ -244,7 +244,7 @@ shared actor class CyclesDispenser(create_cycles_dispenser_args: Types.CreateCyc
     await canister.acceptCycles();
     let refund_amount = ExperimentalCycles.refunded();
     // Consider partial refill is a success, so raise an error only if all cycles are returned
-    if (refund_amount == refill_amount) {
+    if (refund_amount == refill_amount){
       return #err(#CallerRefundedAll);
     };
     let now = Time.now();
@@ -274,7 +274,7 @@ shared actor class CyclesDispenser(create_cycles_dispenser_args: Types.CreateCyc
     configure_command_register_array_ := configure_command_register_.toArray();
   };
 
-  system func postupgrade() {
+  system func postupgrade(){
     // Restore allow_list_ and registers from temporary stable arrays
     for ((principal, powering_parameters) in Iter.fromArray(allow_list_array_)){
       allow_list_.put(principal, powering_parameters);

@@ -161,7 +161,7 @@ module TokenInterface {
     token: Types.Token,
     from: Principal,
     to: Principal,
-    current_balance: Nat,
+    locked_balance: Nat,
     amount: Nat
   ) : async Result.Result<(), Types.AcceptError> {
     switch(token.standard){
@@ -184,7 +184,7 @@ module TokenInterface {
           case(?account_identifier){
             let interface : Types.LedgerInterface = actor (Principal.toText(token.canister));
             let balance = Nat64.toNat((await interface.account_balance({account = account_identifier})).e8s);
-            if (balance < current_balance + amount) {
+            if (balance < locked_balance + amount){
               return #err(#InsufficientBalance);
             } else {
               return #ok;
@@ -222,7 +222,7 @@ module TokenInterface {
                         return #err(#ExtCommonError(err));
                       };
                       case(#ok(balance)){
-                        if (balance < current_balance + amount) {
+                        if (balance < locked_balance + amount){
                           return #err(#InsufficientBalance);
                         } else {
                           return #ok;
@@ -244,14 +244,14 @@ module TokenInterface {
 
   public func refund(
     token: Types.Token,
-    from: Principal,
-    to: Principal,
+    payer: Principal,
+    payee: Principal,
     amount: Nat
   ) : async Result.Result<?Nat, Types.RefundError> {
     switch(token.standard){
       case(#DIP20){
         let interface : Types.Dip20Interface = actor (Principal.toText(token.canister));
-        switch (await interface.transfer(to, amount)){
+        switch (await interface.transfer(payer, amount)){
           case(#Err(err)){
             return #err(#InterfaceError(#DIP20(err)));
           };
@@ -261,23 +261,23 @@ module TokenInterface {
         };
       };
       case(#LEDGER){
-        switch (Utils.getAccountIdentifier(from, to)){
+        switch (Utils.getAccountIdentifier(payee, payer)){
           case(null){
             return #err(#ComputeAccountIdFailed);
           };
-          case(?subaccount_identifier){
-            switch (Utils.getDefaultAccountIdentifier(to)){
+          case(?subaccount){
+            switch (Utils.getDefaultAccountIdentifier(payer)){
               case(null){
                 return #err(#ComputeAccountIdFailed);
               };
-              case(?account_identifier){
+              case(?payer_account){
                 let interface : Types.LedgerInterface = actor (Principal.toText(token.canister));
                 switch (await interface.transfer({
                   memo = 0;
                   amount = { e8s = Nat64.fromNat(amount); }; // This will trap on overflow/underflow
                   fee = { e8s = 10_000; }; // The standard ledger fee
-                  from_subaccount = ?subaccount_identifier;
-                  to = account_identifier;
+                  from_subaccount = ?subaccount;
+                  to = payer_account;
                   created_at_time = ?{ timestamp_nanos = Nat64.fromNat(Int.abs(Time.now())); };
                 })){
                   case(#Err(err)){
@@ -308,16 +308,112 @@ module TokenInterface {
                 return #err(#TokenIdInvalidType);
               };
               case(#text(token_identifier)){
-                switch (Utils.getAccountIdentifier(from, to)){
+                switch (Utils.getAccountIdentifier(payee, payer)){
                   case(null){
                     return #err(#ComputeAccountIdFailed);
                   };
-                  case(?subaccount_identifier){
+                  case(?subaccount){
                     let interface : Types.ExtInterface = actor (Principal.toText(token.canister));
                     switch (await interface.transfer({
-                      from = #address(Utils.accountToText(subaccount_identifier));
-                      subaccount = ?Blob.toArray(Utils.principalToSubaccount(to));
-                      to = #principal(to);
+                      from = #address(Utils.accountToText(subaccount));
+                      subaccount = ?Blob.toArray(Utils.principalToSubaccount(payer));
+                      to = #principal(payer);
+                      token = token_identifier;
+                      amount = amount;
+                      memo = Blob.fromArray([]);
+                      notify = false;
+                    })){
+                      case(#err(err)){
+                        return #err(#InterfaceError(#EXT(err)));
+                      };
+                      // @todo: see the archive extention from the EXT standard. One could use
+                      // it to add the transfer and get a transcation ID.
+                      case(#ok(_)){
+                        return #ok(null);
+                      };
+                    };
+                  };
+                };
+              };
+            };
+          };
+        };
+      };
+      case(#NFT_ORIGYN){
+        return #err(#NftNotSupported);
+      };
+    };
+  };
+
+  public func charge(
+    token: Types.Token,
+    payer: Principal,
+    payee: Principal,
+    amount: Nat
+  ) : async Result.Result<?Nat, Types.ChargeError> {
+    switch(token.standard){
+      case(#DIP20){
+        // @todo: add note
+        return #ok(null);
+      };
+      case(#LEDGER){
+        switch (Utils.getAccountIdentifier(payee, payer)){
+          case(null){
+            return #err(#ComputeAccountIdFailed);
+          };
+          case(?subaccount){
+            switch (Utils.getDefaultAccountIdentifier(payee)){
+              case(null){
+                return #err(#ComputeAccountIdFailed);
+              };
+              case(?payee_account){
+                let interface : Types.LedgerInterface = actor (Principal.toText(token.canister));
+                switch (await interface.transfer({
+                  memo = 0;
+                  amount = { e8s = Nat64.fromNat(amount); }; // This will trap on overflow/underflow
+                  fee = { e8s = 10_000; }; // The standard ledger fee
+                  from_subaccount = ?subaccount;
+                  to = payee_account;
+                  created_at_time = ?{ timestamp_nanos = Nat64.fromNat(Int.abs(Time.now())); };
+                })){
+                  case(#Err(err)){
+                    return #err(#InterfaceError(#LEDGER(err)));
+                  };
+                  case(#Ok(block_index)){
+                    return #ok(?Nat64.toNat(block_index));
+                  };
+                };
+              };
+            };
+          };
+        };
+      };
+      case(#DIP721){
+        return #err(#NftNotSupported);
+      };
+      case(#EXT){
+        switch(token.identifier){
+          case(null){
+            // EXT requires a token identifier
+            return #err(#TokenIdMissing);
+          };
+          case(?identifier){
+            switch(identifier){
+              case(#nat(_)){
+                // EXT cannot use nat as token identifier, only text
+                return #err(#TokenIdInvalidType);
+              };
+              case(#text(token_identifier)){
+                switch (Utils.getAccountIdentifier(payee, payer)){
+                  case(null){
+                    return #err(#ComputeAccountIdFailed);
+                  };
+                  case(?subaccount){
+                    let interface : Types.ExtInterface = actor (Principal.toText(token.canister));
+                    switch (await interface.transfer({
+                      from = #address(Utils.accountToText(subaccount));
+                      subaccount = ?Blob.toArray(Utils.principalToSubaccount(payer));
+                      to = #principal(payee);
                       token = token_identifier;
                       amount = amount;
                       memo = Blob.fromArray([]);

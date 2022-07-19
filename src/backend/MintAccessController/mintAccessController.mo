@@ -43,7 +43,7 @@ shared actor class MintAccessController(admin: Principal) = this {
   };
 
   public shared query func getMinters() : async [Principal] {
-    return Trie.toArray<Principal, (), Principal>(minters_, func(principal, ()) {
+    return Trie.toArray<Principal, (), Principal>(minters_, func(principal, ()){
       return principal;
     });
   };
@@ -101,7 +101,7 @@ shared actor class MintAccessController(admin: Principal) = this {
           return #err(#IsFungibleError(err));
         };
         case(#ok(is_fungible)){
-          if (not is_fungible) {
+          if (not is_fungible){
             return #err(#TokenNotFungible);
           } else if (not (await TokenInterface.isTokenOwned(token, Principal.fromActor(this)))){
             return #err(#TokenNotOwned);
@@ -151,7 +151,7 @@ shared actor class MintAccessController(admin: Principal) = this {
     mint_register_array_ := mint_register_.toArray();
   };
 
-  system func postupgrade() {
+  system func postupgrade(){
     // Restore register from temporary stable array
     for (record in Array.vals(mint_register_array_)){
       mint_register_.add(record);
