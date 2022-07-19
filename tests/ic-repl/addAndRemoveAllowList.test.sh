@@ -5,16 +5,16 @@ load "common/install.sh";
 identity default "~/.config/dfx/identity/default/identity.pem";
 
 // Create the token accessor
-let token_accessor = installMintAccessController(default);
+let token_accessor = installTokenAccessor(default);
 
-// Create the cycles dispenser
+// Create the cycles provider
 let admin = default;
 let minimum_cycles_balance = (0 : nat);
 let init_cycles_config = vec {record { threshold = 1_000_000_000_000_000 : nat; rate_per_t = 1.0 : float64 };};
 let initial_balance = (0 : nat);
-let cycles_dispenser = installCyclesDispenser(admin, minimum_cycles_balance, token_accessor, init_cycles_config, initial_balance);
+let cycles_provider = installCyclesProvider(admin, minimum_cycles_balance, token_accessor, init_cycles_config, initial_balance);
 
-call cycles_dispenser.getAllowList();
+call cycles_provider.getAllowList();
 assert _ == vec {};
 
 let toPowerUp1 = record {
@@ -57,37 +57,37 @@ function convertType(toPowerUp) {
   var;
 };
 
-call cycles_dispenser.getAllowList();
+call cycles_provider.getAllowList();
 assert _ == vec {};
 
 // Add 3 canisters to power up
-call cycles_dispenser.configure(variant {AddAllowList = toPowerUp1});
+call cycles_provider.configure(variant {AddAllowList = toPowerUp1});
 assert _ == variant { ok };
-call cycles_dispenser.configure(variant {AddAllowList = toPowerUp2});
+call cycles_provider.configure(variant {AddAllowList = toPowerUp2});
 assert _ == variant { ok };
-call cycles_dispenser.configure(variant {AddAllowList = toPowerUp3});
+call cycles_provider.configure(variant {AddAllowList = toPowerUp3});
 assert _ == variant { ok };
-call cycles_dispenser.getAllowList();
+call cycles_provider.getAllowList();
 assert _ == vec {convertType(toPowerUp1); convertType(toPowerUp2); convertType(toPowerUp3)};
 
 // Try to add a canister with balance_threshold < balance_target shall fail
-call cycles_dispenser.configure(variant {AddAllowList = toPowerUpInvalid});
+call cycles_provider.configure(variant {AddAllowList = toPowerUpInvalid});
 assert _ == variant { err = variant { InvalidBalanceArguments } };
 
 // Try to remove a canister that has not been added shall fail
-call cycles_dispenser.configure(variant {RemoveAllowList = record { canister = toPowerUpInvalid.canister }});
+call cycles_provider.configure(variant {RemoveAllowList = record { canister = toPowerUpInvalid.canister }});
 assert _ == variant { err = variant { NotInAllowList } };
 
 // Remove the three canister one by one
-call cycles_dispenser.configure(variant {RemoveAllowList = record { canister = toPowerUp3.canister }});
+call cycles_provider.configure(variant {RemoveAllowList = record { canister = toPowerUp3.canister }});
 assert _ == variant { ok };
-call cycles_dispenser.getAllowList();
+call cycles_provider.getAllowList();
 assert _ == vec {convertType(toPowerUp1); convertType(toPowerUp2)};
-call cycles_dispenser.configure(variant {RemoveAllowList = record { canister = toPowerUp2.canister }});
+call cycles_provider.configure(variant {RemoveAllowList = record { canister = toPowerUp2.canister }});
 assert _ == variant { ok };
-call cycles_dispenser.getAllowList();
+call cycles_provider.getAllowList();
 assert _ == vec {convertType(toPowerUp1);};
-call cycles_dispenser.configure(variant {RemoveAllowList = record { canister = toPowerUp1.canister }});
+call cycles_provider.configure(variant {RemoveAllowList = record { canister = toPowerUp1.canister }});
 assert _ == variant { ok };
-call cycles_dispenser.getAllowList();
+call cycles_provider.getAllowList();
 assert _ == vec {};

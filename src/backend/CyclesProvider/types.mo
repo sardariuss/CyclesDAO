@@ -1,18 +1,18 @@
-import TokenInterfaceTypes   "../TokenInterface/types";
+import TokenInterfaceTypes   "../common/types";
 
 import Principal             "mo:base/Principal";
 import Result                "mo:base/Result";
 
 module{
 
-  public type CreateCyclesDispenserArgs = {
+  public type CreateCyclesProviderArgs = {
     admin: Principal;
     minimum_cycles_balance: Nat;
     token_accessor: Principal;
     cycles_exchange_config: [ExchangeLevel];
   };
 
-  public type CyclesDispenserCommand = {
+  public type CyclesProviderCommand = {
     #SetCycleExchangeConfig: [ExchangeLevel];
     #AddAllowList: {
       canister: Principal;
@@ -40,7 +40,7 @@ module{
     #NoCyclesAdded;
     #InvalidCycleConfig;
     #MaxCyclesReached;
-    #MintAccessControllerError: {
+    #TokenAccessorError: {
       #TokenNotSet;
       #MintNotAuthorized;
     };
@@ -87,7 +87,7 @@ module{
   public type ConfigureCommandRecord = {
     date: Int;
     admin: Principal;
-    command: CyclesDispenserCommand;
+    command: CyclesProviderCommand;
   };
 
   public type CyclesProfile = {
@@ -103,13 +103,12 @@ module{
   };
 
   public type ToPowerUpInterface = actor {
-    setCyclesDispenser: shared (Principal) -> async ();
+    setCyclesProvider: shared (Principal) -> async ();
     cyclesBalance: shared query () -> async (Nat);
     acceptCycles: shared () -> async ();
   };
 
-  // Mint access controller
-  public type MintAccessControllerInterface = actor {
+  public type TokenAccessorInterface = actor {
     mint: shared(Principal, Nat) -> async (Nat);
     getToken: shared () -> async (?TokenInterfaceTypes.Token);
     isAuthorizedMinter: shared (Principal) -> async (Bool);

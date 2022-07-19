@@ -3,7 +3,7 @@ import Nat                "mo:base/Nat";
 import Principal          "mo:base/Principal";
 import Result             "mo:base/Result";
 
-shared actor class ToPowerUp(cycles_dispenser: Principal) = this {
+shared actor class ToPowerUp(cycles_provider: Principal) = this {
 
   public type CyclesTransferError = {
     #CanisterNotAllowed;
@@ -12,15 +12,15 @@ shared actor class ToPowerUp(cycles_dispenser: Principal) = this {
     #CallerRefundedAll;
   };
 
-  public type CyclesDispenserInterface = actor {
+  public type CyclesProviderInterface = actor {
     requestCycles: shared() -> async(Result.Result<(), CyclesTransferError>);
   };
 
-  private stable var cycles_dispenser_ : Principal = cycles_dispenser;
+  private stable var cycles_provider_ : Principal = cycles_provider;
   private stable var do_accept_cycles_ : Bool = true;
 
-  public shared func setCyclesDispenser(cycles_dispenser: Principal) : async () {
-    cycles_dispenser_ := cycles_dispenser;
+  public shared func setCyclesProvider(cycles_provider: Principal) : async () {
+    cycles_provider_ := cycles_provider;
   };
 
   public shared func setAcceptCycles(do_accept_cycles : Bool) : async () {
@@ -36,8 +36,8 @@ shared actor class ToPowerUp(cycles_dispenser: Principal) = this {
   };
 
   public shared func pullCycles() : async Result.Result<(), CyclesTransferError> {
-    let cycles_dispenser_actor : CyclesDispenserInterface = actor (Principal.toText(cycles_dispenser_));
-    return await cycles_dispenser_actor.requestCycles();
+    let cycles_provider_actor : CyclesProviderInterface = actor (Principal.toText(cycles_provider_));
+    return await cycles_provider_actor.requestCycles();
   };
 
   public shared func acceptCycles() : async() {

@@ -1,5 +1,5 @@
-import TokenInterfaceTypes   "../TokenInterface/types";
-import TokenInterface        "../TokenInterface/tokenInterface";
+import TokenInterfaceTypes   "../common/types";
+import TokenInterface        "../common/tokenInterface";
 import Types                 "types";
 
 import Array                 "mo:base/Array";
@@ -11,7 +11,7 @@ import Time                  "mo:base/Time";
 import Trie                  "mo:base/Trie";
 import TrieSet               "mo:base/TrieSet";
 
-shared actor class MintAccessController(admin: Principal) = this {
+shared actor class TokenAccessor(admin: Principal) = this {
 
   // Members
 

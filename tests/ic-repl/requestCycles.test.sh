@@ -9,9 +9,9 @@ identity default "~/.config/dfx/identity/default/identity.pem";
 import default_wallet = "rwlgt-iiaaa-aaaaa-aaaaa-cai" as "common/wallet.did";
 
 // Create the token accessor
-let token_accessor = installMintAccessController(default);
+let token_accessor = installTokenAccessor(default);
 
-// Create the cycles dispenser, add it as authorized minter
+// Create the cycles provider, add it as authorized minter
 let admin = default;
 let minimum_cycles_balance = (0 : nat);
 let init_cycles_config = vec {
@@ -21,23 +21,23 @@ let init_cycles_config = vec {
   record { threshold = 150_000_000_000 : nat; rate_per_t = 0.2 : float64 };
 };
 let initial_balance = (0 : nat);
-let cycles_dispenser = installCyclesDispenser(admin, minimum_cycles_balance, token_accessor, init_cycles_config, initial_balance);
-call token_accessor.addMinter(cycles_dispenser);
+let cycles_provider = installCyclesProvider(admin, minimum_cycles_balance, token_accessor, init_cycles_config, initial_balance);
+call token_accessor.addMinter(cycles_provider);
 assert _ == variant { ok };
 
-// Setup a token (arbitrary dip20 here) to be able to call walletReceive and feed cycles to the cycles dispenser
+// Setup a token (arbitrary dip20 here) to be able to call walletReceive and feed cycles to the cycles provider
 let dip20 = installDip20(token_accessor, 1_000_000_000_000_000);
 call token_accessor.setTokenToMint(record { standard = variant{DIP20}; canister = dip20; identifier = opt(""); });
 assert _ == variant { ok };
 
-let toPowerUp = installToPowerUp(cycles_dispenser, 0);
+let toPowerUp = installToPowerUp(cycles_provider, 0);
 
 // Test that pulling cycles fails if the canister is not added to the allowed list
 call toPowerUp.pullCycles();
 assert _ == variant { err = variant { CanisterNotAllowed } };
 
 // Add the canister to the allow list, but do not authorize the pull
-call cycles_dispenser.configure(variant {AddAllowList = record {
+call cycles_provider.configure(variant {AddAllowList = record {
   canister = toPowerUp;
   balance_threshold = 100_000_000;
   balance_target = 200_000_000;
@@ -50,7 +50,7 @@ call toPowerUp.pullCycles();
 assert _ == variant { err = variant { PullNotAuthorized } };
 
 // Add the canister to the allow list, do authorize the pull
-call cycles_dispenser.configure(variant {AddAllowList = record {
+call cycles_provider.configure(variant {AddAllowList = record {
   canister = toPowerUp;
   balance_threshold = 100_000_000;
   balance_target = 200_000_000;
@@ -62,8 +62,8 @@ assert _ == variant { ok };
 call toPowerUp.pullCycles();
 assert _ == variant { err = variant { InsufficientCycles } };
 
-// Add cycles to the cycles dispenser
-walletReceive(default_wallet, cycles_dispenser, 500_000_000);
+// Add cycles to the cycles provider
+walletReceive(default_wallet, cycles_provider, 500_000_000);
 
 // Test that the pull fails because the canister itself does not accept the cycles
 call toPowerUp.setAcceptCycles(false);
@@ -73,7 +73,7 @@ call toPowerUp.pullCycles();
 assert _ == variant { err = variant { CallerRefundedAll } };
 
 // Verify initial balances has been unchanged so far
-call cycles_dispenser.cyclesBalance();
+call cycles_provider.cyclesBalance();
 assert _ == (500_000_000 : nat);
 call toPowerUp.cyclesBalance();
 assert _ == (0 : nat);
@@ -86,7 +86,7 @@ call toPowerUp.pullCycles();
 assert _ == variant { ok };
 
 // Verify balances have been updated
-call cycles_dispenser.cyclesBalance();
+call cycles_provider.cyclesBalance();
 assert _ == (300_000_000 : nat);
 call toPowerUp.cyclesBalance();
 assert _ == (200_000_000 : nat);

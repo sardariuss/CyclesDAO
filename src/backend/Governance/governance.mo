@@ -1,5 +1,5 @@
 import Types            "types";
-import TokenInterface   "../TokenInterface/tokenInterface";
+import TokenInterface   "../common/tokenInterface";
 import Utils            "utils";
 
 import Error            "mo:base/Error";
@@ -52,8 +52,8 @@ shared actor class Governance(create_governance_args : Types.CreateGovernanceArg
   /// vote "yes" on the proposal, the given method will be called with the given method
   /// args on the given canister.
   public shared({caller}) func submitProposal(payload: Types.ProposalPayload) : async Result.Result<Nat, Text> {
-    let mint_access_controller : Types.MintAccessControllerInterface = actor (Principal.toText(system_params_.mint_access_controller));
-    switch(await mint_access_controller.getToken()){
+    let token_accessor : Types.TokenAccessorInterface = actor (Principal.toText(system_params_.token_accessor));
+    switch(await token_accessor.getToken()){
       case(null){
         return #err("Token null");
       };
@@ -98,7 +98,7 @@ shared actor class Governance(create_governance_args : Types.CreateGovernanceArg
         if (List.some(proposal.voters, func (e : Principal) : Bool = e == caller)){
           return #err("Already voted");
         };
-        // Use the token from the proposal, not the one from the mint_access_controller because it
+        // Use the token from the proposal, not the one from the token_accessor because it
         // could have changed in the meantime!
         switch(await TokenInterface.balance(proposal.token, caller)){
           case(#err(err)){
@@ -154,7 +154,7 @@ shared actor class Governance(create_governance_args : Types.CreateGovernanceArg
       return #err("Not allowed!");
     };
     system_params_ := {
-      mint_access_controller = Option.get(payload.mint_access_controller, system_params_.mint_access_controller);
+      token_accessor = Option.get(payload.token_accessor, system_params_.token_accessor);
       proposal_vote_threshold = Option.get(payload.proposal_vote_threshold, system_params_.proposal_vote_threshold);
       proposal_submission_deposit = Option.get(payload.proposal_submission_deposit, system_params_.proposal_submission_deposit);
     };
@@ -185,8 +185,8 @@ shared actor class Governance(create_governance_args : Types.CreateGovernanceArg
     if (caller != Principal.fromActor(this)){
       return #err("Not allowed!");
     };
-    let mint_access_controller : Types.MintAccessControllerInterface = actor (Principal.toText(system_params_.mint_access_controller));
-    ignore await mint_access_controller.mint(payload.to, payload.amount);
+    let token_accessor : Types.TokenAccessorInterface = actor (Principal.toText(system_params_.token_accessor));
+    ignore await token_accessor.mint(payload.to, payload.amount);
     return #ok;
   };
 

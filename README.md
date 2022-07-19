@@ -7,9 +7,9 @@ The Cycles DAO collects cycles for a configured set of canisters and rewards use
 * You have downloaded and installed the [DFINITY Canister SDK](https://sdk.dfinity.org).
 * To run the test scripts, you need to download [ic-repl](https://github.com/chenyan2002/ic-repl/releases) and install it in /usr/bin.
 
-## CyclesDispenser interface (non-exhaustive)
+## CyclesProvider interface (non-exhaustive)
 
-### **configure**: ( *CyclesDispenserCommand* ) -> ( variant { ok; err: *ConfigureError* } )
+### **configure**: ( *CyclesProviderCommand* ) -> ( variant { ok; err: *ConfigureError* } )
 Update the configuration of the cycles DAO. Only the admin is allowed to call this function.
 - ***SetCycleExchangeConfig***: Set the cycles exchange configuration.
 - ***AddAllowList***: Add the canister to the list of canisters that receive cycles from *distributeCycles*.
@@ -35,7 +35,7 @@ Get the current cycles balance.
 ### **computeTokensInExchange**: ( *nat* ) -> ( *nat* )
 Compute the amount of tokens that walletReceive will return in exhange of the given cycles at the time this function is called.
 
-## MintAccessController interface
+## TokenAccessor interface
 
 @todo
 
@@ -67,7 +67,7 @@ The cycles DAO uses the basic DAO from the dfinity examples: https://github.com/
 | CyclesProvider | distributeCycles | distributeCycles.test.sh | split test to avoid risk of side effects - add test of histories | 80% |
 | CyclesProvider | requestCycles | requestCycles.test.sh | add test of histories | 90% |
 | CyclesProvider | *upgrade* | | to test | 0% |
-| MintAccessController | setTokenToMint | setTokenToMint.test.sh | fix ledger canister initialization (see install.sh) | 80% |
+| TokenAccessor | setTokenToMint | setTokenToMint.test.sh | fix ledger canister initialization (see install.sh) | 80% |
 
 ## Known bugs
 

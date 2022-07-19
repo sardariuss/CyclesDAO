@@ -1,18 +1,18 @@
 {
   "version": 1,
   "canisters": {
-    "cyclesDispenser": {
+    "cyclesProvider": {
       "type": "motoko",
-      "main": "src/backend/CyclesDispenser/cyclesDispenser.mo",
+      "main": "src/backend/CyclesProvider/cyclesProvider.mo",
       "declarations": {
-        "output": "src/frontend/declarations/cyclesDispenser"
+        "output": "src/frontend/declarations/cyclesProvider"
       }
     },
-    "mintAccessController": {
+    "tokenAccessor": {
       "type": "motoko",
-      "main": "src/backend/MintAccessController/mintAccessController.mo",
+      "main": "src/backend/TokenAccessor/tokenAccessor.mo",
       "declarations": {
-        "output": "src/frontend/declarations/mintAccessController"
+        "output": "src/frontend/declarations/tokenAccessor"
       }
     },
     "governance": {

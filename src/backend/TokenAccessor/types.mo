@@ -1,4 +1,4 @@
-import TokenInterfaceTypes   "../TokenInterface/types";
+import TokenInterfaceTypes   "../common/types";
 
 import Result                "mo:base/Result";
 

@@ -12,20 +12,20 @@ import Result              "mo:base/Result";
 import Time                "mo:base/Time";
 import TrieMap             "mo:base/TrieMap";
 
-shared actor class CyclesDispenser(create_cycles_dispenser_args: Types.CreateCyclesDispenserArgs) = this {
+shared actor class CyclesProvider(create_cycles_provider_args: Types.CreateCyclesProviderArgs) = this {
 
   // Members
 
-  private stable var admin_ : Principal = create_cycles_dispenser_args.admin;
+  private stable var admin_ : Principal = create_cycles_provider_args.admin;
 
-  private stable var minimum_cycles_balance_ : Nat = create_cycles_dispenser_args.minimum_cycles_balance;
+  private stable var minimum_cycles_balance_ : Nat = create_cycles_provider_args.minimum_cycles_balance;
 
-  private stable var mint_access_controller_ : Types.MintAccessControllerInterface 
-    = actor (Principal.toText(create_cycles_dispenser_args.token_accessor));
+  private stable var token_accessor_ : Types.TokenAccessorInterface 
+    = actor (Principal.toText(create_cycles_provider_args.token_accessor));
 
   private stable var cycles_exchange_config_ : [Types.ExchangeLevel] = [];
-  if (Utils.isValidExchangeConfig(create_cycles_dispenser_args.cycles_exchange_config)){
-    cycles_exchange_config_ := create_cycles_dispenser_args.cycles_exchange_config;
+  if (Utils.isValidExchangeConfig(create_cycles_provider_args.cycles_exchange_config)){
+    cycles_exchange_config_ := create_cycles_provider_args.cycles_exchange_config;
   };
 
   private let allow_list_ : TrieMap.TrieMap<Principal, Types.PoweringParameters> = 
@@ -62,8 +62,8 @@ shared actor class CyclesDispenser(create_cycles_dispenser_args: Types.CreateCyc
     return admin_;
   };
 
-  public query func getMintAccessController() : async Principal {
-    return Principal.fromActor(mint_access_controller_);
+  public query func getTokenAccessor() : async Principal {
+    return Principal.fromActor(token_accessor_);
   };
 
   public query func getCycleExchangeConfig() : async [Types.ExchangeLevel] {
@@ -123,12 +123,12 @@ shared actor class CyclesDispenser(create_cycles_dispenser_args: Types.CreateCyc
       return #err(#MaxCyclesReached);
     };
     // Check if the token accessor has a configured token
-    if ((await mint_access_controller_.getToken()) == null){
-      return #err(#MintAccessControllerError(#TokenNotSet));
+    if ((await token_accessor_.getToken()) == null){
+      return #err(#TokenAccessorError(#TokenNotSet));
     };
-    // Check if the cycles dispenser is authorized to mint
-    if (not (await mint_access_controller_.isAuthorizedMinter(Principal.fromActor(this)))){
-      return #err(#MintAccessControllerError(#MintNotAuthorized));
+    // Check if the cycles provider is authorized to mint
+    if (not (await token_accessor_.isAuthorizedMinter(Principal.fromActor(this)))){
+      return #err(#TokenAccessorError(#MintNotAuthorized));
     };
     // Accept the cycles up to the maximum cycles possible
     let accepted_cycles = ExperimentalCycles.accept(
@@ -138,7 +138,7 @@ shared actor class CyclesDispenser(create_cycles_dispenser_args: Types.CreateCyc
     let token_amount = Utils.computeTokensInExchange(
       cycles_exchange_config_, original_balance, accepted_cycles);
     // Mint the token
-    let mint_index = await mint_access_controller_.mint(msg.caller, token_amount);
+    let mint_index = await token_accessor_.mint(msg.caller, token_amount);
     // Update the registers
     let now = Time.now();
     cycles_balance_register_.add({
@@ -155,7 +155,7 @@ shared actor class CyclesDispenser(create_cycles_dispenser_args: Types.CreateCyc
   };
 
   public shared(msg) func configure(
-    command: Types.CyclesDispenserCommand
+    command: Types.CyclesProviderCommand
   ) : async Result.Result<(), Types.ConfigureError> {
     // Check if the call comes from the admin DAO canister
     if (msg.caller != admin_){

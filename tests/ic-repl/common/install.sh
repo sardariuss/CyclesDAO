@@ -15,15 +15,15 @@ function install(wasm, args, cycle) {
   S
 };
 
-function installMintAccessController(admin) {
-  import interface = "2vxsx-fae" as "../../.dfx/local/canisters/mintAccessController/mintAccessController.did";
+function installTokenAccessor(admin) {
+  import interface = "2vxsx-fae" as "../../.dfx/local/canisters/tokenAccessor/tokenAccessor.did";
   let args = encode interface.__init_args(admin);
-  let wasm = file "../../.dfx/local/canisters/mintAccessController/mintAccessController.wasm";
+  let wasm = file "../../.dfx/local/canisters/tokenAccessor/tokenAccessor.wasm";
   install(wasm, args, 0);
 };
 
-function installCyclesDispenser(admin, minimum_cycles_balance, token_accessor, cycles_exchange_config, cycles_balance) {
-  import interface = "2vxsx-fae" as "../../.dfx/local/canisters/cyclesDispenser/cyclesDispenser.did";
+function installCyclesProvider(admin, minimum_cycles_balance, token_accessor, cycles_exchange_config, cycles_balance) {
+  import interface = "2vxsx-fae" as "../../.dfx/local/canisters/cyclesProvider/cyclesProvider.did";
   let args = encode interface.__init_args(
     record {
       admin = admin;
@@ -32,7 +32,7 @@ function installCyclesDispenser(admin, minimum_cycles_balance, token_accessor, c
       cycles_exchange_config = cycles_exchange_config;
     }
   );
-  let wasm = file "../../.dfx/local/canisters/cyclesDispenser/cyclesDispenser.wasm";
+  let wasm = file "../../.dfx/local/canisters/cyclesProvider/cyclesProvider.wasm";
   install(wasm, args, cycles_balance);
 };
 

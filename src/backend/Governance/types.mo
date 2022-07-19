@@ -1,4 +1,4 @@
-import TokenInterfaceTypes   "../TokenInterface/types";
+import TokenInterfaceTypes   "../common/types";
 
 import List                  "mo:base/List";
 
@@ -41,7 +41,7 @@ module {
   };
 
   public type UpdateSystemParamsPayload = {
-    mint_access_controller: ?Principal;
+    token_accessor: ?Principal;
     proposal_vote_threshold: ?Nat;
     proposal_submission_deposit: ?Nat;
   };
@@ -68,8 +68,8 @@ module {
   };
 
   public type SystemParams = {
-    // The mint access controller
-    mint_access_controller: Principal;
+    // The token accessor
+    token_accessor: Principal;
     // The amount of tokens needed to vote "yes" to accept, or "no" to reject, a proposal
     proposal_vote_threshold: Nat;
     // The amount of tokens that will be temporarily deducted from the account of
@@ -83,8 +83,7 @@ module {
     system_params: SystemParams;
   };
   
-  // The mint access controller interface
-  public type MintAccessControllerInterface = actor {
+  public type TokenAccessorInterface = actor {
     getToken: shared () -> async (?TokenInterfaceTypes.Token);
     mint: shared(Principal, Nat) -> async (Nat);
   };
