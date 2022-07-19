@@ -23,12 +23,12 @@ module{
     identifier: ?{#text: Text; #nat: Nat};
   };
 
-  public type IsFungibleError = {
+  // Errors
+    public type IsFungibleError = {
     #TokenIdMissing;
     #TokenIdInvalidType;
     #ExtCommonError : Ext.CommonError;
   };
-
   public type BalanceError = {
     #ComputeAccountIdFailed;
     #NftNotSupported;
@@ -36,7 +36,6 @@ module{
     #TokenIdInvalidType;
     #ExtCommonError : Ext.CommonError;
   };
-
   public type MintError = {
     #ComputeAccountIdFailed;
     #NftNotSupported;
@@ -48,7 +47,6 @@ module{
       #LEDGER: Ledger.TransferError; 
     };
   };
-
   public type AcceptError = {
     #ComputeAccountIdFailed;
     #NftNotSupported;
@@ -60,11 +58,6 @@ module{
       #DIP20: Dip20.TxError;
     };
   };
-
-  public type RefundError = MintError;
-
-  public type ChargeError = MintError;
-
   public type TransferError = {
     #ComputeAccountIdFailed;
     #TokenIdMissing;
@@ -76,7 +69,19 @@ module{
       #LEDGER: Ledger.TransferError; 
     };
   };
+  public type RefundError = MintError;
+  public type ChargeError = MintError;
 
+  // Results
+  public type BalanceResult = Result.Result<Nat, BalanceError>;
+  public type MintResult = Result.Result<?Nat, MintError>;
+  public type AcceptResult = Result.Result<?Nat, AcceptError>;
+  public type ChargeResult = Result.Result<?Nat, ChargeError>;
+  public type RefundResult = Result.Result<?Nat, RefundError>;
+  public type IsFungibleResult = Result.Result<Bool, IsFungibleError>;
+  public type TransferResult = Result.Result<?Nat, TransferError>;
+
+  // Token interfaces
   public type Dip20Interface = Dip20.Interface;
   public type Dip721Interface = Dip721.Interface;
   public type ExtInterface = Ext.Interface;

@@ -26,11 +26,11 @@ module {
   public type ProposalState = {
     #Open; // The proposal is open for voting
     #Accepted : { // Enough "yes" votes have been cast to accept the proposal
-      refunded: Bool;
+      refund: TokenInterfaceTypes.RefundResult;
       state: ProposalAcceptedState;
     };
     #Rejected : { // Enough "no" votes have been cast to reject the proposal
-      charged: Bool;
+      charge: TokenInterfaceTypes.ChargeResult;
     };
   };
 
@@ -48,6 +48,11 @@ module {
 
   public type DistributeBalancePayload = {
     token: TokenInterfaceTypes.Token;
+    to: Principal;
+    amount: Nat;
+  };
+
+  public type MintPayload = {
     to: Principal;
     amount: Nat;
   };
@@ -81,6 +86,7 @@ module {
   // The mint access controller interface
   public type MintAccessControllerInterface = actor {
     getToken: shared () -> async (?TokenInterfaceTypes.Token);
+    mint: shared(Principal, Nat) -> async (Nat);
   };
 
 };

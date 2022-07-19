@@ -62,7 +62,7 @@ shared actor class Governance(create_governance_args : Types.CreateGovernanceArg
           case(#err(err)){
             #err ("Caller's account must have at least " # debug_show(system_params_.proposal_submission_deposit) # " to submit a proposal");
           };
-          case(#ok){
+          case(#ok(_)){
             let proposal_id = proposal_id_;
             proposal_id_ += 1;
             let proposal : Types.Proposal = {
@@ -117,14 +117,14 @@ shared actor class Governance(create_governance_args : Types.CreateGovernanceArg
             var state = proposal.state;
             if (votes_yes >= system_params_.proposal_vote_threshold){
               // Refund the proposal deposit when the proposal is accepted
-              let refunded = Result.isOk(await TokenInterface.refund(
-                proposal.token, proposal.proposer, Principal.fromActor(this), proposal.submission_deposit));
-              state := #Accepted({refunded = refunded; state = #Pending;});
+              let refund = await TokenInterface.refund(
+                proposal.token, proposal.proposer, Principal.fromActor(this), proposal.submission_deposit);
+              state := #Accepted({refund = refund; state = #Pending;});
             } else if (votes_no >= system_params_.proposal_vote_threshold){
               // Charge the proposal deposit when the proposal is rejected
-              let charged = Result.isOk(await TokenInterface.charge(
-                proposal.token, proposal.proposer, Principal.fromActor(this), proposal.submission_deposit));
-              state := #Rejected({charged = charged;});
+              let charge = await TokenInterface.charge(
+                proposal.token, proposal.proposer, Principal.fromActor(this), proposal.submission_deposit);
+              state := #Rejected({charge = charge;});
             };
             let updated_proposal = {
               id = proposal.id;
@@ -178,30 +178,85 @@ shared actor class Governance(create_governance_args : Types.CreateGovernanceArg
     };
   };
 
-  /// Execute all accepted proposals
-  public func executeAcceptedProposals() : async (){
+  /// Mint
+  ///
+  /// Only callable via proposal execution
+  public shared({caller}) func mint(payload: Types.MintPayload) : async Result.Result<(), Text>{
+    if (caller != Principal.fromActor(this)){
+      return #err("Not allowed!");
+    };
+    let mint_access_controller : Types.MintAccessControllerInterface = actor (Principal.toText(system_params_.mint_access_controller));
+    ignore await mint_access_controller.mint(payload.to, payload.amount);
+    return #ok;
+  };
+
+  public shared({caller}) func claimCharges() : async Result.Result<Nat, Text>{
+    if (caller != Principal.fromActor(this)){
+      return #err("Not allowed!");
+    };
+    var total_charge : Nat = 0;
     for ((id, proposal) in Trie.iter(proposals_)){
       switch(proposal.state){
-        case(#Open){};
-        case(#Rejected(_)){};
-        case(#Accepted({refunded; state})){
-          switch(state){
-            case(#Succeeded){};
-            case(#Failed(_)){};
-            case(#Pending){
-              switch (await executeProposal(proposal)){
-                case (#ok){
-                  updateProposalState(proposal, #Accepted({refunded=refunded; state=#Succeeded;}));
-                };
-                case (#err(err)){
-                  updateProposalState(proposal, #Accepted({refunded=refunded; state=#Failed(err);}));
-                };
-              };
+        case(#Rejected({charge})){
+          if (Result.isErr(charge)){
+            let new_charge = await TokenInterface.charge(
+              proposal.token, proposal.proposer, Principal.fromActor(this), proposal.submission_deposit);
+            updateProposalState(proposal, #Rejected({charge = new_charge}));
+            if (Result.isOk(new_charge)){
+              total_charge += proposal.submission_deposit;
             };
           };
         };
+        case(_){};
       };
     };
+    return #ok(total_charge);
+  };
+
+  /// Execute all accepted proposals
+  public func executeAcceptedProposals() : async(){
+    for ((id, proposal) in Trie.iter(proposals_)){
+      switch(proposal.state){
+        case(#Accepted({refund; state;})){
+          switch(state){
+            case(#Pending){
+              switch (await executeProposal(proposal)){
+                case (#ok){
+                  updateProposalState(proposal, #Accepted({refund=refund; state=#Succeeded;}));
+                };
+                case (#err(err)){
+                  updateProposalState(proposal, #Accepted({refund=refund; state=#Failed(err);}));
+                };
+              };
+            };
+            case(_){};
+          };
+        };
+        case(_){};
+      };
+    };
+  };
+
+  public shared({caller}) func claimRefund() : async(Nat) {
+    var total_refund : Nat = 0;
+    for ((id, proposal) in Trie.iter(proposals_)){
+      if (proposal.proposer == caller){
+        switch(proposal.state){
+          case(#Accepted({refund; state;})){
+            if (Result.isErr(refund)){
+              let new_refund = await TokenInterface.refund(
+                proposal.token, proposal.proposer, Principal.fromActor(this), proposal.submission_deposit);
+              updateProposalState(proposal, #Accepted({refund = new_refund; state = state;}));
+              if (Result.isOk(new_refund)){
+                total_refund += proposal.submission_deposit;
+              };
+            };
+          };
+          case(_){};
+        };
+      };
+    };
+    return total_refund;
   };
 
   /// Execute the given proposal
@@ -233,15 +288,26 @@ shared actor class Governance(create_governance_args : Types.CreateGovernanceArg
   };
 
   private func getLockedAmount(proposer: Principal) : Nat {
-    var amount_locked : Nat = 0;
+    var locked_amount : Nat = 0;
     for ((id, proposal) in Trie.iter(proposals_)){
       if (proposal.proposer == proposer){
-        if (proposal.state == #Open or proposal.state == #Rejected({charged = false;})){
-          amount_locked += proposal.submission_deposit;
+        switch (proposal.state){
+          // Add the deposit of currently open proposals
+          case(#Open){
+            locked_amount += proposal.submission_deposit;  
+          };
+          // Do not forget to take account of rejected proposal which deposit
+          // failed to be charged
+          case (#Rejected({charge})){
+            if (Result.isErr(charge)){
+              locked_amount += proposal.submission_deposit;
+            };
+          };
+          case(_){};
         };
       };
     };
-    return amount_locked;
+    return locked_amount;
   };
 
 };

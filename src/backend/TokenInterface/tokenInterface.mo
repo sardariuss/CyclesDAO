@@ -16,7 +16,7 @@ module TokenInterface {
   public func balance(
     token: Types.Token,
     from: Principal,
-  ) : async Result.Result<Nat, Types.BalanceError> {
+  ) : async Types.BalanceResult {
     switch(token.standard){
       case(#DIP20){
         let interface : Types.Dip20Interface = actor (Principal.toText(token.canister));
@@ -74,7 +74,7 @@ module TokenInterface {
     from: Principal,
     to: Principal,
     amount: Nat
-  ) : async Result.Result<?Nat, Types.MintError> {
+  ) : async Types.MintResult {
     switch(token.standard){
       case(#DIP20){
         let interface : Types.Dip20Interface = actor (Principal.toText(token.canister));
@@ -163,7 +163,7 @@ module TokenInterface {
     to: Principal,
     locked_balance: Nat,
     amount: Nat
-  ) : async Result.Result<(), Types.AcceptError> {
+  ) : async Types.AcceptResult {
     switch(token.standard){
       case(#DIP20){
         let interface : Types.Dip20Interface = actor (Principal.toText(token.canister));
@@ -171,8 +171,8 @@ module TokenInterface {
           case(#Err(err)){
             return #err(#InterfaceError(#DIP20(err)));
           };
-          case(#Ok(_)){
-            return #ok;
+          case(#Ok(tx_counter)){
+            return #ok(?tx_counter);
           };
         };
       };
@@ -187,7 +187,7 @@ module TokenInterface {
             if (balance < locked_balance + amount){
               return #err(#InsufficientBalance);
             } else {
-              return #ok;
+              return #ok(null);
             };
           };
         };
@@ -225,7 +225,7 @@ module TokenInterface {
                         if (balance < locked_balance + amount){
                           return #err(#InsufficientBalance);
                         } else {
-                          return #ok;
+                          return #ok(null);
                         };
                       };
                     };
@@ -247,7 +247,7 @@ module TokenInterface {
     payer: Principal,
     payee: Principal,
     amount: Nat
-  ) : async Result.Result<?Nat, Types.RefundError> {
+  ) : async Types.RefundResult {
     switch(token.standard){
       case(#DIP20){
         let interface : Types.Dip20Interface = actor (Principal.toText(token.canister));
@@ -350,7 +350,7 @@ module TokenInterface {
     payer: Principal,
     payee: Principal,
     amount: Nat
-  ) : async Result.Result<?Nat, Types.ChargeError> {
+  ) : async Types.ChargeResult {
     switch(token.standard){
       case(#DIP20){
         // @todo: add note
@@ -446,7 +446,7 @@ module TokenInterface {
     from: Principal,
     to: Principal, 
     amount: Nat,
-  ) : async Result.Result<?Nat, Types.TransferError> {
+  ) : async Types.TransferResult {
     switch(token.standard){
       case(#DIP20){
         let interface : Types.Dip20Interface = actor (Principal.toText(token.canister));
@@ -555,7 +555,7 @@ module TokenInterface {
     };
   };
 
-  public func isTokenFungible(token: Types.Token) : async Result.Result<Bool, Types.IsFungibleError> {
+  public func isTokenFungible(token: Types.Token) : async Types.IsFungibleResult {
     switch(token.standard){
       case(#DIP20){
         return #ok(true);
