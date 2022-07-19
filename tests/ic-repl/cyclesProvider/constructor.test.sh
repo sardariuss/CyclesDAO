@@ -1,6 +1,6 @@
 #!/usr/local/bin/ic-repl
 
-load "common/install.sh";
+load "../common/install.sh";
 
 identity default "~/.config/dfx/identity/default/identity.pem";
 
@@ -14,7 +14,7 @@ let init_cycles_config = vec {record { threshold = 1_000_000_000_000_000 : nat; 
 let initial_balance = (0 : nat);
 let cycles_provider = installCyclesProvider(admin, minimum_cycles_balance, token_accessor, init_cycles_config, initial_balance);
 
-// Test the cyclesDAO getters after construction
+// Test the cyclesProvider getters after construction
 call cycles_provider.getTokenAccessor();
 assert _ == token_accessor;
 call cycles_provider.cyclesBalance();

@@ -16,14 +16,14 @@ function install(wasm, args, cycle) {
 };
 
 function installTokenAccessor(admin) {
-  import interface = "2vxsx-fae" as "../../.dfx/local/canisters/tokenAccessor/tokenAccessor.did";
+  import interface = "2vxsx-fae" as "../../../.dfx/local/canisters/tokenAccessor/tokenAccessor.did";
   let args = encode interface.__init_args(admin);
-  let wasm = file "../../.dfx/local/canisters/tokenAccessor/tokenAccessor.wasm";
+  let wasm = file "../../../.dfx/local/canisters/tokenAccessor/tokenAccessor.wasm";
   install(wasm, args, 0);
 };
 
 function installCyclesProvider(admin, minimum_cycles_balance, token_accessor, cycles_exchange_config, cycles_balance) {
-  import interface = "2vxsx-fae" as "../../.dfx/local/canisters/cyclesProvider/cyclesProvider.did";
+  import interface = "2vxsx-fae" as "../../../.dfx/local/canisters/cyclesProvider/cyclesProvider.did";
   let args = encode interface.__init_args(
     record {
       admin = admin;
@@ -32,7 +32,7 @@ function installCyclesProvider(admin, minimum_cycles_balance, token_accessor, cy
       cycles_exchange_config = cycles_exchange_config;
     }
   );
-  let wasm = file "../../.dfx/local/canisters/cyclesProvider/cyclesProvider.wasm";
+  let wasm = file "../../../.dfx/local/canisters/cyclesProvider/cyclesProvider.wasm";
   install(wasm, args, cycles_balance);
 };
 
@@ -67,50 +67,50 @@ function installLedger(owner, amount_e8s) {
     }
   );
   // @todo: fix 'Deserialization Failed: "No more values on the wire, the expected type record [...] is not opt, reserved or null"'
-  import interface = "2vxsx-fae" as "../wasm/Ledger/ledger.did";
+  import interface = "2vxsx-fae" as "../../wasm/Ledger/ledger.did";
   let args = encode interface.__init_args(argsRecord);
-  let wasm = file "../wasm/Ledger/ledger.wasm";
+  let wasm = file "../../wasm/Ledger/ledger.wasm";
   install(wasm, args, 0);
 };
 
 function installExtf(owner, total_supply){
-  import interface = "2vxsx-fae" as "../wasm/ExtFungible/extf.did";
+  import interface = "2vxsx-fae" as "../../wasm/ExtFungible/extf.did";
   let args = encode interface.__init_args("EXT FUNGIBLE EXAMPLE", "EXTF", 8, total_supply, owner);
-  let wasm = file "../wasm/ExtFungible/extf.wasm";
+  let wasm = file "../../wasm/ExtFungible/extf.wasm";
   install(wasm, args, 0);
 };
 
 function installExtNft(owner){
-  import interface = "2vxsx-fae" as "../wasm/ExtNft/extNft.did";
+  import interface = "2vxsx-fae" as "../../wasm/ExtNft/extNft.did";
   let args = encode interface.__init_args(owner);
-  let wasm = file "../wasm/ExtNft/extNft.wasm";
+  let wasm = file "../../wasm/ExtNft/extNft.wasm";
   install(wasm, args, 0);
 };
 
 function installDip20(owner, total_supply){
-  import interface = "2vxsx-fae" as "../wasm/DIP20/dip20.did";
+  import interface = "2vxsx-fae" as "../../wasm/DIP20/dip20.did";
   let args = encode interface.__init_args(
     "Test Token Logo", "Test Token Name", "Test Token Symbol", 3, total_supply, owner, 10000);
-  let wasm = file "../wasm/DIP20/dip20.wasm";
+  let wasm = file "../../wasm/DIP20/dip20.wasm";
   install(wasm, args, 0);
 };
 
 function installCap(){
-  let wasm = file "../wasm/DIP721/cap/ic-history-router.wasm";
+  let wasm = file "../../wasm/DIP721/cap/ic-history-router.wasm";
   install(wasm, vec{}, 0);
 };
 
 function installDip721(owner){
   let cap = installCap();
-  import interface = "2vxsx-fae" as "../wasm/DIP721/nft.did";
+  import interface = "2vxsx-fae" as "../../wasm/DIP721/nft.did";
   let args = encode interface.__init_args(
     opt record { custodians = opt vec { owner }; cap = opt cap; } );
-  let wasm = file "../wasm/DIP721/nft.wasm";
+  let wasm = file "../../wasm/DIP721/nft.wasm";
   install(wasm, args, 0);
 };
 
 function installBasicDao(owner){
-  import interface = "2vxsx-fae" as "../wasm/BasicDAO/basicDAO.did";
+  import interface = "2vxsx-fae" as "../../wasm/BasicDAO/basicDAO.did";
   let args = encode interface.__init_args(
     record {
       accounts = vec { record { owner = owner; tokens = record { amount_e8s = 1_000_000_000_000 } } };
@@ -122,20 +122,20 @@ function installBasicDao(owner){
       };
     }
   );
-  let wasm = file "../wasm/BasicDAO/basicDAO.wasm";
+  let wasm = file "../../wasm/BasicDAO/basicDAO.wasm";
   install(wasm, args, 0);
 };
 
 function installToPowerUp(cycles_dao, init_balance) {
-  import interface = "2vxsx-fae" as "../../.dfx/local/canisters/toPowerUp/toPowerUp.did";
+  import interface = "2vxsx-fae" as "../../../.dfx/local/canisters/toPowerUp/toPowerUp.did";
   let args = encode interface.__init_args(cycles_dao);
-  let wasm = file "../../.dfx/local/canisters/toPowerUp/toPowerUp.wasm";
+  let wasm = file "../../../.dfx/local/canisters/toPowerUp/toPowerUp.wasm";
   install(wasm, args, init_balance);
 };
 
 function installUtilities() {
-  import interface = "2vxsx-fae" as "../../.dfx/local/canisters/utilities/utilities.did";
+  import interface = "2vxsx-fae" as "../../../.dfx/local/canisters/utilities/utilities.did";
   let args = encode interface.__init_args();
-  let wasm = file "../../.dfx/local/canisters/utilities/utilities.wasm";
+  let wasm = file "../../../.dfx/local/canisters/utilities/utilities.wasm";
   install(wasm, args, 0);
 };

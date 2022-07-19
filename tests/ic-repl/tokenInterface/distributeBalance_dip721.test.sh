@@ -3,7 +3,7 @@
 // @todo: fix 'Warning: cannot get type for dip721.[function], use types infered from textual value'
 // then uncomment commented asserts
 
-load "common/install.sh";
+load "../common/install.sh";
 
 identity default "~/.config/dfx/identity/default/identity.pem";
 

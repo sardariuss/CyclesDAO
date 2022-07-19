@@ -2,11 +2,11 @@
 
 // Warning: running this test multiple types might fail because it empties the default wallet
 
-load "common/install.sh";
-load "common/wallet.sh";
+load "../common/install.sh";
+load "../common/wallet.sh";
 
 identity default "~/.config/dfx/identity/default/identity.pem";
-import default_wallet = "rwlgt-iiaaa-aaaaa-aaaaa-cai" as "common/wallet.did";
+import default_wallet = "rwlgt-iiaaa-aaaaa-aaaaa-cai" as "../common/wallet.did";
 
 // Create the token accessor
 let token_accessor = installTokenAccessor(default);
@@ -25,8 +25,11 @@ let cycles_provider = installCyclesProvider(admin, minimum_cycles_balance, token
 call token_accessor.addMinter(cycles_provider);
 assert _ == variant { ok };
 
-let dip20 = installDip20(token_accessor, 1_000_000_000_000_000);
-call token_accessor.setTokenToMint(record {standard = variant{DIP20}; canister = dip20; identifier=opt("")});
+let utilities = installUtilities();
+
+let extf = installExtf(token_accessor, 1_000_000_000_000_000);
+let token_identifier = call utilities.getPrincipalAsText(extf);
+call token_accessor.setTokenToMint(record {standard = variant{EXT}; canister = extf; identifier=opt(variant {text = token_identifier})});
 assert _ == variant { ok };
 
 // Verify the original balance
@@ -36,20 +39,21 @@ assert _ == (0 : nat);
 // Add 1 million cycles, verify CyclesDAO's balance is 1 million cycles
 // and default's balance is 1 million tokens
 walletReceive(default_wallet, cycles_provider, 1_000_000_000);
-assert _ == variant { ok = 0 : nat };
+assert _ == (variant { ok = 0 : nat });
 call cycles_provider.cyclesBalance();
 assert _ == (1_000_000_000 : nat);
-call dip20.balanceOf(default_wallet);
-assert _ == (1_000_000_000 : nat);
+call extf.balance(record { token = token_identifier; user = variant { "principal" = default_wallet }});
+assert _ == variant { ok = (1_000_000_000 : nat) };
 
 // Add 2 more million cycles, verify CyclesDAO's balance is 3 millions
 // cycles and default's balance is 2.8 millions DAO tokens
+identity default;
 walletReceive(default_wallet, cycles_provider, 2_000_000_000);
-assert _ == variant { ok = 1 : nat};
+assert _ == (variant { ok = 1 : nat });
 call cycles_provider.cyclesBalance();
 assert _ == (3_000_000_000 : nat);
-call dip20.balanceOf(default_wallet);
-assert _ == (2_800_000_000 : nat);
+call extf.balance(record { token = token_identifier; user = variant { "principal" = default_wallet }});
+assert _ == variant { ok = (2_800_000_000 : nat) };
 
 // Verify the cycles balance register
 call cycles_provider.getCyclesBalanceRegister();

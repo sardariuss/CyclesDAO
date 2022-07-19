@@ -1,12 +1,12 @@
 #!/usr/local/bin/ic-repl
 
-load "common/install.sh";
-load "common/wallet.sh";
+load "../common/install.sh";
+load "../common/wallet.sh";
 
 // Warning: running this test multiple types might fail because it empties the default wallet
 
 identity default "~/.config/dfx/identity/default/identity.pem";
-import default_wallet = "rwlgt-iiaaa-aaaaa-aaaaa-cai" as "common/wallet.did";
+import default_wallet = "rwlgt-iiaaa-aaaaa-aaaaa-cai" as "../common/wallet.did";
 
 // Create the token accessor
 let token_accessor = installTokenAccessor(default);
@@ -27,7 +27,7 @@ assert _ == variant { ok };
 
 // Setup a token (arbitrary dip20 here) to be able to call walletReceive and feed cycles to the cycles provider
 let dip20 = installDip20(token_accessor, 1_000_000_000_000_000);
-call token_accessor.setTokenToMint(record { standard = variant{DIP20}; canister = dip20; identifier = opt(""); });
+call token_accessor.setTokenToMint(record { standard = variant{DIP20}; canister = dip20; identifier = null; });
 assert _ == variant { ok };
 
 let toPowerUp = installToPowerUp(cycles_provider, 0);

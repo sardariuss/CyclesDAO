@@ -1,6 +1,6 @@
 #!/usr/local/bin/ic-repl
 
-load "common/install.sh";
+load "../common/install.sh";
 
 identity default "~/.config/dfx/identity/default/identity.pem";
 
