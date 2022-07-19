@@ -1,5 +1,7 @@
-import Principal         "mo:base/Principal";
-import Result            "mo:base/Result";
+import TokenInterfaceTypes   "../TokenInterface/types";
+
+import Principal             "mo:base/Principal";
+import Result                "mo:base/Result";
 
 module{
 
@@ -106,25 +108,10 @@ module{
     acceptCycles: shared () -> async ();
   };
 
-  // From the token accessor
-
-  public type Token = {
-    standard: TokenStandard;
-    canister: Principal;
-    identifier: ?{#text: Text; #nat: Nat};
-  };
-
-  public type TokenStandard = {
-    #DIP20;
-    #LEDGER;
-    #DIP721;
-    #EXT;
-    #NFT_ORIGYN;
-  };
-
+  // Mint access controller
   public type MintAccessControllerInterface = actor {
     mint: shared(Principal, Nat) -> async (Nat);
-    getToken: shared () -> async (?Token);
+    getToken: shared () -> async (?TokenInterfaceTypes.Token);
     isAuthorizedMinter: shared (Principal) -> async (Bool);
   };
 

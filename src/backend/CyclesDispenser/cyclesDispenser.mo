@@ -20,7 +20,8 @@ shared actor class CyclesDispenser(create_cycles_dispenser_args: Types.CreateCyc
 
   private stable var minimum_cycles_balance_ : Nat = create_cycles_dispenser_args.minimum_cycles_balance;
 
-  private stable var token_accessor_ : Types.MintAccessControllerInterface = actor (Principal.toText(create_cycles_dispenser_args.token_accessor));
+  private stable var mint_access_controller_ : Types.MintAccessControllerInterface 
+    = actor (Principal.toText(create_cycles_dispenser_args.token_accessor));
 
   private stable var cycles_exchange_config_ : [Types.ExchangeLevel] = [];
   if (Utils.isValidExchangeConfig(create_cycles_dispenser_args.cycles_exchange_config)) {
@@ -62,7 +63,7 @@ shared actor class CyclesDispenser(create_cycles_dispenser_args: Types.CreateCyc
   };
 
   public query func getMintAccessController() : async Principal {
-    return Principal.fromActor(token_accessor_);
+    return Principal.fromActor(mint_access_controller_);
   };
 
   public query func getCycleExchangeConfig() : async [Types.ExchangeLevel] {
@@ -122,11 +123,11 @@ shared actor class CyclesDispenser(create_cycles_dispenser_args: Types.CreateCyc
       return #err(#MaxCyclesReached);
     };
     // Check if the token accessor has a configured token
-    if ((await token_accessor_.getToken()) == null) {
+    if ((await mint_access_controller_.getToken()) == null) {
       return #err(#MintAccessControllerError(#TokenNotSet));
     };
     // Check if the cycles dispenser is authorized to mint
-    if (not (await token_accessor_.isAuthorizedMinter(Principal.fromActor(this)))) {
+    if (not (await mint_access_controller_.isAuthorizedMinter(Principal.fromActor(this)))) {
       return #err(#MintAccessControllerError(#MintNotAuthorized));
     };
     // Accept the cycles up to the maximum cycles possible
@@ -137,7 +138,7 @@ shared actor class CyclesDispenser(create_cycles_dispenser_args: Types.CreateCyc
     let token_amount = Utils.computeTokensInExchange(
       cycles_exchange_config_, original_balance, accepted_cycles);
     // Mint the token
-    let mint_index = await token_accessor_.mint(msg.caller, token_amount);
+    let mint_index = await mint_access_controller_.mint(msg.caller, token_amount);
     // Update the registers
     let now = Time.now();
     cycles_balance_register_.add({

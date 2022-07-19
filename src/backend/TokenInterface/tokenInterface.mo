@@ -13,6 +13,62 @@ import Time              "mo:base/Time";
 
 module TokenInterface {
 
+  public func balance(
+    token: Types.Token,
+    from: Principal,
+  ) : async Result.Result<Nat, Types.BalanceError> {
+    switch(token.standard){
+      case(#DIP20){
+        let interface : Types.Dip20Interface = actor (Principal.toText(token.canister));
+        return #ok(await interface.balanceOf(from));
+      };
+      case(#LEDGER){
+        switch (Utils.getDefaultAccountIdentifier(from)){
+          case(null){
+            return #err(#ComputeAccountIdFailed);
+          };
+          case(?account_identifier){
+            let interface : Types.LedgerInterface = actor (Principal.toText(token.canister));
+            return #ok(Nat64.toNat((await interface.account_balance({account = account_identifier})).e8s));
+          };
+        };
+      };
+      case(#DIP721){
+        return #err(#NftNotSupported);
+      };
+      case(#EXT){
+        switch(token.identifier){
+          case(null){
+            // EXT requires a token identifier
+            return #err(#TokenIdMissing);
+          };
+          case(?identifier){
+            switch(identifier){
+              case(#nat(_)){
+                // EXT cannot use nat as token identifier, only text
+                return #err(#TokenIdInvalidType);
+              };
+              case(#text(token_identifier)){
+                let interface : Types.ExtInterface = actor (Principal.toText(token.canister));
+                switch (await interface.balance({token = token_identifier; user = #principal(from);})){
+                  case(#err(err)){
+                    return #err(#ExtCommonError(err));
+                  };
+                  case(#ok(balance)){
+                    return #ok(balance);
+                  };
+                };
+              };
+            };
+          };
+        };
+      };
+      case(#NFT_ORIGYN){
+        return #err(#NftNotSupported);
+      };
+    };
+  };
+
   public func mint(
     token: Types.Token,
     from: Principal,

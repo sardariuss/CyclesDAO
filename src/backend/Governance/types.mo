@@ -1,9 +1,11 @@
-import Int        "mo:base/Int";
-import List       "mo:base/List";
-import Nat        "mo:base/Nat";
-import Principal  "mo:base/Principal";
-import Result     "mo:base/Result";
-import Trie       "mo:base/Trie";
+import TokenInterfaceTypes   "../TokenInterface/types";
+
+import Int                   "mo:base/Int";
+import List                  "mo:base/List";
+import Nat                   "mo:base/Nat";
+import Principal             "mo:base/Principal";
+import Result                "mo:base/Result";
+import Trie                  "mo:base/Trie";
 
 module {
   public type Result<T, E> = Result.Result<T, E>;
@@ -24,17 +26,17 @@ module {
   };
   public type ProposalState = {
     // A failure occurred while executing the proposal
-    #failed : Text;
+    #Failed : Text;
     // The proposal is open for voting
-    #open;
+    #Open;
     // The proposal is currently being executed
-    #executing;
+    #Executing;
     // Enough "no" votes have been cast to reject the proposal, and it will not be executed
-    #rejected;
+    #Rejected;
     // The proposal has been successfully executed
-    #succeeded;
+    #Succeeded;
     // Enough "yes" votes have been cast to accept the proposal, and it will soon be executed
-    #accepted;
+    #Accepted;
   };
   public type TransferArgs = { to : Principal; amount : Nat };
   public type UpdateSystemParamsPayload = {
@@ -42,7 +44,7 @@ module {
     proposal_vote_threshold : ?Nat;
     proposal_submission_deposit : ?Nat;
   };
-  public type Vote = { #no; #yes };
+  public type Vote = { #No; #Yes };
   public type VoteArgs = { vote : Vote; proposal_id : Nat };
 
   public type SystemParams = {
@@ -71,25 +73,9 @@ module {
     s
   };
   
-  public let oneToken = { amount_e8s = 10_000_000 };
-  public let zeroToken = { amount_e8s = 0 };
-
-  // From the token accessor
-
-  public type TokenError = {
-    #ComputeAccountIdFailed;
-    #NftNotSupported;
-    #NotAuthorized;
-    #ExtTokenIdMissing;
-    #TokenIdInvalidType;
-    #TokenInterfaceError;
-    #TokenNotOwned;
-    #TokenNotSet;
+  // Mint access controller interface
+  public type MintAccessControllerInterface = actor {
+    getToken: shared () -> async (?TokenInterfaceTypes.Token);
   };
 
-  public type MintFunction = shared (Principal, Nat) -> async Nat;
-
-  public type MintAccessControllerInterface = actor {
-    getMintFunction: shared() -> async (Result.Result<MintFunction, TokenError>);
-  };  
 };

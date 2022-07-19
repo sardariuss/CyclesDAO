@@ -1,8 +1,8 @@
-import Dip20        "standards/dip20/types";
-import Dip721       "standards/dip721/types";
-import Ext          "standards/ext/types";
-import Ledger       "standards/ledger/types";
-import Origyn       "standards/origyn/types";
+import Dip20            "standards/dip20/types";
+import Dip721           "standards/dip721/types";
+import Ext              "standards/ext/types";
+import Ledger           "standards/ledger/types";
+import Origyn           "standards/origyn/types";
 
 import Principal         "mo:base/Principal";
 import Result            "mo:base/Result";
@@ -24,6 +24,14 @@ module{
   };
 
   public type IsFungibleError = {
+    #TokenIdMissing;
+    #TokenIdInvalidType;
+    #ExtCommonError : Ext.CommonError;
+  };
+
+  public type BalanceError = {
+    #ComputeAccountIdFailed;
+    #NftNotSupported;
     #TokenIdMissing;
     #TokenIdInvalidType;
     #ExtCommonError : Ext.CommonError;
