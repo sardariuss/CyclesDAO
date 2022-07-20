@@ -29,7 +29,7 @@ let utilities = installUtilities();
 
 let extf = installExtf(token_accessor, 1_000_000_000_000_000);
 let token_identifier = call utilities.getPrincipalAsText(extf);
-call token_accessor.setTokenToMint(record {standard = variant{EXT}; canister = extf; identifier=opt(variant {text = token_identifier})});
+call token_accessor.setToken(record {standard = variant{EXT}; canister = extf; identifier=opt(variant {text = token_identifier})});
 assert _ == variant { ok };
 
 // Verify the original balance

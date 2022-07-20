@@ -18,7 +18,7 @@ dfx deploy ledger --argument '(record {minting_account = "'${TOKEN_ACCESSOR_ACCO
 rm tests/wasm/Ledger/ledger.did
 cp tests/wasm/Ledger/ledger.public.did tests/wasm/Ledger/ledger.did
 export LEDGER_TOKEN=$(dfx canister id ledger)
-dfx canister call tokenAccessor setTokenToMint '(record { standard = variant {LEDGER}; canister = principal "'${LEDGER_TOKEN}'"; identifier = null;})'
+dfx canister call tokenAccessor setToken '(record { standard = variant {LEDGER}; canister = principal "'${LEDGER_TOKEN}'"; identifier = null;})'
 
 # Add the cyclesProvider as authorized minter
 export TOKEN_ACCESSOR=$(dfx canister id cyclesProvider)

@@ -14,7 +14,7 @@ dfx deploy extf --argument="(\"EXT FUNGIBLE EXAMPLE\", \"EXTF\", 8, 100_000_000_
 
 # Configure TokenAccessor to mint the EXTF token
 export EXTF_TOKEN=$(dfx canister id extf)
-dfx canister call tokenAccessor setTokenToMint '(variant {EXT}, principal "'${EXTF_TOKEN}'", opt("'${EXTF_TOKEN}'"))'
+dfx canister call tokenAccessor setToken '(variant {EXT}, principal "'${EXTF_TOKEN}'", opt("'${EXTF_TOKEN}'"))'
 
 # To verify if it worked you can perform a first wallet_receive and then
 # check the account balance by uncommenting the following lines!

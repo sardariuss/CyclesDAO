@@ -24,17 +24,21 @@ module{
   };
 
   // Errors
-    public type IsFungibleError = {
+  public type IsFungibleError = {
     #TokenIdMissing;
     #TokenIdInvalidType;
-    #ExtCommonError : Ext.CommonError;
+    #InterfaceError : {
+      #EXT: Ext.CommonError;
+    };
   };
   public type BalanceError = {
     #ComputeAccountIdFailed;
     #NftNotSupported;
     #TokenIdMissing;
     #TokenIdInvalidType;
-    #ExtCommonError : Ext.CommonError;
+    #InterfaceError : {
+      #EXT: Ext.CommonError;
+    };
   };
   public type MintError = {
     #ComputeAccountIdFailed;
@@ -53,9 +57,9 @@ module{
     #TokenIdMissing;
     #TokenIdInvalidType;
     #InsufficientBalance;
-    #ExtCommonError: Ext.CommonError;
     #InterfaceError: {
       #DIP20: Dip20.TxError;
+      #EXT: Ext.CommonError;
     };
   };
   public type TransferError = {

@@ -57,7 +57,7 @@ assert _ == variant { err = variant { TokenAccessorError = variant { TokenNotSet
 
 // Setup a token (arbitrary dip20 here)
 let dip20 = installDip20(token_accessor, 1_000_000_000_000_000);
-call token_accessor.setTokenToMint(record { standard = variant{DIP20}; canister = dip20; identifier = null; });
+call token_accessor.setToken(record { standard = variant{DIP20}; canister = dip20; identifier = null; });
 assert _ == variant { ok };
 
 // Verify that if the cycles provider has not been added as minter

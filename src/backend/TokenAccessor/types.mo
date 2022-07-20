@@ -8,7 +8,7 @@ module {
     #NotAuthorized;
   };
 
-  public type SetTokenToMintError = {
+  public type SetTokenError = {
     #NotAuthorized;
     #TokenNotFungible;
     #TokenNotOwned;

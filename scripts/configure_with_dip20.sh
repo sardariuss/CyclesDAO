@@ -14,7 +14,7 @@ dfx deploy dip20 --argument="(\"data:image/jpeg;base64,...\", \"DIP20 Dummy\", \
 
 # Configure the TokenAccessor to mint the DIP20 token
 export DIP20_TOKEN=$(dfx canister id dip20)
-dfx canister call tokenAccessor setTokenToMint '(variant {DIP20}, principal "'${DIP20_TOKEN}'", null)'
+dfx canister call tokenAccessor setToken '(variant {DIP20}, principal "'${DIP20_TOKEN}'", null)'
 
 # To verify if it worked you can perform a first wallet_receive and then
 # check the account balance by uncommenting the following lines!

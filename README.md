@@ -55,19 +55,27 @@ Compute the amount of tokens that walletReceive will return in exhange of the gi
 
 ## Test Coverage
 
-| canister | function | test scripts | left to do | complete |
+| canister/module | function | test scripts | left to do | complete |
 | ------ | ------ | ------ | ------ | ------ |
 | CyclesProvider | *constructor* | constructor.test.sh | N/A |  100% |
 | CyclesProvider | walletReceive | walletReceive_dip20.test.sh, walletReceive_errors.test.sh, walletReceive_extf.test.sh, walletReceive_ledger.test.sh | fix ledger canister initialization | 75% |
-| CyclesProvider | configure(#SetCycleExchangeConfig) | setCycleExchangeConfig.test.sh | N/A | 100% |
-| CyclesProvider | configure(#AddAllowList) | addAndRemoveAllowList.test.sh.test.sh | N/A | 100% |
-| CyclesProvider | configure(#RemoveAllowList) | addAndRemoveAllowList.test.sh.test.sh | N/A | 100% |
-| CyclesProvider | configure(#SetAdmin) | setAdmin.test.sh | N/A | 100% |
-| CyclesProvider | configure(#SetMinimumBalance) | setMinimumBalance.test.sh | N/A | 100% |
+| CyclesProvider | configure | setCycleExchangeConfig.test.sh, addAndRemoveAllowList.test.sh, setAdmin.test.sh, setMinimumBalance.test.sh | N/A | 100% |
 | CyclesProvider | distributeCycles | distributeCycles.test.sh | split test to avoid risk of side effects - add test of histories | 80% |
 | CyclesProvider | requestCycles | requestCycles.test.sh | add test of histories | 90% |
-| CyclesProvider | *upgrade* | | to test | 0% |
-| TokenAccessor | setTokenToMint | setTokenToMint.test.sh | fix ledger canister initialization (see install.sh) | 80% |
+| CyclesProvider | *upgrade* | | to do | 0% |
+| TokenAccessor | *constructor* | N/A | to do | 0% |
+| TokenAccessor | setToken, getToken | setToken.test.sh | fix ledger canister initialization (see install.sh) | 80% |
+| TokenAccessor | setAdmin, getAdmin | N/A | to do | 0% |
+| TokenAccessor | addMinter, removeMinter, getMinters, isAuthorizedMinter | N/A | to do | 0% |
+| TokenAccessor | mint, getMintRegister | N/A | to do | 0% |
+| TokenAccessor | *upgrade* | N/A | to do | 0% |
+| TokenInterface | balance | balance.test.sh | add test for ledger | 66% |
+| TokenInterface | mint | mint.test.sh | add test for ledger | 66% |
+| TokenInterface | accept, refund, charge | accept_dip20.test.sh, accept_extf.test.sh | check for not covered errors | 90% |
+| TokenInterface | transfer | transfer_dip20.test.sh, transfer_dip721.test.sh, transfer_extNft.test.sh, transfer_extf.test.sh, transfer_ledger.test.sh | fix ledger canister initialization (see install.sh) | 80% |
+| TokenInterface | isTokenFungible | N/A | to do | 0% |
+| TokenInterface | isTokenOwned | N/A | to do | 0% |
+| Governance | *all* | N/A | to do | 0% |
 
 ## Known bugs
 

@@ -50,12 +50,26 @@ module TokenInterface {
               };
               case(#text(token_identifier)){
                 let interface : Types.ExtInterface = actor (Principal.toText(token.canister));
-                switch (await interface.balance({token = token_identifier; user = #principal(from);})){
+                switch (await interface.metadata(token_identifier)){
                   case(#err(err)){
-                    return #err(#ExtCommonError(err));
+                    return #err(#InterfaceError(#EXT(err)));
                   };
-                  case(#ok(balance)){
-                    return #ok(balance);
+                  case(#ok(meta_data)){
+                    switch (meta_data){
+                      case(#nonfungible(_)){
+                        return #err(#NftNotSupported);
+                      };
+                      case(#fungible(_)){
+                        switch (await interface.balance({token = token_identifier; user = #principal(from);})){
+                          case(#err(err)){
+                            return #err(#InterfaceError(#EXT(err)));
+                          };
+                          case(#ok(balance)){
+                            return #ok(balance);
+                          };
+                        };
+                      };
+                    };
                   };
                 };
               };
@@ -219,7 +233,7 @@ module TokenInterface {
                       user = #address(Utils.accountToText(account_identifier));
                     })){
                       case(#err(err)){
-                        return #err(#ExtCommonError(err));
+                        return #err(#InterfaceError(#EXT(err)));
                       };
                       case(#ok(balance)){
                         if (balance < locked_balance + amount){
@@ -577,11 +591,11 @@ module TokenInterface {
                 // EXT cannot use nat as token identifier, only text
                 return #err(#TokenIdInvalidType);
               };
-              case(#text(text_identifier)){
+              case(#text(token_identifier)){
                 let interface : Types.ExtInterface = actor (Principal.toText(token.canister));
-                switch (await interface.metadata(text_identifier)){
+                switch (await interface.metadata(token_identifier)){
                   case(#err(err)){
-                    return #err(#ExtCommonError(err));
+                    return #err(#InterfaceError(#EXT(err)));
                   };
                   case(#ok(meta_data)){
                     switch (meta_data){

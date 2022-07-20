@@ -89,7 +89,7 @@ shared actor class TokenAccessor(admin: Principal) = this {
     return Trie.get<Principal, ()>(minters_, {hash = Principal.hash(principal); key = principal}, Principal.equal) != null;
   };
 
-  public shared(msg) func setTokenToMint(token: TokenInterfaceTypes.Token) : async Result.Result<(), Types.SetTokenToMintError>{
+  public shared(msg) func setToken(token: TokenInterfaceTypes.Token) : async Result.Result<(), Types.SetTokenError>{
     if (msg.caller != admin_){
       return #err(#NotAuthorized);
     } else {

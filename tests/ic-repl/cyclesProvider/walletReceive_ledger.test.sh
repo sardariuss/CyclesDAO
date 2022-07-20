@@ -29,7 +29,7 @@ let utilities = installUtilities();
 
 let ledger = installLedger(token_accessor, 0);
 let default_account = call utilities.getAccountIdentifierAsBlob(default_wallet, ledger);
-call token_accessor.setTokenToMint(record {standard = variant{LEDGER}; canister = ledger; identifier=null});
+call token_accessor.setToken(record {standard = variant{LEDGER}; canister = ledger; identifier=null});
 assert _ == variant { ok };
 
 // Verify the original balance
