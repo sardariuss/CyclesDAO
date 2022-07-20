@@ -8,13 +8,15 @@ cd ..
 
 dfx identity use default
 export TOKEN_ACCESSOR=$(dfx canister id tokenAccessor)
+export CYCLES_PROVIDER=$(dfx canister id cyclesProvider)
 
 # Deploy DIP20 canister, put TokenAccessor as minting account
 dfx deploy dip20 --argument="(\"data:image/jpeg;base64,...\", \"DIP20 Dummy\", \"DIPD\", 8, 10000000000000000,  principal \"$TOKEN_ACCESSOR\", 10000)"
 
-# Configure the TokenAccessor to mint the DIP20 token
+# Configure the Cycles Provider to mint the DIP20 token
 export DIP20_TOKEN=$(dfx canister id dip20)
-dfx canister call tokenAccessor setToken '(variant {DIP20}, principal "'${DIP20_TOKEN}'", null)'
+dfx canister call tokenAccessor setToken '(record {standard = variant {DIP20}; canister = principal "'${DIP20_TOKEN}'"})'
+dfx canister call tokenAccessor addMinter '(principal "'${CYCLES_PROVIDER}'")'
 
 # To verify if it worked you can perform a first wallet_receive and then
 # check the account balance by uncommenting the following lines!

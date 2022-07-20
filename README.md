@@ -72,10 +72,10 @@ Compute the amount of tokens that walletReceive will return in exhange of the gi
 | TokenInterface | balance | balance.test.sh | add test for ledger | 66% |
 | TokenInterface | mint | mint.test.sh | add test for ledger | 66% |
 | TokenInterface | accept, refund, charge | accept_dip20.test.sh, accept_extf.test.sh | check for not covered errors | 90% |
-| TokenInterface | transfer | transfer_dip20.test.sh, transfer_dip721.test.sh, transfer_extNft.test.sh, transfer_extf.test.sh, transfer_ledger.test.sh | fix ledger canister initialization (see install.sh) | 80% |
-| TokenInterface | isTokenFungible | N/A | to do | 0% |
-| TokenInterface | isTokenOwned | N/A | to do | 0% |
-| Governance | *all* | N/A | to do | 0% |
+| TokenInterface | transfer | transfer_dip20.test.sh, transfer_dip721.test.sh, transfer_extNft.test.sh, transfer_extf.test.sh, transfer_ledger.test.sh | fix ledger canister initialization (see install.sh), fix DIP721 cannot get types | 80% |
+| TokenInterface | isTokenFungible | *tested via TokenAccessor setToken.test.sh* | N/A | 100% |
+| TokenInterface | isTokenOwned | *tested via TokenAccessor setToken.test.sh* | N/A | 100% |
+| Governance | *all functions* | governance.test.sh | missing: claimCharges and claimRefund functions, complexe scenario with changement of token, token accessor configured with LEDGER/DIP20, upgrade; need to fix DIP721 cannot get types for distributeBalance | 50% |
 
 ## Known bugs
 

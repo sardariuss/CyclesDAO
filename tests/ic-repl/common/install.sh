@@ -36,6 +36,13 @@ function installCyclesProvider(admin, minimum_cycles_balance, token_accessor, cy
   install(wasm, args, cycles_balance);
 };
 
+function installGovernance(create_governance_args) {
+  import interface = "2vxsx-fae" as "../../../.dfx/local/canisters/governance/governance.did";
+  let args = encode interface.__init_args(create_governance_args);
+  let wasm = file "../../../.dfx/local/canisters/governance/governance.wasm";
+  install(wasm, args, 0);
+};
+
 function installLedger(owner, amount_e8s) {
   let argsRecord = ( 
     record {
@@ -106,23 +113,6 @@ function installDip721(owner){
   let args = encode interface.__init_args(
     opt record { custodians = opt vec { owner }; cap = opt cap; } );
   let wasm = file "../../wasm/DIP721/nft.wasm";
-  install(wasm, args, 0);
-};
-
-function installBasicDao(owner){
-  import interface = "2vxsx-fae" as "../../wasm/BasicDAO/basicDAO.did";
-  let args = encode interface.__init_args(
-    record {
-      accounts = vec { record { owner = owner; tokens = record { amount_e8s = 1_000_000_000_000 } } };
-      proposals = vec {};
-      system_params = record {
-        transfer_fee = record { amount_e8s = 10_000 };
-        proposal_vote_threshold = record { amount_e8s = 1_000_000_000 };
-        proposal_submission_deposit = record { amount_e8s = 10_000 };
-      };
-    }
-  );
-  let wasm = file "../../wasm/BasicDAO/basicDAO.wasm";
   install(wasm, args, 0);
 };
 

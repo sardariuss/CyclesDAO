@@ -58,10 +58,10 @@ shared actor class TokenAccessor(admin: Principal) = this {
     } else {
       // Remove old admin from the list of authorized minters
       minters_ := TrieSet.delete<Principal>(minters_, admin_, Principal.hash(admin_), Principal.equal);
-      // Update admin
-      admin_ := msg.caller;
-      // Add admin to the list of authorized minters
-      minters_ := TrieSet.put<Principal>(minters_, admin_, Principal.hash(admin_), Principal.equal);
+      // Add new admin to the list of authorized minters
+      minters_ := TrieSet.put<Principal>(minters_, admin, Principal.hash(admin), Principal.equal);
+      // Update the admin
+      admin_ := admin;
       // Success
       return #ok;
     };

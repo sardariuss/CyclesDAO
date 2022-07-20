@@ -111,6 +111,7 @@ shared actor class Governance(create_governance_args : Types.CreateGovernanceArg
             var votes_yes = proposal.votes_yes;
             var votes_no = proposal.votes_no;
             switch (args.vote){
+              // @todo: one could add the locked amount to the balance
               case (#Yes){ votes_yes += balance; };
               case (#No){ votes_no += balance; };
             };
