@@ -51,16 +51,16 @@ shared actor class Governance(create_governance_args : Types.CreateGovernanceArg
   /// A proposal contains a canister ID, method name and method args. If enough users
   /// vote "yes" on the proposal, the given method will be called with the given method
   /// args on the given canister.
-  public shared({caller}) func submitProposal(payload: Types.ProposalPayload) : async Result.Result<Nat, Text> {
+  public shared({caller}) func submitProposal(payload: Types.ProposalPayload) : async Result.Result<Nat, Types.SubmitProposalError> {
     let token_accessor : Types.TokenAccessorInterface = actor (Principal.toText(system_params_.token_accessor));
     switch(await token_accessor.getToken()){
       case(null){
-        return #err("Token null");
+        return #err(#TokenNotSet);
       };
       case(?token){
         switch(await TokenInterface.accept(token, caller, Principal.fromActor(this), getLockedAmount(caller), system_params_.proposal_submission_deposit)){
-          case(#err(err)){
-            #err ("Caller's account must have at least " # debug_show(system_params_.proposal_submission_deposit) # " to submit a proposal");
+          case(#err(accept_error)){
+            return #err(#TokenInterfaceError(accept_error));
           };
           case(#ok(_)){
             let proposal_id = proposal_id_;
@@ -86,27 +86,27 @@ shared actor class Governance(create_governance_args : Types.CreateGovernanceArg
   };
 
   // Vote on an open proposal
-  public shared({caller}) func vote(args: Types.VoteArgs) : async Result.Result<Types.ProposalState, Text> {
+  public shared({caller}) func vote(args: Types.VoteArgs) : async Result.Result<Types.ProposalState, Types.VoteError> {
     switch (proposal(args.proposal_id)){
       case (null){ 
-        return #err("No proposal with ID " # debug_show(args.proposal_id) # " exists");
+        return #err(#ProposalNotFound);
       };
       case (?proposal){
         if (proposal.state != #Open){
-          return #err("Proposal " # debug_show(proposal.id) # " is not open for voting");
+          return #err(#ProposalNotOpen);
         };
         if (List.some(proposal.voters, func (e : Principal) : Bool = e == caller)){
-          return #err("Already voted");
+          return #err(#AlreadyVoted);
         };
         // Use the token from the proposal, not the one from the token_accessor because it
         // could have changed in the meantime!
         switch(await TokenInterface.balance(proposal.token, caller)){
-          case(#err(err)){
-            return #err("Cannot get balance");
+          case(#err(balance_error)){
+            return #err(#TokenInterfaceError(balance_error));
           };
           case(#ok(balance)){
             if (balance == 0){
-              return #err("Caller does not have any tokens to vote with");
+              return #err(#EmptyBalance);
             };
             var votes_yes = proposal.votes_yes;
             var votes_no = proposal.votes_no;
@@ -150,9 +150,9 @@ shared actor class Governance(create_governance_args : Types.CreateGovernanceArg
   /// Update system params
   ///
   /// Only callable via proposal execution
-  public shared({caller}) func updateSystemParams(payload: Types.UpdateSystemParamsPayload) : async Result.Result<(), Text>{
+  public shared({caller}) func updateSystemParams(payload: Types.UpdateSystemParamsPayload) : async Result.Result<(), Types.AuthorizationError>{
     if (caller != Principal.fromActor(this)){
-      return #err("Not allowed!");
+      return #err(#NotAllowed);
     };
     system_params_ := {
       token_accessor = Option.get(payload.token_accessor, system_params_.token_accessor);
@@ -165,13 +165,13 @@ shared actor class Governance(create_governance_args : Types.CreateGovernanceArg
   /// Distribute balance
   ///
   /// Only callable via proposal execution
-  public shared({caller}) func distributeBalance(payload: Types.DistributeBalancePayload) : async Result.Result<(), Text>{
+  public shared({caller}) func distributeBalance(payload: Types.DistributeBalancePayload) : async Result.Result<(), Types.DistributeBalanceError>{
     if (caller != Principal.fromActor(this)){
-      return #err("Not allowed!");
+      return #err(#NotAllowed);
     };
     switch(await TokenInterface.transfer(payload.token, Principal.fromActor(this), payload.to, payload.amount)){
-      case(#err(err)){
-        return #err("Transfer failed!");
+      case(#err(transfer_error)){
+        return #err(#TokenInterfaceError(transfer_error));
       };
       case(#ok(_)){
         return #ok;
@@ -182,18 +182,18 @@ shared actor class Governance(create_governance_args : Types.CreateGovernanceArg
   /// Mint
   ///
   /// Only callable via proposal execution
-  public shared({caller}) func mint(payload: Types.MintPayload) : async Result.Result<(), Text>{
+  public shared({caller}) func mint(payload: Types.MintPayload) : async Result.Result<(), Types.AuthorizationError>{
     if (caller != Principal.fromActor(this)){
-      return #err("Not allowed!");
+      return #err(#NotAllowed);
     };
     let token_accessor : Types.TokenAccessorInterface = actor (Principal.toText(system_params_.token_accessor));
     ignore await token_accessor.mint(payload.to, payload.amount);
     return #ok;
   };
 
-  public shared({caller}) func claimCharges() : async Result.Result<Nat, Text>{
+  public shared({caller}) func claimCharges() : async Result.Result<Nat, Types.AuthorizationError>{
     if (caller != Principal.fromActor(this)){
-      return #err("Not allowed!");
+      return #err(#NotAllowed);
     };
     var total_charge : Nat = 0;
     for ((id, proposal) in Trie.iter(proposals_)){
@@ -215,7 +215,7 @@ shared actor class Governance(create_governance_args : Types.CreateGovernanceArg
   };
 
   /// Execute all accepted proposals
-  public func executeAcceptedProposals() : async(){
+  public func executeAcceptedProposals() : async() {
     for ((id, proposal) in Trie.iter(proposals_)){
       switch(proposal.state){
         case(#Accepted({refund; state;})){
@@ -261,14 +261,14 @@ shared actor class Governance(create_governance_args : Types.CreateGovernanceArg
   };
 
   /// Execute the given proposal
-  private func executeProposal(proposal: Types.Proposal) : async Result.Result<(), Text> {
+  private func executeProposal(proposal: Types.Proposal) : async Result.Result<(), Types.ExecuteProposalError> {
     try {
       let payload = proposal.payload;
       ignore await ICRaw.call(payload.canister_id, payload.method, payload.message);
       return #ok;
     }
     catch(err){
-      return #err(Error.message(err));
+      return #err(#ICRawCallError(Error.message(err)));
     };
   };
 

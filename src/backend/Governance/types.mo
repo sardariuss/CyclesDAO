@@ -37,7 +37,7 @@ module {
   public type ProposalAcceptedState = {
     #Pending; // The proposal is pending to be executed
     #Succeeded; // The proposal has been successfully executed
-    #Failed : Text; // A failure occurred while executing the proposal
+    #Failed : ExecuteProposalError; // A failure occurred while executing the proposal
   };
 
   public type UpdateSystemParamsPayload = {
@@ -76,6 +76,32 @@ module {
     // a user that submits a proposal. If the proposal is Accepted, this deposit is returned,
     // otherwise it is lost. This prevents users from submitting superfluous proposals.
     proposal_submission_deposit: Nat;
+  };
+
+  public type SubmitProposalError = {
+    #TokenNotSet;
+    #TokenInterfaceError: TokenInterfaceTypes.AcceptError;
+  };
+  
+  public type VoteError = {
+    #ProposalNotFound;
+    #ProposalNotOpen;
+    #AlreadyVoted;
+    #TokenInterfaceError: TokenInterfaceTypes.BalanceError;
+    #EmptyBalance;
+  };
+
+  public type AuthorizationError = {
+    #NotAllowed;
+  };
+
+  public type DistributeBalanceError = {
+    #NotAllowed;
+    #TokenInterfaceError: TokenInterfaceTypes.TransferError;
+  };
+
+  public type ExecuteProposalError = {
+    #ICRawCallError: Text;
   };
 
   public type CreateGovernanceArgs = {

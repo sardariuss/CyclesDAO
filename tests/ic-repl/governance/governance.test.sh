@@ -47,7 +47,7 @@ assert _ == variant { ok };
 // Cannot update system params without proposal
 let update_proposal_vote_threshold = record { proposal_vote_threshold = opt (400 : nat) };
 call governance.updateSystemParams(update_proposal_vote_threshold);
-assert _.err ~= "Not allowed!";
+assert _ == variant { err = variant { NotAllowed } };
 call governance.getSystemParams();
 assert _.proposal_vote_threshold == (500 : nat);
 
@@ -62,7 +62,7 @@ call governance.submitProposal(
     message = encode governance.updateSystemParams(update_proposal_vote_threshold);
   }
 );
-assert _.err ~= "Caller's account must have at least";
+assert _ == variant { err = variant { TokenInterfaceError = variant { InsufficientBalance } } };
 // Alice transfers the proposal_submission_deposit to the governance subaccount
 let governance_alice_sub = call utilities.getAccountIdentifierAsText(governance, alice);
 call extf.transfer(record {
@@ -89,7 +89,7 @@ let alice_proposal_id = _.ok;
 // voting
 identity eve;
 call governance.vote(record { proposal_id = alice_proposal_id; vote = variant { Yes } });
-assert _.err ~= "Caller does not have any tokens to vote with";
+assert _ == variant { err = variant { EmptyBalance } };
 call governance.getProposal(alice_proposal_id);
 assert _? ~= record {
   id = alice_proposal_id;
@@ -108,7 +108,7 @@ identity bob;
 call governance.vote(record { proposal_id = alice_proposal_id; vote = variant { Yes } });
 assert _.ok == variant { Open };
 call governance.vote(record { proposal_id = alice_proposal_id; vote = variant { No } });
-assert _.err ~= "Already voted";
+assert _ == variant { err = variant { AlreadyVoted } };
 identity dory;
 call governance.vote(record { proposal_id = alice_proposal_id; vote = variant { No } });
 assert _.ok == variant { Open };
@@ -117,7 +117,7 @@ call governance.vote(record { proposal_id = alice_proposal_id; vote = variant { 
 assert _.ok == variant { Accepted = record { state = variant { Pending }; refund = variant { ok = null : opt variant{} };} };
 identity default;
 call governance.vote(record { proposal_id = alice_proposal_id; vote = variant { No } });
-assert _.err ~= "is not open for voting";
+assert _ == variant { err = variant { ProposalNotOpen } };
 
 call governance.executeAcceptedProposals();
 
@@ -184,7 +184,7 @@ call governance.submitProposal(
     message = encode governance.mint(record { to = alice; amount = 100 });
   }
 );
-assert _.err ~= "Caller's account must have at least";
+assert _ == variant { err = variant { TokenInterfaceError = variant { InsufficientBalance } } };
 
 // Reject bob_proposal_1, accept bob_proposal_2
 identity cathy;
