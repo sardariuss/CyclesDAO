@@ -33,6 +33,10 @@
       "type": "motoko",
       "main": "tests/utilities/utilities.mo"
     },
+    "tokenInterfaceCanister": {
+      "type": "motoko",
+      "main": "tests/utilities/tokenInterfaceCanister.mo"
+    },
     "toPowerUp": {
       "type": "motoko",
       "main": "tests/utilities/toPowerUp.mo"

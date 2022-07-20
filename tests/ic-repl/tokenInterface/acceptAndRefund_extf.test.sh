@@ -6,27 +6,26 @@ load "../common/wallet.sh";
 identity default "~/.config/dfx/identity/default/identity.pem";
 import default_wallet = "rwlgt-iiaaa-aaaaa-aaaaa-cai" as "../common/wallet.did";
 
-// Create the token accessor
-let token_accessor = installTokenAccessor(default);
+// Install the token interface canister
+let token_interface = installTokenInterface();
 
 // Create the utilities canister
 let utilities = installUtilities();
 
-// Install EXT and set it as the token to mint
-let extf = installExtf(token_accessor, 1_000_000_000_000_000);
+// Install EXT, use the token interface as minter
+let extf = installExtf(token_interface, 1_000_000_000_000_000);
 let token_identifier = call utilities.getPrincipalAsText(extf);
-call token_accessor.setTokenToMint(record {standard = variant{EXT}; canister = extf; identifier=opt(variant{text = token_identifier})});
-assert _ == variant { ok };
+let ext_token = record {standard = variant{EXT}; canister = extf; identifier = opt(variant{text = token_identifier})};
 
 // Transfer some tokens to the default user
-call token_accessor.mint(default, 222_222_222_222);
-assert _ == ( 0 : nat );
+call token_interface.mint(ext_token, token_interface, default, 222_222_222_222);
+assert _ == variant { ok = null : opt nat };
 call extf.balance(record { token = token_identifier; user = variant { "principal" = default } });
 assert _ == variant { ok = 222_222_222_222 : nat };
-call extf.balance(record { token = token_identifier; user = variant { "principal" = token_accessor } });
+call extf.balance(record { token = token_identifier; user = variant { "principal" = token_interface } });
 
-// Get token_accessor defaults subaccount
-let token_accessor_default_sub = call utilities.getAccountIdentifierAsText(token_accessor, default);
+// Get token_interface defaults user subaccount
+let token_interface_default_sub = call utilities.getAccountIdentifierAsText(token_interface, default);
 
 // Transfer half the tokens
 call extf.transfer(record {
@@ -35,26 +34,26 @@ call extf.transfer(record {
   memo = vec {};
   notify = false;
   subaccount = null;
-  to = variant { address = token_accessor_default_sub };
+  to = variant { address = token_interface_default_sub };
   token = token_identifier;
 });
 assert _ == variant { ok = 111_111_111_111 : nat };
-call extf.balance(record { token = token_identifier; user = variant { address = token_accessor_default_sub } });
+call extf.balance(record { token = token_identifier; user = variant { address = token_interface_default_sub } });
 assert _ == variant { ok = 111_111_111_111 : nat };
-call extf.balance(record { token = token_identifier; user = variant { "principal" = token_accessor } });
+call extf.balance(record { token = token_identifier; user = variant { "principal" = token_interface } });
 
 // Accept more tokens than transfered shall fail
-call token_accessor.accept(default, 0, 111_111_111_112);
-assert _ == variant { err = variant { TokenInterfaceError } };
+call token_interface.accept(ext_token, default, token_interface, 0, 111_111_111_112);
+assert _ == variant { err = variant { InsufficientBalance } };
 
 // Accept the exact amount of tokens shall succeed
-call token_accessor.accept(default, 0, 111_111_111_111);
-assert _ == variant { ok };
+call token_interface.accept(ext_token, default, token_interface, 0, 111_111_111_111);
+assert _ == variant { ok = null : opt nat };
 
 // Refund the accepted tokens
-call token_accessor.refund(default, 111_111_111_111);
+call token_interface.refund(ext_token, default, token_interface, 111_111_111_111);
 assert _ == variant { ok = null : opt nat };
 call extf.balance(record { token = token_identifier; user = variant { "principal" = default } });
 assert _ == variant { ok = 222_222_222_222 : nat };
-call extf.balance(record { token = token_identifier; user = variant { address = token_accessor_default_sub } });
+call extf.balance(record { token = token_identifier; user = variant { address = token_interface_default_sub } });
 assert _ == variant { ok = 0 : nat };

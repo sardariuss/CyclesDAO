@@ -139,3 +139,10 @@ function installUtilities() {
   let wasm = file "../../../.dfx/local/canisters/utilities/utilities.wasm";
   install(wasm, args, 0);
 };
+
+function installTokenInterface() {
+  import interface = "2vxsx-fae" as "../../../.dfx/local/canisters/tokenInterfaceCanister/tokenInterfaceCanister.did";
+  let args = encode interface.__init_args();
+  let wasm = file "../../../.dfx/local/canisters/tokenInterfaceCanister/tokenInterfaceCanister.wasm";
+  install(wasm, args, 0);
+};
