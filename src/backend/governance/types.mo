@@ -36,7 +36,7 @@ module {
 
   public type ProposalAcceptedState = {
     #Pending; // The proposal is pending to be executed
-    #Succeeded; // The proposal has been successfully executed
+    #Succeeded; // The proposal has been succeededfully executed
     #Failed : ExecuteProposalError; // A failure occurred while executing the proposal
   };
 
@@ -102,6 +102,30 @@ module {
 
   public type ExecuteProposalError = {
     #ICRawCallError: Text;
+  };
+
+  public type ClaimCharges = {
+    total_charges_succeeded: Nat;
+    total_charges_failed: Nat;
+    charges: [ClaimChargeRecord];
+  };
+
+  public type ClaimChargeRecord = {
+    proposal_id: Nat;
+    submission_deposit: Nat;
+    charge: TokenInterfaceTypes.ChargeResult;
+  };
+
+  public type ClaimRefunds = {
+    total_refunds_succeeded: Nat;
+    total_refunds_failed: Nat;
+    refunds: [ClaimRefundRecord];
+  };
+
+  public type ClaimRefundRecord = {
+    proposal_id: Nat;
+    submission_deposit: Nat;
+    refund: TokenInterfaceTypes.RefundResult;
   };
 
   public type CreateGovernanceArgs = {

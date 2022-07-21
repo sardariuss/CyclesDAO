@@ -2,6 +2,7 @@ import Types            "types";
 import TokenInterface   "../tokenInterface/tokenInterface";
 import Utils            "utils";
 
+import Buffer           "mo:base/Buffer";
 import Error            "mo:base/Error";
 import ICRaw            "mo:base/ExperimentalInternetComputer";
 import Iter             "mo:base/Iter";
@@ -111,7 +112,6 @@ shared actor class Governance(create_governance_args : Types.CreateGovernanceArg
             var votes_yes = proposal.votes_yes;
             var votes_no = proposal.votes_no;
             switch (args.vote){
-              // @todo: one could add the locked amount to the balance
               case (#Yes){ votes_yes += balance; };
               case (#No){ votes_no += balance; };
             };
@@ -191,11 +191,13 @@ shared actor class Governance(create_governance_args : Types.CreateGovernanceArg
     return #ok;
   };
 
-  public shared({caller}) func claimCharges() : async Result.Result<Nat, Types.AuthorizationError>{
+  public shared({caller}) func claimCharges() : async Result.Result<Types.ClaimCharges, Types.AuthorizationError>{
     if (caller != Principal.fromActor(this)){
       return #err(#NotAllowed);
     };
-    var total_charge : Nat = 0;
+    let charges : Buffer.Buffer<Types.ClaimChargeRecord> = Buffer.Buffer(0);
+    var total_charges_succeeded : Nat = 0;
+    var total_charges_failed : Nat = 0;
     for ((id, proposal) in Trie.iter(proposals_)){
       switch(proposal.state){
         case(#Rejected({charge})){
@@ -203,15 +205,22 @@ shared actor class Governance(create_governance_args : Types.CreateGovernanceArg
             let new_charge = await TokenInterface.charge(
               proposal.token, proposal.proposer, Principal.fromActor(this), proposal.submission_deposit);
             updateProposalState(proposal, #Rejected({charge = new_charge}));
+            charges.add({
+              proposal_id = proposal.id;
+              submission_deposit = proposal.submission_deposit;
+              charge = new_charge;
+            });
             if (Result.isOk(new_charge)){
-              total_charge += proposal.submission_deposit;
+              total_charges_succeeded += proposal.submission_deposit;
+            } else {
+              total_charges_failed += proposal.submission_deposit;
             };
           };
         };
         case(_){};
       };
     };
-    return #ok(total_charge);
+    return #ok({total_charges_succeeded = total_charges_succeeded; total_charges_failed = total_charges_failed; charges = charges.toArray();});
   };
 
   /// Execute all accepted proposals
@@ -238,8 +247,10 @@ shared actor class Governance(create_governance_args : Types.CreateGovernanceArg
     };
   };
 
-  public shared({caller}) func claimRefund() : async(Nat) {
-    var total_refund : Nat = 0;
+  public shared({caller}) func claimRefunds() : async (Types.ClaimRefunds) {
+    let refunds : Buffer.Buffer<Types.ClaimRefundRecord> = Buffer.Buffer(0);
+    var total_refunds_succeeded : Nat = 0;
+    var total_refunds_failed : Nat = 0;
     for ((id, proposal) in Trie.iter(proposals_)){
       if (proposal.proposer == caller){
         switch(proposal.state){
@@ -248,8 +259,15 @@ shared actor class Governance(create_governance_args : Types.CreateGovernanceArg
               let new_refund = await TokenInterface.refund(
                 proposal.token, proposal.proposer, Principal.fromActor(this), proposal.submission_deposit);
               updateProposalState(proposal, #Accepted({refund = new_refund; state = state;}));
+              refunds.add({
+                proposal_id = proposal.id;
+                submission_deposit = proposal.submission_deposit;
+                refund = new_refund;
+              });
               if (Result.isOk(new_refund)){
-                total_refund += proposal.submission_deposit;
+                total_refunds_succeeded += proposal.submission_deposit;
+              } else {
+                total_refunds_failed += total_refunds_failed;
               };
             };
           };
@@ -257,7 +275,7 @@ shared actor class Governance(create_governance_args : Types.CreateGovernanceArg
         };
       };
     };
-    return total_refund;
+    return {total_refunds_succeeded = total_refunds_succeeded; total_refunds_failed = total_refunds_failed; refunds = refunds.toArray()};
   };
 
   /// Execute the given proposal
@@ -293,18 +311,22 @@ shared actor class Governance(create_governance_args : Types.CreateGovernanceArg
     for ((id, proposal) in Trie.iter(proposals_)){
       if (proposal.proposer == proposer){
         switch (proposal.state){
-          // Add the deposit of currently open proposals
+          // Add the deposit of open proposals
           case(#Open){
             locked_amount += proposal.submission_deposit;  
           };
-          // Do not forget to take account of rejected proposal which deposit
-          // failed to be charged
-          case (#Rejected({charge})){
+          // Add the deposit of accepted proposals where the refund failed
+          case(#Accepted({refund; state})){
+            if (Result.isErr(refund)){
+              locked_amount += proposal.submission_deposit;
+            };
+          };
+          // Add the deposit of rejected proposals where the charge failed
+          case(#Rejected({charge})){
             if (Result.isErr(charge)){
               locked_amount += proposal.submission_deposit;
             };
           };
-          case(_){};
         };
       };
     };
