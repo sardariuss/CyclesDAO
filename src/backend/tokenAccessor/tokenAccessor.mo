@@ -5,6 +5,9 @@ import Types                 "types";
 import Array                 "mo:base/Array";
 import Buffer                "mo:base/Buffer";
 import Debug                 "mo:base/Debug";
+import Int                   "mo:base/Int";
+import Iter                  "mo:base/Iter";
+import Nat                   "mo:base/Nat";
 import Principal             "mo:base/Principal";
 import Result                "mo:base/Result";
 import Time                  "mo:base/Time";
@@ -22,16 +25,11 @@ shared actor class TokenAccessor(admin: Principal) = this {
   private stable var minters_: TrieSet.Set<Principal> = Trie.empty();
   minters_ := TrieSet.put<Principal>(minters_, admin_, Principal.hash(admin_), Principal.equal);
 
-  private let mint_register_ : Buffer.Buffer<Types.MintRecord> = Buffer.Buffer(0);
+  private stable var mint_register_ : Trie.Trie<Nat, Types.MintRecord> = Trie.empty<Nat, Types.MintRecord>();
   
   private stable var mint_record_index_ : Nat = 0;
 
   
-  // For upgrades
-
-  private stable var mint_register_array_ : [Types.MintRecord] = [];
-
- 
   // Getters
 
   public shared query func getToken() : async ?TokenInterfaceTypes.Token {
@@ -49,7 +47,7 @@ shared actor class TokenAccessor(admin: Principal) = this {
   };
 
   public shared query func getMintRegister() : async [Types.MintRecord] {
-    return mint_register_.toArray();
+    return Iter.toArray(Iter.map(Trie.iter(mint_register_), func (kv : (Nat, Types.MintRecord)) : Types.MintRecord = kv.1));
   };
 
   public shared(msg) func setAdmin(admin: Principal): async Result.Result<(), Types.NotAuthorizedError> {
@@ -130,11 +128,11 @@ shared actor class TokenAccessor(admin: Principal) = this {
           date = Time.now();
           amount = amount;
           to = to;
-          token = token_;
+          token = token;
           result = result;
         };
         // Add the mint record to the register, whether it succeeded or not
-        mint_register_.add(mint_record);
+        putMintRecord(mint_record);
         // Increase the mint record index for the next call
         mint_record_index_ := mint_record_index_ + 1;
         // Return the actual mint record index
@@ -143,21 +141,49 @@ shared actor class TokenAccessor(admin: Principal) = this {
     };
   };
 
-  
-  // For upgrades
-
-  system func preupgrade(){
-    // Save register in temporary stable array
-    mint_register_array_ := mint_register_.toArray();
+  public shared(msg) func claimMintTokens() : async (Types.ClaimMintTokens) {
+    let results : Buffer.Buffer<Types.ClaimMintRecord> = Buffer.Buffer(0);
+    var total_mints_succeeded : Nat = 0;
+    var total_mints_failed : Nat = 0;
+    for ((id, mint_record) in Trie.iter(mint_register_)){
+      if (mint_record.to == msg.caller){
+        if (Result.isErr(mint_record.result)){
+          // Try to mint
+          let mint_result = await TokenInterface.mint(
+            mint_record.token, mint_record.to, Principal.fromActor(this), mint_record.amount);
+          // Update the mint result in the register
+          let updated_mint_record = {
+            index = id;
+            date = mint_record.date;
+            amount = mint_record.amount;
+            to = mint_record.to;
+            token = mint_record.token;
+            result = mint_result;
+          };
+          putMintRecord(updated_mint_record);
+          // Add it to the list of results to return
+          results.add({
+            mint_record_id = id;
+            amount = mint_record.amount;
+            result = mint_result;
+          });
+          // Update the totals to return
+          if (Result.isOk(mint_result)){
+            total_mints_succeeded += mint_record.amount;
+          } else {
+            total_mints_failed += mint_record.amount;
+          };
+        };
+      };
+    };
+    return {total_mints_succeeded = total_mints_succeeded; total_mints_failed = total_mints_failed; results = results.toArray()};
   };
 
-  system func postupgrade(){
-    // Restore register from temporary stable array
-    for (record in Array.vals(mint_register_array_)){
-      mint_register_.add(record);
-    };
-    // Empty temporary stable array
-    mint_register_array_ := [];
+  private func putMintRecord(mint_record: Types.MintRecord) {
+    mint_register_ := Trie.put(
+      mint_register_,
+      { key = mint_record.index; hash = Int.hash(mint_record.index)}, Nat.equal, mint_record
+    ).0;
   };
 
 };
