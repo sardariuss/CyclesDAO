@@ -1,5 +1,5 @@
-import TokenInterfaceTypes   "../../src/backend/common/types";
-import TokenInterface        "../../src/backend/common/tokenInterface";
+import TokenInterfaceTypes   "../../src/backend/tokenInterface/types";
+import TokenInterface        "../../src/backend/tokenInterface/tokenInterface";
 
 shared actor class TokenInterfaceCanister() {
 

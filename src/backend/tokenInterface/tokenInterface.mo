@@ -367,7 +367,7 @@ module TokenInterface {
   ) : async Types.ChargeResult {
     switch(token.standard){
       case(#DIP20){
-        // @todo: add note
+        // Nothing to do, the amount already belongs to the payee account
         return #ok(null);
       };
       case(#LEDGER){

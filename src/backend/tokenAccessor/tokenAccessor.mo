@@ -1,5 +1,5 @@
-import TokenInterfaceTypes   "../common/types";
-import TokenInterface        "../common/tokenInterface";
+import TokenInterfaceTypes   "../tokenInterface/types";
+import TokenInterface        "../tokenInterface/tokenInterface";
 import Types                 "types";
 
 import Array                 "mo:base/Array";

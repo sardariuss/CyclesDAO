@@ -1,4 +1,4 @@
-import TokenInterfaceTypes   "../common/types";
+import TokenInterfaceTypes   "../tokenInterface/types";
 
 import List                  "mo:base/List";
 

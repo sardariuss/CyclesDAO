@@ -3,21 +3,21 @@
   "canisters": {
     "cyclesProvider": {
       "type": "motoko",
-      "main": "src/backend/CyclesProvider/cyclesProvider.mo",
+      "main": "src/backend/cyclesProvider/cyclesProvider.mo",
       "declarations": {
         "output": "src/frontend/declarations/cyclesProvider"
       }
     },
     "tokenAccessor": {
       "type": "motoko",
-      "main": "src/backend/TokenAccessor/tokenAccessor.mo",
+      "main": "src/backend/tokenAccessor/tokenAccessor.mo",
       "declarations": {
         "output": "src/frontend/declarations/tokenAccessor"
       }
     },
     "governance": {
       "type": "motoko",
-      "main": "src/backend/Governance/governance.mo",
+      "main": "src/backend/governance/governance.mo",
       "declarations": {
         "output": "src/frontend/declarations/governance"
       }

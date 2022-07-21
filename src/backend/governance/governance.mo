@@ -1,5 +1,5 @@
 import Types            "types";
-import TokenInterface   "../common/tokenInterface";
+import TokenInterface   "../tokenInterface/tokenInterface";
 import Utils            "utils";
 
 import Error            "mo:base/Error";
