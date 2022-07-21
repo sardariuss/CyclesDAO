@@ -83,7 +83,7 @@ call toPowerUp.setAcceptCycles(true);
 call toPowerUp.getAcceptCycles();
 assert _ == true;
 call toPowerUp.pullCycles();
-assert _ == variant { ok };
+assert _ == variant { ok = variant { Refilled } };
 
 // Verify balances have been updated
 call cycles_provider.cyclesBalance();

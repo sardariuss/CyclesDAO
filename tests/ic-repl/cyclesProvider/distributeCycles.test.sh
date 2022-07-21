@@ -8,6 +8,18 @@ load "../common/wallet.sh";
 identity default "~/.config/dfx/identity/default/identity.pem";
 import default_wallet = "rwlgt-iiaaa-aaaaa-aaaaa-cai" as "../common/wallet.did";
 
+function convertType(toPowerUp) {
+  let var = record {
+    toPowerUp.canister;
+    record {
+      balance_threshold = toPowerUp.balance_threshold : nat;
+      balance_target = toPowerUp.balance_target : nat;
+      pull_authorized = toPowerUp.pull_authorized : bool;
+    }
+  };
+  var;
+};
+
 // Create the token accessor
 let token_accessor = installTokenAccessor(default);
 
@@ -32,13 +44,16 @@ assert _ == variant { ok };
 
 // Add a first canister to the cyclesProvider allow list
 let toPowerUp1 = installToPowerUp(cycles_provider, 0);
-call cycles_provider.configure(variant {AddAllowList = record {
+let toPowerUp1Record = record {
   canister = toPowerUp1;
   balance_threshold = 100_000_000;
   balance_target = 200_000_000;
   pull_authorized = true;
-}});
-assert _ == variant { ok };
+};
+call cycles_provider.configure(variant {AddAllowList = toPowerUp1Record});
+call cycles_provider.getAllowList();
+assert _ ~= vec {convertType(toPowerUp1Record)};
+assert _[0][1].last_execution.state == variant { Pending };
 
 // Verify original balances
 call cycles_provider.cyclesBalance();
@@ -46,9 +61,10 @@ assert _ == (0 : nat);
 call toPowerUp1.cyclesBalance();
 assert _ == (0 : nat);
 
-// CyclesProvider balance is 0, distributeCycles shall return false
+// CyclesProvider balance is 0, distributeCycles shall fail to refill the canister
 call cycles_provider.distributeCycles();
-assert _ == false;
+call cycles_provider.getAllowList();
+assert _[0][1].last_execution.state == variant { Failed = variant { InsufficientCycles } };
 
 // Add cycles up to the configured minimum balance
 walletReceive(default_wallet, cycles_provider, 500_000_000);
@@ -56,9 +72,10 @@ call cycles_provider.cyclesBalance();
 assert _ == (500_000_000 : nat);
 
 // CyclesProvider balance is 500 million, which is the minimum balance, hence
-// distributeCycles shall still return false
+// distributeCycles shall still fail to refill the canister
 call cycles_provider.distributeCycles();
-assert _ == false;
+call cycles_provider.getAllowList();
+assert _[0][1].last_execution.state == variant { Failed = variant { InsufficientCycles } };
 
 // Add cycles to refill up to the canister balance target 1
 walletReceive(default_wallet, cycles_provider, 200_000_000);
@@ -68,35 +85,41 @@ assert _ == (700_000_000 : nat);
 // CyclesProvider balance is 700 million, which shall be enough to power up
 // the canister 1
 call cycles_provider.distributeCycles();
-assert _ == true;
+call cycles_provider.getAllowList();
+assert _[0][1].last_execution.state == variant { Refilled };
 call toPowerUp1.cyclesBalance();
 assert _ == (200_000_000 : nat);
 call cycles_provider.cyclesBalance();
 assert _ == (500_000_000 : nat);
 
-// Successive calls to distributeCycles shall succeed because the canister does
-// not require to be refilled
+// Successive calls to distributeCycles shall return that the canister is already
+// above the threshold
 call cycles_provider.distributeCycles();
-assert _ == true;
+call cycles_provider.getAllowList();
+assert _[0][1].last_execution.state == variant { AlreadyAboveThreshold };
 
 // Add a second canister to the cyclesProvider allow list
 let toPowerUp2 = installToPowerUp(cycles_provider, 0);
-call cycles_provider.configure(variant {AddAllowList = record {
+let toPowerUp2Record = record {
   canister = toPowerUp2;
   balance_threshold = 200_000_000;
   balance_target = 400_000_000;
   pull_authorized = true;
-}});
-assert _ == variant { ok };
+};
+call cycles_provider.configure(variant {AddAllowList = toPowerUp2Record});
+call cycles_provider.getAllowList();
+assert _ ~= vec {convertType(toPowerUp1Record); convertType(toPowerUp2Record)};
+assert _[1][1].last_execution.state == variant { Pending };
 
 // Verify original balance
 call toPowerUp2.cyclesBalance();
 assert _ == (0 : nat);
 
 // CyclesProvider balance is 500 million, which is the minimum balance, hence
-// distributeCycles shall still return false
+// distributeCycles shall fail to refill the canister
 call cycles_provider.distributeCycles();
-assert _ == false;
+call cycles_provider.getAllowList();
+assert _[1][1].last_execution.state == variant { Failed = variant { InsufficientCycles } };
 
 // Add cycles to refill up to the canister, but not enough to reach the balance target 2
 walletReceive(default_wallet, cycles_provider, 200_000_000);
@@ -106,7 +129,8 @@ assert _ == (700_000_000 : nat);
 // CyclesProvider balance is 700 million, which is not enough to power up
 // the canister 2
 call cycles_provider.distributeCycles();
-assert _ == false;
+call cycles_provider.getAllowList();
+assert _[1][1].last_execution.state == variant { Failed = variant { InsufficientCycles } };
 call toPowerUp2.cyclesBalance();
 assert _ == (0 : nat);
 call cycles_provider.cyclesBalance();
@@ -119,7 +143,8 @@ assert _ == (1_000_000_000 : nat);
 
 // CyclesProvider balance is 1 billion, which is shall be enough to refill canister 2
 call cycles_provider.distributeCycles();
-assert _ == true;
+call cycles_provider.getAllowList();
+assert _[1][1].last_execution.state == variant { Refilled };
 call toPowerUp2.cyclesBalance();
 assert _ == (400_000_000 : nat);
 call cycles_provider.cyclesBalance();
@@ -127,13 +152,16 @@ assert _ == (600_000_000 : nat);
 
 // Add a third canister to the cyclesProvider allow list
 let toPowerUp3 = installToPowerUp(cycles_provider, 300_000_000);
-call cycles_provider.configure(variant {AddAllowList = record {
+let toPowerUp3Record = record {
   canister = toPowerUp3;
   balance_threshold = 200_000_000;
   balance_target = 400_000_000;
   pull_authorized = true;
-}});
-assert _ == variant { ok };
+};
+call cycles_provider.configure(variant {AddAllowList = toPowerUp3Record});
+call cycles_provider.getAllowList();
+assert _ ~= vec {convertType(toPowerUp1Record); convertType(toPowerUp2Record); convertType(toPowerUp3Record)};
+assert _[2][1].last_execution.state == variant { Pending };
 
 // The canister 3 already has a balance superior than its threshold, calling
 // distributeCycles shall leave its balance unchanged
@@ -142,7 +170,15 @@ assert _ == (300_000_000 : nat);
 call cycles_provider.cyclesBalance();
 assert _ == (600_000_000 : nat);
 call cycles_provider.distributeCycles();
-assert _ == true;
+call cycles_provider.getAllowList();
+assert _[0][1].last_execution.state == variant { AlreadyAboveThreshold };
+assert _[1][1].last_execution.state == variant { Refilled }; // Still in refilled cause another canister has been added in the meanwhile
+assert _[2][1].last_execution.state == variant { AlreadyAboveThreshold };
+call cycles_provider.distributeCycles();
+call cycles_provider.getAllowList();
+assert _[0][1].last_execution.state == variant { AlreadyAboveThreshold };
+assert _[1][1].last_execution.state == variant { AlreadyAboveThreshold };
+assert _[2][1].last_execution.state == variant { AlreadyAboveThreshold };
 call toPowerUp3.cyclesBalance();
 assert _ == (300_000_000 : nat);
 call cycles_provider.cyclesBalance();

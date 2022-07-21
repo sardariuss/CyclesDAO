@@ -10,6 +10,7 @@ import Nat                 "mo:base/Nat";
 import Principal           "mo:base/Principal";
 import Result              "mo:base/Result";
 import Time                "mo:base/Time";
+import Trie                "mo:base/Trie";
 import TrieMap             "mo:base/TrieMap";
 
 shared actor class CyclesProvider(create_cycles_provider_args: Types.CreateCyclesProviderArgs) = this {
@@ -28,10 +29,7 @@ shared actor class CyclesProvider(create_cycles_provider_args: Types.CreateCycle
     cycles_exchange_config_ := create_cycles_provider_args.cycles_exchange_config;
   };
 
-  private let allow_list_ : TrieMap.TrieMap<Principal, Types.PoweringParameters> = 
-    TrieMap.TrieMap<Principal, Types.PoweringParameters>(
-      Principal.equal, Principal.hash
-    );
+  private stable var allow_list_ : Trie.Trie<Principal, Types.PoweringParameters> = Trie.empty<Principal, Types.PoweringParameters>();
 
   private let cycles_balance_register_ : Buffer.Buffer<Types.CyclesBalanceRecord> = Buffer.Buffer(0);
   cycles_balance_register_.add({date = Time.now(); balance = ExperimentalCycles.balance()});
@@ -44,8 +42,6 @@ shared actor class CyclesProvider(create_cycles_provider_args: Types.CreateCycle
   
 
   // For upgrades
-
-  private stable var allow_list_array_ : [(Principal, Types.PoweringParameters)] = [];
 
   private stable var cycles_balance_register_array_ : [Types.CyclesBalanceRecord] = [];
 
@@ -71,7 +67,11 @@ shared actor class CyclesProvider(create_cycles_provider_args: Types.CreateCycle
   };
 
   public query func getAllowList() : async [(Principal, Types.PoweringParameters)] {
-    return Utils.mapToArray(allow_list_);
+    return Trie.toArray<Principal, Types.PoweringParameters, (Principal, Types.PoweringParameters)>(
+      allow_list_, func(principal, powering_parameters) {
+        return (principal, powering_parameters);
+      }
+    );
   };
 
   public query func getMinimumBalance() : async Nat {
@@ -94,6 +94,7 @@ shared actor class CyclesProvider(create_cycles_provider_args: Types.CreateCycle
     return configure_command_register_.toArray();
   };
 
+  // @todo: remove this function, this is only for the frontend and can be done directly in js
   public shared func getCyclesProfile() : async [Types.CyclesProfile] {
     return await Utils.getPoweringParameters(allow_list_);
   };
@@ -174,10 +175,15 @@ shared actor class CyclesProvider(create_cycles_provider_args: Types.CreateCycle
         if (balance_threshold >= balance_target){
           return #err(#InvalidBalanceArguments);
         };
-        allow_list_.put(canister, {balance_threshold = balance_threshold; balance_target = balance_target; pull_authorized = pull_authorized;});
+        putInAllowList(canister, {
+          balance_threshold = balance_threshold;
+          balance_target = balance_target;
+          pull_authorized = pull_authorized;
+          last_execution = {time = Time.now(); state = #Pending};
+        });
       };
       case(#RemoveAllowList {canister}){
-        if (allow_list_.remove(canister) == null){
+        if (not removeFromAllowList(canister)){
           return #err(#NotInAllowList);
         };
       };
@@ -192,30 +198,53 @@ shared actor class CyclesProvider(create_cycles_provider_args: Types.CreateCycle
     return #ok;
   };
 
-  // @todo: what if one canister traps? it will block all the others from receiving the cycles
-  public shared func distributeCycles() : async Bool {
-    var success : Bool = true;
-    for ((principal, {balance_threshold; balance_target}) in allow_list_.entries()){
-      switch (await fillWithCycles(principal, balance_threshold, balance_target, #DistributeCycles)){
-        case (#ok(_)){};
-        case (#err(_)){
-          success := false;  
+  public shared func distributeCycles() : async () {
+    let now = Time.now();
+    // If no canister has its last execution state to pending, reset all states to pending
+    if (not (Trie.some<Principal, Types.PoweringParameters>(allow_list_, func(_, {last_execution}) { last_execution.state == #Pending; }))){
+      allow_list_ := Trie.mapFilter<Principal, Types.PoweringParameters, Types.PoweringParameters>(allow_list_, func(principal, powering_parameters){
+        return ?updatePoweringParameters(powering_parameters, {time = now; state = #Pending});
+      });
+    };
+    // Iterate over the canisters
+    // @todo: investigate if modifying the Trie while iterating on it does work!
+    for ((principal, powering_parameters) in Trie.iter(allow_list_)){
+      // Call fillWithCycles only if the canister is in pending state
+      if (powering_parameters.last_execution.state == #Pending){
+        // Put it preventively in trapped state, so if it ever traps it is in the right state
+        putInAllowList(principal, updatePoweringParameters(powering_parameters, {time = now; state = #Trapped}));
+        switch (await fillWithCycles(principal, powering_parameters.balance_threshold, powering_parameters.balance_target, #DistributeCycles)){
+          case (#err(error)){
+            putInAllowList(principal, updatePoweringParameters(powering_parameters, {time = now; state = #Failed(error)}));
+          };
+          case (#ok(success)){
+            putInAllowList(principal, updatePoweringParameters(powering_parameters, {time = now; state = success}));
+          };
         };
       };
     };
-    return success;
   };
 
-  public shared(msg) func requestCycles() : async Result.Result<(), Types.CyclesTransferError> {
-    switch (allow_list_.get(msg.caller)){
+  public shared(msg) func requestCycles() : async Result.Result<Types.CyclesTransferSuccess, Types.CyclesTransferError> {
+    switch (Trie.find(allow_list_, {key = msg.caller; hash = Principal.hash(msg.caller);}, Principal.equal)){
       case(null){
         return #err(#CanisterNotAllowed);
       };
-      case(?{balance_threshold; balance_target; pull_authorized}){
-        if (not pull_authorized){
+      case(?powering_parameters){
+        if (not powering_parameters.pull_authorized){
           return #err(#PullNotAuthorized);
         } else {
-          return await fillWithCycles(msg.caller, balance_threshold, balance_target, #RequestCycles);
+          let now = Time.now();
+          switch (await fillWithCycles(msg.caller, powering_parameters.balance_threshold, powering_parameters.balance_target, #RequestCycles)){
+            case (#err(error)){
+              putInAllowList(msg.caller, updatePoweringParameters(powering_parameters, {time = now; state = #Failed(error)}));
+              return #err(error);
+            };
+            case (#ok(success)){
+              putInAllowList(msg.caller, updatePoweringParameters(powering_parameters, {time = now; state = success}));
+              return #ok(success);
+            };
+          };
         };
       };
     };
@@ -226,13 +255,13 @@ shared actor class CyclesProvider(create_cycles_provider_args: Types.CreateCycle
     balance_threshold: Nat,
     balance_target: Nat,
     method: Types.CyclesDistributionMethod
-    ) : async Result.Result<(), Types.CyclesTransferError> {
+    ) : async Result.Result<Types.CyclesTransferSuccess, Types.CyclesTransferError> {
     let canister : Types.ToPowerUpInterface = actor(Principal.toText(principal));
     let current_balance = await canister.cyclesBalance();
     let difference : Int = balance_threshold - current_balance;
     if (difference <= 0){
       // Canister balance is already above threshold, return ok
-      return #ok;
+      return #ok(#AlreadyAboveThreshold);
     };
     let refill_amount : Int = balance_target - current_balance;
     let available_cycles : Int = ExperimentalCycles.balance() - minimum_cycles_balance_;
@@ -255,19 +284,39 @@ shared actor class CyclesProvider(create_cycles_provider_args: Types.CreateCycle
       method = method;
     });
     cycles_balance_register_.add({date = now; balance = ExperimentalCycles.balance()});
-    return #ok;
+    return #ok(#Refilled);
   };
 
   public query func computeTokensInExchange(cycles_amount: Nat) : async Nat {
     return Utils.computeTokensInExchange(cycles_exchange_config_, ExperimentalCycles.balance(), cycles_amount);
   };
 
+  private func putInAllowList(canister: Principal, powering_parameters: Types.PoweringParameters) {
+    allow_list_ := Trie.put(allow_list_, {key = canister; hash = Principal.hash(canister);}, Principal.equal, powering_parameters).0;
+  };
+
+  private func removeFromAllowList(canister: Principal) : Bool {
+    let trie_remove = Trie.remove(allow_list_, {key = canister; hash = Principal.hash(canister);}, Principal.equal);
+    allow_list_ := trie_remove.0;
+    return (trie_remove.1 != null);
+  };
+
+  private func updatePoweringParameters(
+    powering_parameters: Types.PoweringParameters,
+    last_execution: Types.DistributeCyclesInfo
+  ) : Types.PoweringParameters {
+    return {
+      balance_threshold = powering_parameters.balance_threshold;
+      balance_target = powering_parameters.balance_target;
+      pull_authorized = powering_parameters.pull_authorized;
+      last_execution = last_execution;
+    };
+  };
 
   // For upgrades
 
   system func preupgrade(){
-    // Save allow_list_ and registers in temporary stable arrays
-    allow_list_array_ := Utils.mapToArray(allow_list_);
+    // Save registers in temporary stable arrays
     cycles_balance_register_array_ := cycles_balance_register_.toArray();
     cycles_sent_register_array_ := cycles_sent_register_.toArray();
     cycles_received_register_array_ := cycles_received_register_.toArray();
@@ -275,10 +324,7 @@ shared actor class CyclesProvider(create_cycles_provider_args: Types.CreateCycle
   };
 
   system func postupgrade(){
-    // Restore allow_list_ and registers from temporary stable arrays
-    for ((principal, powering_parameters) in Iter.fromArray(allow_list_array_)){
-      allow_list_.put(principal, powering_parameters);
-    };
+    // Restore registers from temporary stable arrays
     for (record in Array.vals(cycles_balance_register_array_)){
       cycles_balance_register_.add(record);
     };
@@ -292,7 +338,6 @@ shared actor class CyclesProvider(create_cycles_provider_args: Types.CreateCycle
       configure_command_register_.add(record);
     };
     // Empty temporary stable arrays
-    allow_list_array_ := [];
     cycles_balance_register_array_ := [];
     cycles_sent_register_array_ := [];
     cycles_received_register_array_ := [];

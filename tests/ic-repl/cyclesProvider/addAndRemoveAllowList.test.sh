@@ -68,7 +68,7 @@ assert _ == variant { ok };
 call cycles_provider.configure(variant {AddAllowList = toPowerUp3});
 assert _ == variant { ok };
 call cycles_provider.getAllowList();
-assert _ == vec {convertType(toPowerUp1); convertType(toPowerUp2); convertType(toPowerUp3)};
+assert _ ~= vec {convertType(toPowerUp1); convertType(toPowerUp2); convertType(toPowerUp3)};
 
 // Try to add a canister with balance_threshold < balance_target shall fail
 call cycles_provider.configure(variant {AddAllowList = toPowerUpInvalid});
@@ -82,12 +82,12 @@ assert _ == variant { err = variant { NotInAllowList } };
 call cycles_provider.configure(variant {RemoveAllowList = record { canister = toPowerUp3.canister }});
 assert _ == variant { ok };
 call cycles_provider.getAllowList();
-assert _ == vec {convertType(toPowerUp1); convertType(toPowerUp2)};
+assert _ ~= vec {convertType(toPowerUp1); convertType(toPowerUp2)};
 call cycles_provider.configure(variant {RemoveAllowList = record { canister = toPowerUp2.canister }});
 assert _ == variant { ok };
 call cycles_provider.getAllowList();
-assert _ == vec {convertType(toPowerUp1);};
+assert _ ~= vec {convertType(toPowerUp1);};
 call cycles_provider.configure(variant {RemoveAllowList = record { canister = toPowerUp1.canister }});
 assert _ == variant { ok };
 call cycles_provider.getAllowList();
-assert _ == vec {};
+assert _ ~= vec {};

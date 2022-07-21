@@ -5,6 +5,11 @@ import Result             "mo:base/Result";
 
 shared actor class ToPowerUp(cycles_provider: Principal) = this {
 
+  public type CyclesTransferSuccess = {
+    #AlreadyAboveThreshold;
+    #Refilled;
+  };
+
   public type CyclesTransferError = {
     #CanisterNotAllowed;
     #PullNotAuthorized;
@@ -13,7 +18,7 @@ shared actor class ToPowerUp(cycles_provider: Principal) = this {
   };
 
   public type CyclesProviderInterface = actor {
-    requestCycles: shared() -> async(Result.Result<(), CyclesTransferError>);
+    requestCycles: shared() -> async(Result.Result<CyclesTransferSuccess, CyclesTransferError>);
   };
 
   private stable var cycles_provider_ : Principal = cycles_provider;
@@ -35,7 +40,7 @@ shared actor class ToPowerUp(cycles_provider: Principal) = this {
     return ExperimentalCycles.balance();
   };
 
-  public shared func pullCycles() : async Result.Result<(), CyclesTransferError> {
+  public shared func pullCycles() : async Result.Result<CyclesTransferSuccess, CyclesTransferError> {
     let cycles_provider_actor : CyclesProviderInterface = actor (Principal.toText(cycles_provider_));
     return await cycles_provider_actor.requestCycles();
   };

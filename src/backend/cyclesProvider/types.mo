@@ -53,6 +53,11 @@ module{
     #NotInAllowList;
   };
 
+  public type CyclesTransferSuccess = {
+    #AlreadyAboveThreshold;
+    #Refilled;
+  };
+
   public type CyclesTransferError = {
     #CanisterNotAllowed;
     #PullNotAuthorized;
@@ -100,6 +105,20 @@ module{
     balance_threshold: Nat;
     balance_target: Nat;
     pull_authorized: Bool;
+    last_execution: DistributeCyclesInfo;
+  };
+
+  public type DistributeCyclesInfo = {
+    time: Int;
+    state: DistributeCyclesState;
+  };
+
+  public type DistributeCyclesState = {
+    #Pending;
+    #Trapped;
+    #Failed: CyclesTransferError;
+    #AlreadyAboveThreshold;
+    #Refilled;
   };
 
   public type ToPowerUpInterface = actor {

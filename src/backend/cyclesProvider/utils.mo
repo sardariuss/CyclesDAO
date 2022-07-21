@@ -7,7 +7,6 @@ import Iter              "mo:base/Iter";
 import Nat               "mo:base/Nat";
 import Principal         "mo:base/Principal";
 import Trie              "mo:base/Trie";
-import TrieMap           "mo:base/TrieMap";
 
 module {
 
@@ -45,22 +44,11 @@ module {
     isValid;
   };
 
-  public func mapToArray(
-    trie_map: TrieMap.TrieMap<Principal, Types.PoweringParameters>
-  ) : [(Principal, Types.PoweringParameters)] {
-    let buffer : Buffer.Buffer<(Principal, Types.PoweringParameters)> 
-      = Buffer.Buffer(trie_map.size());
-    for (entry in trie_map.entries()){
-      buffer.add(entry);
-    };
-    buffer.toArray();
-  };
-
   public func getPoweringParameters(
-    trie_map: TrieMap.TrieMap<Principal, Types.PoweringParameters>
+    trie: Trie.Trie<Principal, Types.PoweringParameters>
   ) : async [Types.CyclesProfile] {
-    let buffer : Buffer.Buffer<Types.CyclesProfile> = Buffer.Buffer(trie_map.size());
-    for ((principal, powering_parameters) in trie_map.entries()){
+    let buffer : Buffer.Buffer<Types.CyclesProfile> = Buffer.Buffer(0);
+    for ((principal, powering_parameters) in Trie.iter(trie)){
       let canister : Types.ToPowerUpInterface = actor(Principal.toText(principal));
       let balance_cycles = await canister.cyclesBalance();
       buffer.add({

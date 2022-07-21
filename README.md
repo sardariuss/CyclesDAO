@@ -60,7 +60,7 @@ Compute the amount of tokens that walletReceive will return in exhange of the gi
 | CyclesProvider | *constructor* | constructor.test.sh | N/A |  100% |
 | CyclesProvider | walletReceive | walletReceive_dip20.test.sh, walletReceive_errors.test.sh, walletReceive_extf.test.sh, walletReceive_ledger.test.sh | fix ledger canister initialization | 75% |
 | CyclesProvider | configure | setCycleExchangeConfig.test.sh, addAndRemoveAllowList.test.sh, setAdmin.test.sh, setMinimumBalance.test.sh | N/A | 100% |
-| CyclesProvider | distributeCycles | distributeCycles.test.sh | split test to avoid risk of side effects - add test of histories | 80% |
+| CyclesProvider | distributeCycles | distributeCycles.test.sh | split test to avoid risk of side effects - add test of histories - test trap of canister | 70% |
 | CyclesProvider | requestCycles | requestCycles.test.sh | add test of histories | 90% |
 | CyclesProvider | *upgrade* | | to do | 0% |
 | TokenAccessor | *constructor* | N/A | to do | 0% |
@@ -83,7 +83,6 @@ Compute the amount of tokens that walletReceive will return in exhange of the gi
 
 ## Limitations
 
-- In *distributeCycles*, if one call to *fillWithCycles* function traps, it will prevent other allowed canisters from receiving cycles. (see main.mo:232)
 - Ledger uses e8s, while DIP20 and EXT standard use e0s
 
 ## Ressources
