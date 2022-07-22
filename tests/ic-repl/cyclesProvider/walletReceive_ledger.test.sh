@@ -5,7 +5,7 @@
 load "../common/install.sh";
 load "../common/wallet.sh";
 
-identity default "~/.config/dfx/identity/default/identity.pem";
+identity default;
 import default_wallet = "rwlgt-iiaaa-aaaaa-aaaaa-cai" as "../common/wallet.did";
 
 // Create the token accessor
@@ -27,8 +27,8 @@ assert _ == variant { ok };
 
 let utilities = installUtilities();
 
-let ledger = installLedger(token_accessor, 0);
-let default_account = call utilities.getAccountIdentifierAsBlob(default_wallet, ledger);
+let ledger = installLedger(token_accessor, utilities, 0);
+let default_account = call utilities.getDefaultAccountIdentifierAsBlob(default_wallet);
 call token_accessor.setToken(record {standard = variant{LEDGER}; canister = ledger; identifier=null});
 assert _ == variant { ok };
 
@@ -42,8 +42,8 @@ walletReceive(default_wallet, cycles_provider, 1_000_000_000);
 assert _ ~= variant { ok = record { index = 0 : nat; } };
 call cycles_provider.cyclesBalance();
 assert _ == (1_000_000_000 : nat);
-call ledger.account_balance(default_account);
-assert _ == (1_000_000_000 : nat);
+call ledger.account_balance(record { account = default_account });
+assert _ == record { e8s = 1_000_000_000 : nat64 };
 
 // Add 2 more million cycles, verify CyclesDAO's balance is 3 millions
 // cycles and default's balance is 2.8 millions DAO tokens
@@ -51,8 +51,8 @@ walletReceive(default_wallet, cycles_provider, 2_000_000_000);
 assert _ ~= variant { ok = record { index = 1 : nat; } };
 call cycles_provider.cyclesBalance();
 assert _ == (3_000_000_000 : nat);
-call ledger.account_balance(default_account);
-assert _ == (2_800_000_000 : nat);
+call ledger.account_balance(record { account = default_account });
+assert _ == record { e8s = 2_800_000_000 : nat64 };
 
 // Verify the cycles balance register
 call cycles_provider.getCyclesBalanceRegister();

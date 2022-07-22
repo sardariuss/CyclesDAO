@@ -5,7 +5,7 @@
 
 load "../common/install.sh";
 
-identity default "~/.config/dfx/identity/default/identity.pem";
+identity default;
 
 // Install the token interface canister
 let token_interface = installTokenInterface();

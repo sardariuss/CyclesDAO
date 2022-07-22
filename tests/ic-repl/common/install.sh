@@ -1,7 +1,7 @@
 #!/usr/local/bin/ic-repl
 
 function install(wasm, args, cycle) {
-  identity default "~/.config/dfx/identity/default/identity.pem";
+  identity default;
   let id = call ic.provisional_create_canister_with_cycles(record { settings = null; amount = opt (cycle : nat) });
   let S = id.canister_id;
   call ic.install_code(
@@ -43,21 +43,16 @@ function installGovernance(create_governance_args) {
   install(wasm, args, 0);
 };
 
-function installLedger(owner, amount_e8s) {
+function installLedger(owner, utilities, amount) {
+  let owner_account = call utilities.getDefaultAccountIdentifierAsText(owner);
   let argsRecord = ( 
     record {
-      send_whitelist = vec { owner };
-      minting_account = "mint account";
-      transaction_window = opt record { secs = 100_000; nanos = 100_000 };
-      max_message_size_bytes = opt(100_000);
-      archive_options = opt record {
-        num_blocks_to_archive = 100_000;
-        trigger_threshold = 100_000;
-        max_message_size_bytes = opt(100_000);
-        node_max_memory_size_bytes = opt(100_000);
-        controller_id = owner;
-      };
-      initial_values = vec { record {"initial_values"; record { e8s = amount_e8s };}};
+      send_whitelist = vec {};
+      minting_account = owner_account;
+      transaction_window = null;
+      max_message_size_bytes = null;
+      archive_options = null;
+      initial_values = vec { record {owner_account; record { e8s = amount }; } };
     } : record {
       send_whitelist : vec principal;
       minting_account : text;
@@ -65,7 +60,7 @@ function installLedger(owner, amount_e8s) {
       max_message_size_bytes : opt nat64;
       archive_options : opt record {
         num_blocks_to_archive : nat64;
-        trigger_threshold : nat64;
+        method_threshold : nat64;
         max_message_size_bytes : opt nat64;
         node_max_memory_size_bytes : opt nat64;
         controller_id : principal;
@@ -73,8 +68,7 @@ function installLedger(owner, amount_e8s) {
       initial_values : vec record { text; record { e8s : nat64 } };
     }
   );
-  // @todo: fix 'Deserialization Failed: "No more values on the wire, the expected type record [...] is not opt, reserved or null"'
-  import interface = "2vxsx-fae" as "../../wasm/Ledger/ledger.did";
+  import interface = "2vxsx-fae" as "../../wasm/Ledger/ledger.private.did";
   let args = encode interface.__init_args(argsRecord);
   let wasm = file "../../wasm/Ledger/ledger.wasm";
   install(wasm, args, 0);

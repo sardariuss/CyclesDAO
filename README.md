@@ -26,24 +26,24 @@ The CyclesDAO expects tokens to be expressed in their *base natural unit*, hence
 | canister/module | function | test scripts | left to do | complete |
 | ------ | ------ | ------ | ------ | ------ |
 | CyclesProvider | *constructor* | constructor.test.sh | N/A |  100% |
-| CyclesProvider | walletReceive | walletReceive_dip20.test.sh, walletReceive_errors.test.sh, walletReceive_extf.test.sh, walletReceive_ledger.test.sh | fix ledger canister initialization | 75% |
+| CyclesProvider | walletReceive | walletReceive_dip20.test.sh, walletReceive_errors.test.sh, walletReceive_extf.test.sh, walletReceive_ledger.test.sh | N/A | 100% |
 | CyclesProvider | configure | setCycleExchangeConfig.test.sh, addAndRemoveAllowList.test.sh, setAdmin.test.sh, setMinimumBalance.test.sh | N/A | 100% |
 | CyclesProvider | distributeCycles | distributeCycles.test.sh | split test to avoid risk of side effects - add test of histories - test trap of canister | 70% |
 | CyclesProvider | requestCycles | requestCycles.test.sh | add test of histories | 90% |
 | CyclesProvider | *upgrade* | | to do | 0% |
 | TokenAccessor | *constructor* | N/A | to do | 0% |
-| TokenAccessor | setToken, getToken | setToken.test.sh | fix ledger canister initialization (see install.sh) | 80% |
+| TokenAccessor | setToken, getToken | setToken.test.sh | N/A | 100% |
 | TokenAccessor | setAdmin, getAdmin | N/A | to do | 0% |
 | TokenAccessor | addMinter, removeMinter, getMinters, isAuthorizedMinter | N/A | to do | 0% |
 | TokenAccessor | mint, getMintRegister | N/A | to do | 0% |
 | TokenAccessor | *upgrade* | N/A | to do | 0% |
-| TokenInterface | balance | balance.test.sh | add test for ledger | 66% |
-| TokenInterface | mint | mint.test.sh | add test for ledger | 66% |
-| TokenInterface | accept, refund, charge | accept_dip20.test.sh, accept_extf.test.sh | check for not covered errors | 90% |
-| TokenInterface | transfer | transfer_dip20.test.sh, transfer_dip721.test.sh, transfer_extNft.test.sh, transfer_extf.test.sh, transfer_ledger.test.sh | fix ledger canister initialization (see install.sh), fix DIP721 cannot get types | 80% |
+| TokenInterface | balance | balance.test.sh | uncomment test on dip721 owner once warnings are fixed | 90% |
+| TokenInterface | mint | mint.test.sh | N/A | 100% |
+| TokenInterface | accept, refund, charge | accept_dip20.test.sh, accept_extf.test.sh | add a test for ledger, check for not covered errors | 60% |
+| TokenInterface | transfer | transfer_dip20.test.sh, transfer_dip721.test.sh, transfer_extNft.test.sh, transfer_extf.test.sh, transfer_ledger.test.sh | uncomment test on dip721 owner once warnings are fixed | 95% |
 | TokenInterface | isTokenFungible | *tested via TokenAccessor setToken.test.sh* | N/A | 100% |
 | TokenInterface | isTokenOwned | *tested via TokenAccessor setToken.test.sh* | N/A | 100% |
-| Governance | *all functions* | governance.test.sh | missing: claimCharges and claimRefund functions, complexe scenario with changement of token, token accessor configured with LEDGER/DIP20, upgrade; need to fix DIP721 cannot get types for distributeBalance | 50% |
+| Governance | *all functions* | governance.test.sh | missing: claimCharges and claimRefund functions, complexe scenario with change of token, token accessor configured with LEDGER/DIP20, upgrade; need to fix DIP721 cannot get types for distributeBalance | 50% |
 
 ## Known bugs
 

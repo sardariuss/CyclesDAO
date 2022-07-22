@@ -5,7 +5,7 @@ load "../common/wallet.sh";
 
 // Warning: running this test multiple types might fail because it empties the default wallet
 
-identity default "~/.config/dfx/identity/default/identity.pem";
+identity default;
 import default_wallet = "rwlgt-iiaaa-aaaaa-aaaaa-cai" as "../common/wallet.did";
 
 function convertType(toPowerUp) {

@@ -2,7 +2,7 @@
 
 load "../common/install.sh";
 
-identity default "~/.config/dfx/identity/default/identity.pem";
+identity default;
 
 // Create the utilities canister
 let utilities = installUtilities();

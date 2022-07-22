@@ -2,13 +2,31 @@
 
 load "../common/install.sh";
 
-identity default "~/.config/dfx/identity/default/identity.pem";
+identity default;
 
 // Install the token interface canister
 let token_interface = installTokenInterface();
 
 // Install the utilities
 let utilities = installUtilities();
+
+// Get accounts
+identity alice;
+let alice_account = call utilities.getDefaultAccountIdentifierAsBlob(alice);
+identity default;
+let default_account = call utilities.getDefaultAccountIdentifierAsBlob(default);
+
+//// Test Ledger balance
+let ledger = installLedger(default, utilities, 2_000_000_000);
+let ledger_token = record {standard = variant{LEDGER}; canister = ledger; identifier = null : opt variant{}};
+call ledger.account_balance(record { account = default_account });
+assert _ == record { e8s = 2_000_000_000 : nat64 };
+call token_interface.balance(ledger_token, default);
+assert _ == variant { ok = (2_000_000_000 : nat) };
+call ledger.account_balance(record { account = alice_account });
+assert _ == record { e8s = 0 : nat64 };
+call token_interface.balance(ledger_token, token_interface);
+assert _ == variant { ok = (0 : nat) };
 
 // Test DIP20 balance
 let dip20 = installDip20(default, 2_000_000_000);
@@ -41,9 +59,9 @@ let dip721 = installDip721(default);
 let nft_identifier = (0 : nat);
 let nft_data = vec { record { "First NFT"; variant { TextContent = "Nice NFT" } } };
 call dip721.mint(default, nft_identifier, nft_data);
-//assert _ == variant { ok };
+assert _ == variant { Ok = 1 : nat };
 call dip721.tokenMetadata(nft_identifier);
-//assert _.ok.owner == opt default;
+//assert _ ~= variant { Ok = record { owner = default } }; // @todo: uncomment this once warning "cannot get type for dip721" is fixed
 let dip721_token = record {standard = variant{DIP721}; canister = dip721; identifier = opt variant { nat = nft_identifier }; };
 call token_interface.balance(dip721_token, default);
 assert _ == variant { err = variant { NftNotSupported } };

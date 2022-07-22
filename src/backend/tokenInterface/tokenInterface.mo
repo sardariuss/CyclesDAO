@@ -474,7 +474,7 @@ module TokenInterface {
         };
       };
       case(#LEDGER){
-        switch (Utils.getAccountIdentifier(to, token.canister)){
+        switch (Utils.getDefaultAccountIdentifier(to)){
           case(null){
             return #err(#ComputeAccountIdFailed);
           };
