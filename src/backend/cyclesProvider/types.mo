@@ -127,8 +127,17 @@ module{
     acceptCycles: shared () -> async ();
   };
 
+  // From the TokenAccessor
+  public type MintRecord = {
+    index: Nat;
+    date: Int;
+    amount: Nat;
+    to: Principal;
+    token: TokenInterfaceTypes.Token;
+    result: Result.Result<?Nat, TokenInterfaceTypes.MintError>;
+  };
   public type TokenAccessorInterface = actor {
-    mint: shared(Principal, Nat) -> async (Nat);
+    mint: shared(Principal, Nat) -> async (MintRecord);
     getToken: shared () -> async (?TokenInterfaceTypes.Token);
     isAuthorizedMinter: shared (Principal) -> async (Bool);
   };

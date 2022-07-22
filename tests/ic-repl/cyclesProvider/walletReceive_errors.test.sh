@@ -70,4 +70,4 @@ assert _ == variant { ok };
 
 // Finally verify it works
 walletReceive(default_wallet, cycles_provider, 1_000_000_000);
-assert _ == variant { ok = (0 : nat) };
+assert _ ~= variant { ok = record { index = 0 : nat; } };

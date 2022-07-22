@@ -1,17 +1,17 @@
-import Types               "types";
-import Utils               "utils";
+import Types                 "types";
+import Utils                 "utils";
 
-import Array               "mo:base/Array";
-import Buffer              "mo:base/Buffer";
-import ExperimentalCycles  "mo:base/ExperimentalCycles";
-import Int                 "mo:base/Int";
-import Iter                "mo:base/Iter";
-import Nat                 "mo:base/Nat";
-import Principal           "mo:base/Principal";
-import Result              "mo:base/Result";
-import Time                "mo:base/Time";
-import Trie                "mo:base/Trie";
-import TrieMap             "mo:base/TrieMap";
+import Array                 "mo:base/Array";
+import Buffer                "mo:base/Buffer";
+import ExperimentalCycles    "mo:base/ExperimentalCycles";
+import Int                   "mo:base/Int";
+import Iter                  "mo:base/Iter";
+import Nat                   "mo:base/Nat";
+import Principal             "mo:base/Principal";
+import Result                "mo:base/Result";
+import Time                  "mo:base/Time";
+import Trie                  "mo:base/Trie";
+import TrieMap               "mo:base/TrieMap";
 
 shared actor class CyclesProvider(create_cycles_provider_args: Types.CreateCyclesProviderArgs) = this {
 
@@ -107,7 +107,7 @@ shared actor class CyclesProvider(create_cycles_provider_args: Types.CreateCycle
   };
 
   public shared(msg) func walletReceive() : 
-    async Result.Result<Nat, Types.WalletReceiveError> {
+    async Result.Result<Types.MintRecord, Types.WalletReceiveError> {
     // Check if cycles are available
     let available_cycles = ExperimentalCycles.available();
     if (available_cycles == 0){
@@ -139,7 +139,7 @@ shared actor class CyclesProvider(create_cycles_provider_args: Types.CreateCycle
     let token_amount = Utils.computeTokensInExchange(
       cycles_exchange_config_, original_balance, accepted_cycles);
     // Mint the token
-    let mint_index = await token_accessor_.mint(msg.caller, token_amount);
+    let mint_record = await token_accessor_.mint(msg.caller, token_amount);
     // Update the registers
     let now = Time.now();
     cycles_balance_register_.add({
@@ -150,9 +150,9 @@ shared actor class CyclesProvider(create_cycles_provider_args: Types.CreateCycle
       date = now;
       from = msg.caller;
       cycle_amount = accepted_cycles;
-      mint_index = mint_index;
+      mint_index = mint_record.index;
     });
-    return #ok(mint_index);
+    return #ok(mint_record);
   };
 
   public shared(msg) func configure(

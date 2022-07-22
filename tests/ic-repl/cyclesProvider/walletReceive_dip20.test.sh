@@ -36,7 +36,7 @@ assert _ == (0 : nat);
 // Add 1 million cycles, verify CyclesProvider's balance is 1 million cycles
 // and default's balance is 1 million tokens
 walletReceive(default_wallet, cycles_provider, 1_000_000_000);
-assert _ == variant { ok = 0 : nat };
+assert _ ~= variant { ok = record { index = 0 : nat; } };
 call cycles_provider.cyclesBalance();
 assert _ == (1_000_000_000 : nat);
 call dip20.balanceOf(default_wallet);
@@ -45,7 +45,7 @@ assert _ == (1_000_000_000 : nat);
 // Add 2 more million cycles, verify CyclesProvider's balance is 3 millions
 // cycles and default's balance is 2.8 millions tokens
 walletReceive(default_wallet, cycles_provider, 2_000_000_000);
-assert _ == variant { ok = 1 : nat};
+assert _ ~= variant { ok = record { index = 1 : nat; } };
 call cycles_provider.cyclesBalance();
 assert _ == (3_000_000_000 : nat);
 call dip20.balanceOf(default_wallet);

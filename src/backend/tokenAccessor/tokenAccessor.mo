@@ -46,6 +46,10 @@ shared actor class TokenAccessor(admin: Principal) = this {
     });
   };
 
+  public shared query func getMintRecord(mint_index: Nat) : async ?Types.MintRecord {
+    return Trie.get<Nat, Types.MintRecord>(mint_register_, {key = mint_index; hash = Int.hash(mint_index);}, Nat.equal);
+  };
+
   public shared query func getMintRegister() : async [Types.MintRecord] {
     return Iter.toArray(Iter.map(Trie.iter(mint_register_), func (kv : (Nat, Types.MintRecord)) : Types.MintRecord = kv.1));
   };
@@ -114,7 +118,7 @@ shared actor class TokenAccessor(admin: Principal) = this {
 
   // @todo: add to doc: it's the responsability of the caller to check that it is 
   // authorized to mint and that the token is set before calling mint
-  public shared(msg) func mint(to: Principal, amount: Nat) : async Nat {
+  public shared(msg) func mint(to: Principal, amount: Nat) : async Types.MintRecord {
     if (not (await isAuthorizedMinter(msg.caller))){
       Debug.trap("Not authorized!");
     };
@@ -135,8 +139,8 @@ shared actor class TokenAccessor(admin: Principal) = this {
         putMintRecord(mint_record);
         // Increase the mint record index for the next call
         mint_record_index_ := mint_record_index_ + 1;
-        // Return the actual mint record index
-        return mint_record.index;
+        // Return mint record
+        return mint_record;
       };
     };
   };

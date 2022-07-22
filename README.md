@@ -7,42 +7,6 @@ The Cycles DAO collects cycles for a configured set of canisters and rewards use
 * You have downloaded and installed the [DFINITY Canister SDK](https://sdk.dfinity.org).
 * To run the test scripts, you need to download [ic-repl](https://github.com/chenyan2002/ic-repl/releases) and install it in /usr/bin.
 
-## CyclesProvider interface (non-exhaustive)
-
-### **configure**: ( *CyclesProviderCommand* ) -> ( variant { ok; err: *ConfigureError* } )
-Update the configuration of the cycles DAO. Only the admin is allowed to call this function.
-- ***SetCycleExchangeConfig***: Set the cycles exchange configuration.
-- ***AddAllowList***: Add the canister to the list of canisters that receive cycles from *distributeCycles*.
-- ***RemoveAllowList***: Remove a canister from the list of canisters that receive cycles from *distributeCycles*.
-- ***SetAdmin***: Set the admin of the cycles DAO.
-- ***SetMinimumBalance***: Set the minimum balance of cycles that the cycles DAO will keep for itself.
-
-### **walletReceive**: () -> ( variant { ok: *nat*; err: *WalletReceiveError* } )
-Accept the cycles given by the caller and transfer freshly minted tokens in exchange. This function is intended to be called from a cycle wallet that can pass cycles. The amount of tokens exchanged depends on the configured cycles exchange configuration. If the current cycles balance exceeds the greatest exchange level from the configuration, refund all the cycles. Return a mint index identifier on success. See the functions *getCycleExchangeConfig*, *cyclesBalance* and *computeTokensInExchange* for more info.
-
-### **distributeCycles**: () -> ( *bool* )
-Distribute the cycles to the canister in the allowed list. Does nothing if all canister already have a cycles amount greater than their minimum thresholds.
-
-### **requestCycles**: () -> ( variant { ok; err: *CyclesTransferError* } )
-Request to send cycles up to the cycles *balance_target*. This function is intended to be called from a canister that has been added via the method *configure(#AddAllowList)*, with *pull_authorized* set to true. Does nothing if the canister has a already a cycles amount greater than the minimum threshold.
-
-### **getCycleExchangeConfig**: () -> ( vec *ExchangeLevel* )
-Return the current cycles exchange configuration
-
-### **cyclesBalance**: () -> ( *nat* )
-Get the current cycles balance.
-
-### **computeTokensInExchange**: ( *nat* ) -> ( *nat* )
-Compute the amount of tokens that walletReceive will return in exhange of the given cycles at the time this function is called.
-
-## TokenAccessor interface
-
-@todo
-
-## Governance interface
-
-@todo
-
 ## Token standards supported
 
 - DIP 20: https://github.com/Psychedelic/DIP20
@@ -52,6 +16,10 @@ Compute the amount of tokens that walletReceive will return in exhange of the gi
   - The NFT EXT wasm used in the test has been generated from /blob/main/examples/erc721.mo
 - DIP721: https://github.com/Psychedelic/DIP721/tree/develop
 - NFT_ORIGYN: *coming soon*
+
+The CyclesDAO expects tokens to be expressed in their *base natural unit*, hence without any decimals. For example, in the *CyclesDispenser* method *walletReceive*, if the current exchange level gives a rate_per_t of 1.0 tokens per cycles:
+- If configured with ledger, calling walletReceive with 1_000_000_000 cycles will result in 1_000_000_000 e8s tokens, hence 10 ledger tokens will be minted in exchange
+- If configured with dip20 or EXT it depends on the metadata, calling walletReceive with 1_000_000_000 cycles will result in 1_000_000_000 base token units, hence 10^(9-metadata.decimals) dip20/EXT tokens will be minted in exchange
 
 ## Test Coverage
 
@@ -80,10 +48,6 @@ Compute the amount of tokens that walletReceive will return in exhange of the gi
 ## Known bugs
 
 - *npm run build* currently fails (though *npm run dev* works!) with the error "ERROR: Big integer literals are not available in the configured target environment ("chrome87", "edge88", "es2019", "firefox78", "safari13.1")" even if ES2020 is specified. Tested on wsl2 run in a windows 10 environment. Maybe it is linked to the bug reported here: https://github.com/vercel/next.js/issues/37271.
-
-## Limitations
-
-- Ledger uses e8s, while DIP20 and EXT standard use e0s
 
 ## Ressources
 

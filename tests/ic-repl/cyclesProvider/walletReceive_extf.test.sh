@@ -39,7 +39,7 @@ assert _ == (0 : nat);
 // Add 1 million cycles, verify CyclesDAO's balance is 1 million cycles
 // and default's balance is 1 million tokens
 walletReceive(default_wallet, cycles_provider, 1_000_000_000);
-assert _ == (variant { ok = 0 : nat });
+assert _ ~= variant { ok = record { index = 0 : nat; } };
 call cycles_provider.cyclesBalance();
 assert _ == (1_000_000_000 : nat);
 call extf.balance(record { token = token_identifier; user = variant { "principal" = default_wallet }});
@@ -49,7 +49,7 @@ assert _ == variant { ok = (1_000_000_000 : nat) };
 // cycles and default's balance is 2.8 millions DAO tokens
 identity default;
 walletReceive(default_wallet, cycles_provider, 2_000_000_000);
-assert _ == (variant { ok = 1 : nat });
+assert _ ~= variant { ok = record { index = 1 : nat; } };
 call cycles_provider.cyclesBalance();
 assert _ == (3_000_000_000 : nat);
 call extf.balance(record { token = token_identifier; user = variant { "principal" = default_wallet }});
