@@ -60,5 +60,5 @@ GNU General Public License v3.0
 
 ## Credits
 
-Battery svg: https://www.svgrepo.com/svg/219834/battery
-The governance canister is an adaptation of the Basic DAO from the dfinity examples: https://github.com/dfinity/examples/tree/master/motoko/basic_dao
+- Battery svg: https://www.svgrepo.com/svg/219834/battery
+- The governance canister is an adaptation of the Basic DAO from the dfinity examples: https://github.com/dfinity/examples/tree/master/motoko/basic_dao
