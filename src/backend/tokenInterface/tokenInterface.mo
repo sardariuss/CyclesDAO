@@ -382,6 +382,7 @@ module TokenInterface {
               };
               case(?payee_account){
                 let interface : Types.LedgerInterface = actor (Principal.toText(token.canister));
+                // @todo: somehow the transfer fails with the error InsufficientFunds. To investigate!
                 switch (await interface.transfer({
                   memo = 0;
                   amount = { e8s = Nat64.fromNat(amount); }; // This will trap on overflow/underflow

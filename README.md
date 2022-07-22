@@ -25,21 +25,18 @@ The CyclesDAO expects tokens to be expressed in their *base natural unit*, hence
 
 | canister/module | function | test scripts | left to do | complete |
 | ------ | ------ | ------ | ------ | ------ |
-| CyclesProvider | *constructor* | constructor.test.sh | N/A |  100% |
+| CyclesProvider | *constructor* | constructor.test.sh | N/A | 100% |
 | CyclesProvider | walletReceive | walletReceive_dip20.test.sh, walletReceive_errors.test.sh, walletReceive_extf.test.sh, walletReceive_ledger.test.sh | N/A | 100% |
 | CyclesProvider | configure | setCycleExchangeConfig.test.sh, addAndRemoveAllowList.test.sh, setAdmin.test.sh, setMinimumBalance.test.sh | N/A | 100% |
 | CyclesProvider | distributeCycles | distributeCycles.test.sh | split test to avoid risk of side effects - add test of histories - test trap of canister | 70% |
 | CyclesProvider | requestCycles | requestCycles.test.sh | add test of histories | 90% |
 | CyclesProvider | *upgrade* | | to do | 0% |
-| TokenAccessor | *constructor* | N/A | to do | 0% |
 | TokenAccessor | setToken, getToken | setToken.test.sh | N/A | 100% |
-| TokenAccessor | setAdmin, getAdmin | N/A | to do | 0% |
-| TokenAccessor | addMinter, removeMinter, getMinters, isAuthorizedMinter | N/A | to do | 0% |
+| TokenAccessor | *constructor*, setAdmin, getAdmin, addMinter, removeMinter, getMinters, isAuthorizedMinter | authorizations.test.sh | N/A | 100% |
 | TokenAccessor | mint, getMintRegister | N/A | to do | 0% |
-| TokenAccessor | *upgrade* | N/A | to do | 0% |
-| TokenInterface | balance | balance.test.sh | uncomment test on dip721 owner once warnings are fixed | 90% |
+| TokenInterface | balance | balance.test.sh | uncomment test on dip721 owner once warnings are fixed | 95% |
 | TokenInterface | mint | mint.test.sh | N/A | 100% |
-| TokenInterface | accept, refund, charge | accept_dip20.test.sh, accept_extf.test.sh | add a test for ledger, check for not covered errors | 60% |
+| TokenInterface | accept, refund, charge | accept_dip20.test.sh, accept_extf.test.sh, accept_ledger.test.sh| fix ledger test, check for not covered errors | 70% |
 | TokenInterface | transfer | transfer_dip20.test.sh, transfer_dip721.test.sh, transfer_extNft.test.sh, transfer_extf.test.sh, transfer_ledger.test.sh | uncomment test on dip721 owner once warnings are fixed | 95% |
 | TokenInterface | isTokenFungible | *tested via TokenAccessor setToken.test.sh* | N/A | 100% |
 | TokenInterface | isTokenOwned | *tested via TokenAccessor setToken.test.sh* | N/A | 100% |
@@ -48,6 +45,7 @@ The CyclesDAO expects tokens to be expressed in their *base natural unit*, hence
 ## Known bugs
 
 - *npm run build* currently fails (though *npm run dev* works!) with the error "ERROR: Big integer literals are not available in the configured target environment ("chrome87", "edge88", "es2019", "firefox78", "safari13.1")" even if ES2020 is specified. Tested on wsl2 run in a windows 10 environment. Maybe it is linked to the bug reported here: https://github.com/vercel/next.js/issues/37271.
+- The transfers to the legder subaccounts done in tokenInterface seem to fail while the subaccount balance is correct. Maybe the behavior of the ledger minting account having sub-accounts is not well defined.
 
 ## Ressources
 
