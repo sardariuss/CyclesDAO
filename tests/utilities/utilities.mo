@@ -62,6 +62,10 @@ shared actor class Utilities() {
     return Principal.toText(principal);
   };
 
+  public query func principalToSubaccount(principal: Principal) : async Blob {
+    return Accounts.principalToSubaccount(principal);
+  };
+
   public query func computeExtTokenIdentifier(principal: Principal, index: Nat32) : async Text {
     var identifier : [Nat8] = [10, 116, 105, 100]; //b"\x0Atid"
     identifier := Array.append(identifier, Blob.toArray(Principal.toBlob(principal)));

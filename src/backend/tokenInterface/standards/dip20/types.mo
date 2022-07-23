@@ -35,6 +35,7 @@ module {
     getMetadata: () -> async Metadata;
     mint : (Principal, Nat) -> async TxReceipt;
     balanceOf: (Principal) -> async Nat;
+    getTokenFee: () -> async Nat;
   };
 
 }

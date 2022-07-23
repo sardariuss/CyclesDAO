@@ -13,6 +13,8 @@ import Time              "mo:base/Time";
 
 module TokenInterface {
 
+  let LEDGER_FEE : Nat = 10000;
+
   public func balance(
     token: Types.Token,
     from: Principal,
@@ -198,7 +200,7 @@ module TokenInterface {
           case(?account_identifier){
             let interface : Types.LedgerInterface = actor (Principal.toText(token.canister));
             let balance = Nat64.toNat((await interface.account_balance({account = account_identifier})).e8s);
-            if (balance < locked_balance + amount){
+            if (balance < locked_balance + amount + LEDGER_FEE){
               return #err(#InsufficientBalance);
             } else {
               return #ok(null);
@@ -275,32 +277,25 @@ module TokenInterface {
         };
       };
       case(#LEDGER){
-        switch (Utils.getAccountIdentifier(payee, payer)){
+        switch (Utils.getDefaultAccountIdentifier(payer)){
           case(null){
             return #err(#ComputeAccountIdFailed);
           };
-          case(?subaccount){
-            switch (Utils.getDefaultAccountIdentifier(payer)){
-              case(null){
-                return #err(#ComputeAccountIdFailed);
+          case(?payer_account){
+            let interface : Types.LedgerInterface = actor (Principal.toText(token.canister));
+            switch (await interface.transfer({
+              memo = 0;
+              amount = { e8s = Nat64.fromNat(amount); }; // This will trap on overflow/underflow
+              fee = { e8s = 10_000; }; // The standard ledger fee
+              from_subaccount = ?Utils.principalToSubaccount(payer);
+              to = payer_account;
+              created_at_time = ?{ timestamp_nanos = Nat64.fromNat(Int.abs(Time.now())); };
+            })){
+              case(#Err(err)){
+                return #err(#InterfaceError(#LEDGER(err)));
               };
-              case(?payer_account){
-                let interface : Types.LedgerInterface = actor (Principal.toText(token.canister));
-                switch (await interface.transfer({
-                  memo = 0;
-                  amount = { e8s = Nat64.fromNat(amount); }; // This will trap on overflow/underflow
-                  fee = { e8s = 10_000; }; // The standard ledger fee
-                  from_subaccount = ?subaccount;
-                  to = payer_account;
-                  created_at_time = ?{ timestamp_nanos = Nat64.fromNat(Int.abs(Time.now())); };
-                })){
-                  case(#Err(err)){
-                    return #err(#InterfaceError(#LEDGER(err)));
-                  };
-                  case(#Ok(block_index)){
-                    return #ok(?Nat64.toNat(block_index));
-                  };
-                };
+              case(#Ok(block_index)){
+                return #ok(?Nat64.toNat(block_index));
               };
             };
           };
@@ -328,6 +323,7 @@ module TokenInterface {
                   };
                   case(?subaccount){
                     let interface : Types.ExtInterface = actor (Principal.toText(token.canister));
+                    let test_fee : Nat = 10000;
                     switch (await interface.transfer({
                       from = #address(Utils.accountToText(subaccount));
                       subaccount = ?Blob.toArray(Utils.principalToSubaccount(payer));
@@ -336,6 +332,7 @@ module TokenInterface {
                       amount = amount;
                       memo = Blob.fromArray([]);
                       notify = false;
+                      fee = test_fee;
                     })){
                       case(#err(err)){
                         return #err(#InterfaceError(#EXT(err)));
@@ -371,33 +368,26 @@ module TokenInterface {
         return #ok(null);
       };
       case(#LEDGER){
-        switch (Utils.getAccountIdentifier(payee, payer)){
+        switch (Utils.getDefaultAccountIdentifier(payee)){
           case(null){
             return #err(#ComputeAccountIdFailed);
           };
-          case(?subaccount){
-            switch (Utils.getDefaultAccountIdentifier(payee)){
-              case(null){
-                return #err(#ComputeAccountIdFailed);
+          case(?payee_account){
+            let interface : Types.LedgerInterface = actor (Principal.toText(token.canister));
+            // @todo: somehow the transfer fails with the error InsufficientFunds. To investigate!
+            switch (await interface.transfer({
+              memo = 0;
+              amount = { e8s = Nat64.fromNat(amount); }; // This will trap on overflow/underflow
+              fee = { e8s = 10_000; }; // The standard ledger fee
+              from_subaccount = ?Utils.principalToSubaccount(payer);
+              to = payee_account;
+              created_at_time = ?{ timestamp_nanos = Nat64.fromNat(Int.abs(Time.now())); };
+            })){
+              case(#Err(err)){
+                return #err(#InterfaceError(#LEDGER(err)));
               };
-              case(?payee_account){
-                let interface : Types.LedgerInterface = actor (Principal.toText(token.canister));
-                // @todo: somehow the transfer fails with the error InsufficientFunds. To investigate!
-                switch (await interface.transfer({
-                  memo = 0;
-                  amount = { e8s = Nat64.fromNat(amount); }; // This will trap on overflow/underflow
-                  fee = { e8s = 10_000; }; // The standard ledger fee
-                  from_subaccount = ?subaccount;
-                  to = payee_account;
-                  created_at_time = ?{ timestamp_nanos = Nat64.fromNat(Int.abs(Time.now())); };
-                })){
-                  case(#Err(err)){
-                    return #err(#InterfaceError(#LEDGER(err)));
-                  };
-                  case(#Ok(block_index)){
-                    return #ok(?Nat64.toNat(block_index));
-                  };
-                };
+              case(#Ok(block_index)){
+                return #ok(?Nat64.toNat(block_index));
               };
             };
           };
@@ -649,6 +639,5 @@ module TokenInterface {
       };
     }; 
   };
-
 
 };
