@@ -21,6 +21,12 @@ The CyclesDAO expects tokens to be expressed in their *base natural unit*, hence
 - If configured with ledger, calling walletReceive with 1_000_000_000 cycles will result in 1_000_000_000 e8s tokens, hence 10 ledger tokens will be minted in exchange
 - If configured with dip20 or EXT it depends on the metadata, calling walletReceive with 1_000_000_000 cycles will result in 1_000_000_000 base token units, hence 10^(9-metadata.decimals) dip20/EXT tokens will be minted in exchange
 
+The fees used in the transfer methods depend on the token standard in use:
+ - for DIP20 transcations, the fee is deduced from the method getTokenFee
+ - for Ledger transaction, it is a hard-coded fee of 10000 e8s
+ - for EXT transactions, no fee is deduced because the EXT fee extension does not expose a getter for the fee (but only a setter?)
+ - for DIP721 transactions, no fee is deduced
+
 ## Test Coverage
 
 | canister/module | function | test scripts | left to do | complete |
