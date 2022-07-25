@@ -1,15 +1,15 @@
 import { toMilliSeconds, toTrillions, standardToString } from "./../../utils/conversion";
-import { CyclesReceivedRecord } from "../../../declarations/cyclesDAO/cyclesDAO.did.js";
+import { CyclesReceivedRecord } from "../../../declarations/cyclesProvider/cyclesProvider.did.js";
 
 import { useEffect, useState } from "react";
 
-function TradeHistory({cyclesDAOActor}: any) {
+function TradeHistory({cyclesProviderActor}: any) {
 
   const [cyclesReceivedHistory, setCyclesReceivedHistory] = useState<Array<CyclesReceivedRecord>>([]);
 
   const fetch_data = async () => {
 		try {
-      setCyclesReceivedHistory(await cyclesDAOActor.getCyclesReceivedRegister() as Array<CyclesReceivedRecord>);
+      setCyclesReceivedHistory(await cyclesProviderActor.getCyclesReceivedRegister() as Array<CyclesReceivedRecord>);
     } catch (err) {
 			// handle error (or empty response)
 			console.error(err);
@@ -41,16 +41,7 @@ function TradeHistory({cyclesDAOActor}: any) {
                 Sent (in T cycles)
               </th>
               <th scope="col" className="px-6 py-3 text-center">
-                Received (in T tokens)
-              </th>
-              <th scope="col" className="px-6 py-3 text-center">
-                Token standard
-              </th>
-              <th scope="col" className="px-6 py-3 text-center">
-                Token principal
-              </th>
-              <th scope="col" className="px-6 py-3 text-center">
-                Block index
+                Mint index
               </th>
             </tr>
           </thead>
@@ -68,16 +59,7 @@ function TradeHistory({cyclesDAOActor}: any) {
                   { toTrillions(record.cycle_amount).toFixed(3) }
                 </td>
                 <td className="px-6 py-4 text-center">
-                  { toTrillions(record.token_amount).toFixed(3) }
-                </td>
-                <td className="px-6 py-4 text-center">
-                  { standardToString(record.token_standard) }
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-center">
-                  { record.token_principal.toString() }
-                </td>
-                <td className="px-6 py-4 text-center">
-                  { record.block_index.toString() }
+                  { record.mint_index.toString() }
                 </td>
               </tr>)})}
           </tbody>

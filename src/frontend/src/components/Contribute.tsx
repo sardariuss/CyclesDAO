@@ -1,6 +1,7 @@
 import TradeHistory from './tables/TradeHistory'
 import { toTrillions, fromTrillions } from '../utils/conversion';
-import { Token, TokenStandard, ExchangeLevel } from "../../declarations/cyclesDAO/cyclesDAO.did.js";
+import { ExchangeLevel } from "../../declarations/cyclesProvider/cyclesProvider.did.js";
+import { Token, TokenStandard } from "../../declarations/tokenAccessor/tokenAccessor.did.js";
 
 import { useEffect, useState } from "react";
 import { Bar }            from 'react-chartjs-2'
@@ -79,7 +80,7 @@ const BarChart = ({ chartData, annotation }: any) => {
   );
 };
 
-function Contribute({cyclesDAOActor}: any) {
+function Contribute({cyclesProviderActor, tokenAccessorActor}: any) {
 
   const [tokenStandard, setTokenStandard] = useState<string>("");
   const [cyclesBalance, setCyclesBalance] = useState<bigint>(0n);
@@ -94,16 +95,14 @@ function Contribute({cyclesDAOActor}: any) {
   const fetch_data = async () => {
 		try {
       // Token info
-      let token = await cyclesDAOActor.getToken() as Array<Token>;
+      let token = await tokenAccessorActor.getToken() as Array<Token>;
       if (token.length != 0){
         setTokenStandard(Object.entries(token[0].standard as TokenStandard)[0][0]);
-      } else {
-        setTokenStandard("");
       }
       // Current cycles balance
-      setCyclesBalance(await cyclesDAOActor.cyclesBalance());
+      setCyclesBalance(await cyclesProviderActor.cyclesBalance());
       // Max cycles balance
-      setExchangeConfig(await cyclesDAOActor.getCycleExchangeConfig() as Array<ExchangeLevel>);
+      setExchangeConfig(await cyclesProviderActor.getCycleExchangeConfig() as Array<ExchangeLevel>);
     } catch (err) {
 			// handle error (or empty response)
 			console.error(err);
@@ -126,7 +125,7 @@ function Contribute({cyclesDAOActor}: any) {
 
   useEffect(() => {
     const computeTokensExchange = async () => {
-      setTokensPreview(await cyclesDAOActor.computeTokensInExchange(cyclesPreview));
+      setTokensPreview(await cyclesProviderActor.computeTokensInExchange(cyclesPreview));
     };
     computeTokensExchange();
   }, [cyclesPreview]);
@@ -214,7 +213,7 @@ function Contribute({cyclesDAOActor}: any) {
               </div>
             </div>
             <div className="flex">
-              <TradeHistory cyclesDAOActor={cyclesDAOActor}/>
+              <TradeHistory cyclesProviderActor={cyclesProviderActor}/>
             </div>
           </div>
         </div>

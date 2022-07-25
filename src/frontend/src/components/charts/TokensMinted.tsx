@@ -1,4 +1,4 @@
-import { CyclesReceivedRecord } from "../../../declarations/cyclesDAO/cyclesDAO.did.js";
+import { MintRecord } from "../../../declarations/tokenAccessor/tokenAccessor.did.js";
 import { toTrillions, toMilliSeconds } from "../../utils/conversion";
 import { ScatterChart, ScatterData } from "./raw/ScatterChart";
 
@@ -7,19 +7,19 @@ import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
 
-function TokensMinted({cyclesDAOActor}: any) {
+function TokensMinted({tokenAccessorActor}: any) {
 
   const [chartData, setChartData] = useState({})
   const [haveData, setHaveData] = useState(false);
 
   const fetch_data = async () => {
 		try {
-      const cyclesReceived = await cyclesDAOActor.getCyclesReceivedRegister() as Array<CyclesReceivedRecord>;
+      const tokensMinted = await tokenAccessorActor.getMintRegister() as Array<MintRecord>;
       var accumulatedTokensAmount : bigint = 0n;
       let accumulatedTokensDataset : ScatterData[] = [];
-      cyclesReceived.map((record) => {
-        accumulatedTokensDataset.push({x: toMilliSeconds(record.date), y: toTrillions(accumulatedTokensAmount + record.token_amount)});
-        accumulatedTokensAmount += record.token_amount;
+      tokensMinted.map((record) => {
+        accumulatedTokensDataset.push({x: toMilliSeconds(record.date), y: toTrillions(accumulatedTokensAmount + record.amount)});
+        accumulatedTokensAmount += record.amount;
       });
       // If there is only one point, add a dummy point on the bottom to be able to see something
       // (required because we removed the visualization of point but use areas instead)

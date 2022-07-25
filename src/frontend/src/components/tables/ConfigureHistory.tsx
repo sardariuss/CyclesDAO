@@ -1,15 +1,15 @@
 import { toMilliSeconds } from "./../../utils/conversion";
-import { ConfigureCommandRecord, CyclesProviderCommand } from "../../../declarations/cyclesDAO/cyclesDAO.did.js";
+import { ConfigureCommandRecord, CyclesProviderCommand } from "../../../declarations/cyclesProvider/cyclesProvider.did.js";
 
 import { useEffect, useState } from "react";
 
-function ConfigureHistory({cyclesDAOActor}: any) {
+function ConfigureHistory({cyclesProviderActor}: any) {
 
   const [commandHistory, setCommandHistory] = useState<Array<ConfigureCommandRecord>>([]);
 
   const fetch_data = async () => {
 		try {
-      setCommandHistory(await cyclesDAOActor.getConfigureCommandRegister() as Array<ConfigureCommandRecord>);
+      setCommandHistory(await cyclesProviderActor.getConfigureCommandRegister() as Array<ConfigureCommandRecord>);
     } catch (err) {
 			// handle error (or empty response)
 			console.error(err);
@@ -28,12 +28,6 @@ function ConfigureHistory({cyclesDAOActor}: any) {
   const commandToString = (commandType: CyclesProviderCommand) => {
     if ('SetCycleExchangeConfig' in commandType){
       return 'SetCycleExchangeConfig';
-    }
-    if ('DistributeBalance' in commandType){
-      return 'DistributeBalance';
-    }
-    if ('SetToken' in commandType){
-      return 'SetToken';
     }
     if ('AddAllowList' in commandType){
       return 'AddAllowList';

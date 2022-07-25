@@ -1,4 +1,5 @@
-import { idlFactory as idlCyclesDAO } from "../declarations/cyclesDAO";
+import { idlFactory as idlCyclesProvider } from "../declarations/cyclesProvider";
+import { idlFactory as idlTokenAccessor }  from "../declarations/tokenAccessor";
 import DashBoard from "./components/Dashboard";
 import Governance from "./components/Governance";
 import Contribute from "./components/Contribute";
@@ -21,15 +22,20 @@ function App() {
     console.error(err);
   });
 
-  var cyclesDAOActor = Actor.createActor(idlCyclesDAO, {
+  var cyclesProviderActor = Actor.createActor(idlCyclesProvider, {
     agent: agent,
-    canisterId: `${process.env.CYCLESDAO_CANISTER_ID}`
+    canisterId: `${process.env.CYCLESPROVIDER_CANISTER_ID}`
+  });
+
+  var tokenAccessorActor = Actor.createActor(idlTokenAccessor, {
+    agent: agent,
+    canisterId: `${process.env.TOKENACCESSOR_CANISTER_ID}`
   });
 
   // Call the method distributeCycles every 2 seconds
   useEffect(() => {
 		const interval = setInterval(() => {
-      cyclesDAOActor.distributeCycles();
+      cyclesProviderActor.distributeCycles();
 		}, 2000);
 		return () => clearInterval(interval);
 	}, []);
@@ -73,19 +79,19 @@ function App() {
                 <Route
                   path="/"
                   element={
-                    <DashBoard cyclesDAOActor={cyclesDAOActor}/>
+                    <DashBoard cyclesProviderActor={cyclesProviderActor} tokenAccessorActor={tokenAccessorActor}/>
                   }
                 />
                 <Route
                   path="/hopla"
                   element={
-                    <Governance cyclesDAOActor={cyclesDAOActor}/>
+                    <Governance cyclesProviderActor={cyclesProviderActor}/>
                   }
                 />
                 <Route
                   path="/contribute"
                   element={
-                    <Contribute cyclesDAOActor={cyclesDAOActor}/>
+                    <Contribute cyclesProviderActor={cyclesProviderActor} tokenAccessorActor={tokenAccessorActor}/>
                   }
                 />
               </Routes>

@@ -1,4 +1,4 @@
-import { TokenStandard } from "../../declarations/cyclesDAO/cyclesDAO.did.js";
+import { TokenStandard } from "../../declarations/cyclesProvider/cyclesProvider.did.js";
 
 export const toTrillions = (cycles: bigint) => {
 	//return Number(cycles / (10n ** 12n));

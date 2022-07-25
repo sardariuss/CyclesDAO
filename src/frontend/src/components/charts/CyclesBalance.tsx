@@ -1,4 +1,4 @@
-import { CyclesBalanceRecord } from "../../../declarations/cyclesDAO/cyclesDAO.did.js";
+import { CyclesBalanceRecord } from "../../../declarations/cyclesProvider/cyclesProvider.did.js";
 import { toTrillions, toMilliSeconds } from "./../../utils/conversion";
 import { ScatterChart } from "./raw/ScatterChart";
 
@@ -7,19 +7,19 @@ import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
 
-function CyclesBalance({cyclesDAOActor}: any) {
+function CyclesBalance({cyclesProviderActor}: any) {
 
   const [chartData, setChartData] = useState({})
   const [haveData, setHaveData] = useState(false);
 
   const fetch_data = async () => {
 		try {
-      const cyclesBalance = await cyclesDAOActor.getCyclesBalanceRegister() as Array<CyclesBalanceRecord>;
+      const cyclesBalance = await cyclesProviderActor.getCyclesBalanceRegister() as Array<CyclesBalanceRecord>;
       let data = cyclesBalance.map((record) => {
         return {x: toMilliSeconds(record.date), y: toTrillions(record.balance)};
       });
 
-      const currentCyclesBalance : bigint = await cyclesDAOActor.cyclesBalance();
+      const currentCyclesBalance : bigint = await cyclesProviderActor.cyclesBalance();
       const now : number = Date.now();
       data.push({x: now, y: toTrillions(currentCyclesBalance)});
       

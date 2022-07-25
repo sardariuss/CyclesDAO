@@ -1,4 +1,4 @@
-import { CyclesProfile } from "../../../declarations/cyclesDAO/cyclesDAO.did.js";
+import { CyclesProfile } from "../../../declarations/cyclesProvider/cyclesProvider.did.js";
 import { useEffect, useState } from "react";
 import { toTrillions } from "../../utils/conversion";
 
@@ -65,7 +65,7 @@ const BarChart = ({ chartData, annotation }: any) => {
   );
 };
 
-function PoweredCanisters({cyclesDAOActor}: any) {
+function PoweredCanisters({cyclesProviderActor}: any) {
 
   const [chartData, setChartData] = useState({})
   const [haveData, setHaveData] = useState(false);
@@ -73,7 +73,7 @@ function PoweredCanisters({cyclesDAOActor}: any) {
 
   const fetch_data = async () => {
 		try {
-      const cyclesProfile = await cyclesDAOActor.getCyclesProfile() as Array<CyclesProfile>;
+      const cyclesProfile = await cyclesProviderActor.getCyclesProfile() as Array<CyclesProfile>;
 
       setChartData({
         labels: cyclesProfile.map((profile) => profile.principal),

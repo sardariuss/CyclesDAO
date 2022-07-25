@@ -1,4 +1,4 @@
-import { CyclesSentRecord } from "../../../declarations/cyclesDAO/cyclesDAO.did.js";
+import { CyclesSentRecord } from "../../../declarations/cyclesProvider/cyclesProvider.did.js";
 import { toTrillions, toMilliSeconds } from "../../utils/conversion";
 import { ScatterChart } from "./raw/ScatterChart";
 
@@ -7,14 +7,14 @@ import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
 
-function CyclesSent({cyclesDAOActor}: any) {
+function CyclesSent({cyclesProviderActor}: any) {
 
   const [chartData, setChartData] = useState({})
   const [haveData, setHaveData] = useState(false);
 
   const fetch_data = async () => {
 		try {
-      const cyclesSent = await cyclesDAOActor.getCyclesSentRegister() as Array<CyclesSentRecord>;
+      const cyclesSent = await cyclesProviderActor.getCyclesSentRegister() as Array<CyclesSentRecord>;
       
       setChartData({
         datasets: [

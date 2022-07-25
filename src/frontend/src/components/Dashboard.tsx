@@ -1,4 +1,5 @@
-import { CyclesSentRecord, CyclesReceivedRecord, PoweringParameters } from "../../declarations/cyclesDAO/cyclesDAO.did.js";
+import { CyclesSentRecord, CyclesReceivedRecord, PoweringParameters } from "../../declarations/cyclesProvider/cyclesProvider.did.js";
+import { MintRecord } from "../../declarations/tokenAccessor/tokenAccessor.did.js";
 import { toTrillions } from "./../utils/conversion";
 import PoweredCanisters from "./charts/PoweredCanisters";
 import CyclesBalance from "./charts/CyclesBalance";
@@ -9,7 +10,7 @@ import type { Principal } from '@dfinity/principal';
 import { useEffect, useState } from "react";
 
 
-function Dashboard({cyclesDAOActor}: any) {
+function Dashboard({cyclesProviderActor, tokenAccessorActor}: any) {
 
   const [allowList, setAllowList] = useState<Array<[Principal, PoweringParameters]>>([]);
   const [cyclesBalance, setCyclesBalance] = useState<bigint>(BigInt(0));
@@ -19,22 +20,26 @@ function Dashboard({cyclesDAOActor}: any) {
 
   const fetch_data = async () => {
 		try {
-      setAllowList(await cyclesDAOActor.getAllowList() as Array<[Principal, PoweringParameters]>);
-      setCyclesBalance(await cyclesDAOActor.cyclesBalance() as bigint);
+      setAllowList(await cyclesProviderActor.getAllowList() as Array<[Principal, PoweringParameters]>);
+      setCyclesBalance(await cyclesProviderActor.cyclesBalance() as bigint);
       
-      let cyclesSentRegister = await cyclesDAOActor.getCyclesSentRegister() as Array<CyclesSentRecord>;
+      let cyclesSentRegister = await cyclesProviderActor.getCyclesSentRegister() as Array<CyclesSentRecord>;
       var cyclesSentAmount : bigint = 0n;
       cyclesSentRegister.map(record => cyclesSentAmount += record.amount);
       setTotalSentCycles(cyclesSentAmount);
       
-      let cyclesReceivedRegister = await cyclesDAOActor.getCyclesReceivedRegister() as Array<CyclesReceivedRecord>;
+      let cyclesReceivedRegister = await cyclesProviderActor.getCyclesReceivedRegister() as Array<CyclesReceivedRecord>;
       var cyclesReceivedAmount : bigint = 0n;
-      var tokenMintedAmount : bigint = 0n;
       cyclesReceivedRegister.map(record => {
         cyclesReceivedAmount += record.cycle_amount;
-        tokenMintedAmount += record.token_amount;
       });
       setTotalReceivedCycles(cyclesReceivedAmount);
+
+      let mintTokensRegister = await tokenAccessorActor.getMintRegister() as Array<MintRecord>;
+      var tokenMintedAmount : bigint = 0n;
+      mintTokensRegister.map(record => {
+        tokenMintedAmount += record.amount;
+      });
       setTotalMintedTokens(tokenMintedAmount);
 
     } catch (err) {
@@ -77,7 +82,7 @@ function Dashboard({cyclesDAOActor}: any) {
           <div className="flex flex-col bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 h-128">
             <p className="font-normal text-gray-700 dark:text-gray-400 text-start m-5">Balance of powered canisters (in T cycles)</p>
             <div className="App m-5">
-              <PoweredCanisters cyclesDAOActor={cyclesDAOActor}/>
+              <PoweredCanisters cyclesProviderActor={cyclesProviderActor}/>
             </div>
           </div>
           </span>
@@ -85,7 +90,7 @@ function Dashboard({cyclesDAOActor}: any) {
           <div className="flex flex-col bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 h-128">
             <p className="font-normal text-gray-700 dark:text-gray-400 text-start m-5">Balance history (in T cycles)</p>
             <div className="App m-5">
-              <CyclesBalance cyclesDAOActor={cyclesDAOActor}/>
+              <CyclesBalance cyclesProviderActor={cyclesProviderActor}/>
             </div>
           </div>
           </span>
@@ -95,7 +100,7 @@ function Dashboard({cyclesDAOActor}: any) {
           <div className="flex flex-col bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 h-128">
             <p className="font-normal text-gray-700 dark:text-gray-400 text-start m-5">Total cycles received (in T cycles)</p>
             <div className="App m-5">
-              <CyclesReceived cyclesDAOActor={cyclesDAOActor}/>
+              <CyclesReceived cyclesProviderActor={cyclesProviderActor}/>
             </div>
           </div>
           </span>
@@ -103,7 +108,7 @@ function Dashboard({cyclesDAOActor}: any) {
           <div className="flex flex-col bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 h-128">
             <p className="font-normal text-gray-700 dark:text-gray-400 text-start m-5">Total tokens minted (in T tokens)</p>
             <div className="App m-5">
-              <TokensMinted cyclesDAOActor={cyclesDAOActor}/>
+              <TokensMinted tokenAccessorActor={tokenAccessorActor}/>
             </div>
           </div>
           </span>
