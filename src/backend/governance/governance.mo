@@ -1,18 +1,18 @@
-import Types            "types";
-import TokenInterface   "../tokenInterface/tokenInterface";
-import Utils            "utils";
+import Types                "types";
+import TokenInterface       "../tokenInterface/tokenInterface";
+import TokenLocker          "../tokenLocker/tokenLocker";
+import TokenLockerTypes     "../tokenLocker/types";
+import Utils                "utils";
 
-import Buffer           "mo:base/Buffer";
-import Error            "mo:base/Error";
-import ICRaw            "mo:base/ExperimentalInternetComputer";
-import Iter             "mo:base/Iter";
-import List             "mo:base/List";
-import Nat              "mo:base/Nat";
-import Option           "mo:base/Option";
-import Principal        "mo:base/Principal";
-import Result           "mo:base/Result";
-import Time             "mo:base/Time";
-import Trie             "mo:base/Trie";
+import Error                "mo:base/Error";
+import ICRaw                "mo:base/ExperimentalInternetComputer";
+import List                 "mo:base/List";
+import Nat                  "mo:base/Nat";
+import Option               "mo:base/Option";
+import Principal            "mo:base/Principal";
+import Result               "mo:base/Result";
+import Time                 "mo:base/Time";
+import Trie                 "mo:base/Trie";
 
 shared actor class Governance(create_governance_args : Types.CreateGovernanceArgs) = this {
 
@@ -24,6 +24,14 @@ shared actor class Governance(create_governance_args : Types.CreateGovernanceArg
 
   private stable var proposal_id_ : Nat = 0;
 
+  private var token_locker_ : ?TokenLocker.TokenLocker = null;
+
+  // For upgrades
+  
+  var token_locks_ : Trie.Trie<Nat, TokenLockerTypes.TokenLock> = Trie.empty();
+  
+  var lock_index_ : Nat = 0;
+
 
   // Getters
   
@@ -32,7 +40,7 @@ shared actor class Governance(create_governance_args : Types.CreateGovernanceArg
   };
 
   public query func getProposals() : async [Types.Proposal] {
-    return Iter.toArray(Iter.map(Trie.iter(proposals_), func (kv : (Nat, Types.Proposal)) : Types.Proposal = kv.1));
+    return Trie.toArray<Nat, Types.Proposal, Types.Proposal>(proposals_, func(id, proposal) { proposal });
   };
 
   public query func getSystemParams() : async Types.SystemParams { 
@@ -45,6 +53,34 @@ shared actor class Governance(create_governance_args : Types.CreateGovernanceArg
 
   private func putProposal(proposal_id: Nat, proposal: Types.Proposal){
     proposals_ := Trie.put(proposals_, Utils.proposalKey(proposal_id), Nat.equal, proposal).0;
+  };
+
+  private func getTokenLocker() : TokenLocker.TokenLocker {
+    switch(token_locker_) {
+      case(null){
+        let token_locker = TokenLocker.TokenLocker({owner = Principal.fromActor(this); token_locks = Trie.empty(); lock_index = 0;});
+        token_locker_ := ?token_locker;
+        return token_locker;
+      };
+      case(?token_locker){
+        return token_locker;
+      };
+    };
+  };
+
+  public shared({caller}) func getLockedTokens() : async TokenLockerTypes.LockedTokens {
+    return (await getTokenLocker().getLockedTokens(caller));
+  };
+
+  public shared({caller}) func claimRefundErrors() : async [TokenLockerTypes.TokenLock] {
+    return (await getTokenLocker().claimRefundErrors(caller));
+  };
+
+  public shared({caller}) func claimChargeErrors() : async Result.Result<[TokenLockerTypes.TokenLock], Types.AuthorizationError> {
+    if (caller != Principal.fromActor(this)){
+      return #err(#NotAllowed);
+    };
+    return #ok(await getTokenLocker().claimChargeErrors());
   };
   
   /// Submit a proposal
@@ -59,11 +95,11 @@ shared actor class Governance(create_governance_args : Types.CreateGovernanceArg
         return #err(#TokenNotSet);
       };
       case(?token){
-        switch(await TokenInterface.accept(token, caller, Principal.fromActor(this), getLockedAmount(caller), system_params_.proposal_submission_deposit)){
-          case(#err(accept_error)){
-            return #err(#TokenInterfaceError(accept_error));
+        switch(await getTokenLocker().lock(token, caller, system_params_.proposal_submission_deposit)){
+          case(#err(lock_error)){
+            return #err(#TokenLockerError(lock_error));
           };
-          case(#ok(_)){
+          case(#ok(lock_id)){
             let proposal_id = proposal_id_;
             proposal_id_ += 1;
             let proposal : Types.Proposal = {
@@ -76,7 +112,7 @@ shared actor class Governance(create_governance_args : Types.CreateGovernanceArg
               votes_no = 0;
               voters = List.nil();
               token = token;
-              submission_deposit = system_params_.proposal_submission_deposit;
+              lock_id = lock_id;
             };
             putProposal(proposal_id, proposal);
             return #ok(proposal_id);
@@ -118,14 +154,12 @@ shared actor class Governance(create_governance_args : Types.CreateGovernanceArg
             var state = proposal.state;
             if (votes_yes >= system_params_.proposal_vote_threshold){
               // Refund the proposal deposit when the proposal is accepted
-              let refund = await TokenInterface.refund(
-                proposal.token, proposal.proposer, Principal.fromActor(this), proposal.submission_deposit);
-              state := #Accepted({refund = refund; state = #Pending;});
+              ignore (await getTokenLocker().refund(proposal.lock_id));
+              state := #Accepted({state = #Pending;});
             } else if (votes_no >= system_params_.proposal_vote_threshold){
               // Charge the proposal deposit when the proposal is rejected
-              let charge = await TokenInterface.charge(
-                proposal.token, proposal.proposer, Principal.fromActor(this), proposal.submission_deposit);
-              state := #Rejected({charge = charge;});
+              ignore (await getTokenLocker().charge(proposal.lock_id));
+              state := #Rejected;
             };
             let updated_proposal = {
               id = proposal.id;
@@ -137,7 +171,7 @@ shared actor class Governance(create_governance_args : Types.CreateGovernanceArg
               proposer = proposal.proposer;
               payload = proposal.payload;
               token = proposal.token;
-              submission_deposit = proposal.submission_deposit;
+              lock_id = proposal.lock_id;
             };
             putProposal(proposal.id, updated_proposal);
             return #ok(state);
@@ -191,51 +225,19 @@ shared actor class Governance(create_governance_args : Types.CreateGovernanceArg
     return #ok;
   };
 
-  public shared({caller}) func claimCharges() : async Result.Result<Types.ClaimCharges, Types.AuthorizationError>{
-    if (caller != Principal.fromActor(this)){
-      return #err(#NotAllowed);
-    };
-    let charges : Buffer.Buffer<Types.ClaimChargeRecord> = Buffer.Buffer(0);
-    var total_charges_succeeded : Nat = 0;
-    var total_charges_failed : Nat = 0;
-    for ((id, proposal) in Trie.iter(proposals_)){
-      switch(proposal.state){
-        case(#Rejected({charge})){
-          if (Result.isErr(charge)){
-            let new_charge = await TokenInterface.charge(
-              proposal.token, proposal.proposer, Principal.fromActor(this), proposal.submission_deposit);
-            updateProposalState(proposal, #Rejected({charge = new_charge}));
-            charges.add({
-              proposal_id = proposal.id;
-              submission_deposit = proposal.submission_deposit;
-              charge = new_charge;
-            });
-            if (Result.isOk(new_charge)){
-              total_charges_succeeded += proposal.submission_deposit;
-            } else {
-              total_charges_failed += proposal.submission_deposit;
-            };
-          };
-        };
-        case(_){};
-      };
-    };
-    return #ok({total_charges_succeeded = total_charges_succeeded; total_charges_failed = total_charges_failed; charges = charges.toArray();});
-  };
-
   /// Execute all accepted proposals
   public func executeAcceptedProposals() : async() {
     for ((id, proposal) in Trie.iter(proposals_)){
       switch(proposal.state){
-        case(#Accepted({refund; state;})){
+        case(#Accepted({state;})){
           switch(state){
             case(#Pending){
               switch (await executeProposal(proposal)){
                 case (#ok){
-                  updateProposalState(proposal, #Accepted({refund=refund; state=#Succeeded;}));
+                  updateProposalState(proposal, #Accepted({state=#Succeeded;}));
                 };
                 case (#err(err)){
-                  updateProposalState(proposal, #Accepted({refund=refund; state=#Failed(err);}));
+                  updateProposalState(proposal, #Accepted({state=#Failed(err);}));
                 };
               };
             };
@@ -245,37 +247,6 @@ shared actor class Governance(create_governance_args : Types.CreateGovernanceArg
         case(_){};
       };
     };
-  };
-
-  public shared({caller}) func claimRefunds() : async (Types.ClaimRefunds) {
-    let refunds : Buffer.Buffer<Types.ClaimRefundRecord> = Buffer.Buffer(0);
-    var total_refunds_succeeded : Nat = 0;
-    var total_refunds_failed : Nat = 0;
-    for ((id, proposal) in Trie.iter(proposals_)){
-      if (proposal.proposer == caller){
-        switch(proposal.state){
-          case(#Accepted({refund; state;})){
-            if (Result.isErr(refund)){
-              let new_refund = await TokenInterface.refund(
-                proposal.token, proposal.proposer, Principal.fromActor(this), proposal.submission_deposit);
-              updateProposalState(proposal, #Accepted({refund = new_refund; state = state;}));
-              refunds.add({
-                proposal_id = proposal.id;
-                submission_deposit = proposal.submission_deposit;
-                refund = new_refund;
-              });
-              if (Result.isOk(new_refund)){
-                total_refunds_succeeded += proposal.submission_deposit;
-              } else {
-                total_refunds_failed += total_refunds_failed;
-              };
-            };
-          };
-          case(_){};
-        };
-      };
-    };
-    return {total_refunds_succeeded = total_refunds_succeeded; total_refunds_failed = total_refunds_failed; refunds = refunds.toArray()};
   };
 
   /// Execute the given proposal
@@ -301,36 +272,18 @@ shared actor class Governance(create_governance_args : Types.CreateGovernanceArg
       proposer = proposal.proposer;
       payload = proposal.payload;
       token = proposal.token;
-      submission_deposit = proposal.submission_deposit;
+      lock_id = proposal.lock_id;
     };
     putProposal(proposal.id, updated_proposal);
   };
 
-  private func getLockedAmount(proposer: Principal) : Nat {
-    var locked_amount : Nat = 0;
-    for ((id, proposal) in Trie.iter(proposals_)){
-      if (proposal.proposer == proposer){
-        switch (proposal.state){
-          // Add the deposit of open proposals
-          case(#Open){
-            locked_amount += proposal.submission_deposit;  
-          };
-          // Add the deposit of accepted proposals where the refund failed
-          case(#Accepted({refund; state})){
-            if (Result.isErr(refund)){
-              locked_amount += proposal.submission_deposit;
-            };
-          };
-          // Add the deposit of rejected proposals where the charge failed
-          case(#Rejected({charge})){
-            if (Result.isErr(charge)){
-              locked_amount += proposal.submission_deposit;
-            };
-          };
-        };
-      };
-    };
-    return locked_amount;
+  system func preupgrade(){
+    token_locks_ := getTokenLocker().getTokenLocks();
+    lock_index_ := getTokenLocker().getLockIndex();
+  };
+  
+  system func postupgrade(){
+    token_locker_ := ?TokenLocker.TokenLocker({owner = Principal.fromActor(this); token_locks = token_locks_; lock_index = lock_index_});
   };
 
 };

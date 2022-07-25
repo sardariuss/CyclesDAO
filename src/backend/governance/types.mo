@@ -1,4 +1,5 @@
 import TokenInterfaceTypes   "../tokenInterface/types";
+import TokenLockerTypes      "../tokenLocker/types";
 
 import List                  "mo:base/List";
 
@@ -14,7 +15,7 @@ module {
     proposer: Principal;
     payload: ProposalPayload;
     token: TokenInterfaceTypes.Token;
-    submission_deposit: Nat;
+    lock_id: Nat;
   };
   
   public type ProposalPayload = {
@@ -26,12 +27,9 @@ module {
   public type ProposalState = {
     #Open; // The proposal is open for voting
     #Accepted : { // Enough "yes" votes have been cast to accept the proposal
-      refund: TokenInterfaceTypes.RefundResult;
       state: ProposalAcceptedState;
     };
-    #Rejected : { // Enough "no" votes have been cast to reject the proposal
-      charge: TokenInterfaceTypes.ChargeResult;
-    };
+    #Rejected; // Enough "no" votes have been cast to reject the proposal
   };
 
   public type ProposalAcceptedState = {
@@ -80,7 +78,7 @@ module {
 
   public type SubmitProposalError = {
     #TokenNotSet;
-    #TokenInterfaceError: TokenInterfaceTypes.AcceptError;
+    #TokenLockerError: TokenLockerTypes.LockError;
   };
   
   public type VoteError = {
@@ -102,30 +100,6 @@ module {
 
   public type ExecuteProposalError = {
     #ICRawCallError: Text;
-  };
-
-  public type ClaimCharges = {
-    total_charges_succeeded: Nat;
-    total_charges_failed: Nat;
-    charges: [ClaimChargeRecord];
-  };
-
-  public type ClaimChargeRecord = {
-    proposal_id: Nat;
-    submission_deposit: Nat;
-    charge: TokenInterfaceTypes.ChargeResult;
-  };
-
-  public type ClaimRefunds = {
-    total_refunds_succeeded: Nat;
-    total_refunds_failed: Nat;
-    refunds: [ClaimRefundRecord];
-  };
-
-  public type ClaimRefundRecord = {
-    proposal_id: Nat;
-    submission_deposit: Nat;
-    refund: TokenInterfaceTypes.RefundResult;
   };
 
   public type CreateGovernanceArgs = {

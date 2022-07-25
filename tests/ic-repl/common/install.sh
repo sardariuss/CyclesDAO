@@ -130,3 +130,10 @@ function installTokenInterface() {
   let wasm = file "../../../.dfx/local/canisters/tokenInterfaceCanister/tokenInterfaceCanister.wasm";
   install(wasm, args, 0);
 };
+
+function installTokenLocker() {
+  import interface = "2vxsx-fae" as "../../../.dfx/local/canisters/tokenLockerCanister/tokenLockerCanister.did";
+  let args = encode interface.__init_args();
+  let wasm = file "../../../.dfx/local/canisters/tokenLockerCanister/tokenLockerCanister.wasm";
+  install(wasm, args, 0);
+};

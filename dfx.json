@@ -37,6 +37,10 @@
       "type": "motoko",
       "main": "tests/utilities/tokenInterfaceCanister.mo"
     },
+    "tokenLockerCanister": {
+      "type": "motoko",
+      "main": "tests/utilities/tokenLockerCanister.mo"
+    },
     "toPowerUp": {
       "type": "motoko",
       "main": "tests/utilities/toPowerUp.mo"

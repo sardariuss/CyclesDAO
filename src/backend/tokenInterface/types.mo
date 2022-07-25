@@ -51,17 +51,7 @@ module{
       #LEDGER: Ledger.TransferError; 
     };
   };
-  public type AcceptError = {
-    #ComputeAccountIdFailed;
-    #NftNotSupported;
-    #TokenIdMissing;
-    #TokenIdInvalidType;
-    #InsufficientBalance;
-    #InterfaceError: {
-      #DIP20: Dip20.TxError;
-      #EXT: Ext.CommonError;
-    };
-  };
+  
   public type TransferError = {
     #ComputeAccountIdFailed;
     #TokenIdMissing;
@@ -73,15 +63,10 @@ module{
       #LEDGER: Ledger.TransferError; 
     };
   };
-  public type RefundError = MintError;
-  public type ChargeError = MintError;
 
   // Results
   public type BalanceResult = Result.Result<Nat, BalanceError>;
   public type MintResult = Result.Result<?Nat, MintError>;
-  public type AcceptResult = Result.Result<?Nat, AcceptError>;
-  public type ChargeResult = Result.Result<?Nat, ChargeError>;
-  public type RefundResult = Result.Result<?Nat, RefundError>;
   public type IsFungibleResult = Result.Result<Bool, IsFungibleError>;
   public type TransferResult = Result.Result<?Nat, TransferError>;
 

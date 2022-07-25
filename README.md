@@ -36,16 +36,15 @@ The CyclesDAO expects tokens to be expressed in their *base natural unit*, hence
 | TokenAccessor | mint, getMintRegister | N/A | to do | 0% |
 | TokenInterface | balance | balance.test.sh | uncomment test on dip721 owner once warnings are fixed | 95% |
 | TokenInterface | mint | mint.test.sh | N/A | 100% |
-| TokenInterface | accept, refund, charge | accept_dip20.test.sh, accept_extf.test.sh, accept_ledger.test.sh| fix ledger test, check for not covered errors | 70% |
 | TokenInterface | transfer | transfer_dip20.test.sh, transfer_dip721.test.sh, transfer_extNft.test.sh, transfer_extf.test.sh, transfer_ledger.test.sh | uncomment test on dip721 owner once warnings are fixed | 95% |
 | TokenInterface | isTokenFungible | *tested via TokenAccessor setToken.test.sh* | N/A | 100% |
 | TokenInterface | isTokenOwned | *tested via TokenAccessor setToken.test.sh* | N/A | 100% |
+| TokenLocker | lock, charge, refund | tokenLocker_dip20.test.sh, tokenLocker_extf.test.sh, tokenLocker_ledger.test.sh | test more complexe scenarios | 80% |
 | Governance | *all functions* | governance.test.sh | missing: claimCharges and claimRefund functions, complexe scenario with change of token, token accessor configured with LEDGER/DIP20, upgrade; need to fix DIP721 cannot get types for distributeBalance | 50% |
 
 ## Known bugs
 
 - *npm run build* currently fails (though *npm run dev* works!) with the error "ERROR: Big integer literals are not available in the configured target environment ("chrome87", "edge88", "es2019", "firefox78", "safari13.1")" even if ES2020 is specified. Tested on wsl2 run in a windows 10 environment. Maybe it is linked to the bug reported here: https://github.com/vercel/next.js/issues/37271.
-- The transfers to the legder subaccounts done in tokenInterface seem to fail while the subaccount balance is correct. Maybe the behavior of the ledger minting account having sub-accounts is not well defined.
 
 ## Ressources
 

@@ -13,3 +13,7 @@ dfx build toPowerUp
 # Compile the token interface canister
 dfx canister create tokenInterfaceCanister
 dfx build tokenInterfaceCanister
+
+# Compile the token locker canister
+dfx canister create tokenLockerCanister
+dfx build tokenLockerCanister

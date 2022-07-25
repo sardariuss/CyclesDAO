@@ -19,34 +19,6 @@ shared actor class TokenInterfaceCanister() {
     return await TokenInterface.mint(token, from, to, amount);
   };
 
-  public func accept(
-    token: TokenInterfaceTypes.Token,
-    from: Principal,
-    to: Principal,
-    locked_balance: Nat,
-    amount: Nat
-  ) : async TokenInterfaceTypes.AcceptResult {
-    return await TokenInterface.accept(token, from, to, locked_balance, amount);
-  };
-
-  public func refund(
-    token: TokenInterfaceTypes.Token,
-    payer: Principal,
-    payee: Principal,
-    amount: Nat
-  ) : async TokenInterfaceTypes.RefundResult {
-    return await TokenInterface.refund(token, payer, payee, amount);
-  };
-
-  public func charge(
-    token: TokenInterfaceTypes.Token,
-    payer: Principal,
-    payee: Principal,
-    amount: Nat
-  ) : async TokenInterfaceTypes.ChargeResult {
-    return await TokenInterface.charge(token, payer, payee, amount);
-  };
-
   public func transfer(
     token: TokenInterfaceTypes.Token,
     from: Principal,
