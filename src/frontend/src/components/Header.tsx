@@ -1,23 +1,30 @@
-import { getPlugActors } from "../utils/actors";
+import { createPlugActors, createStoicActors } from "../utils/actors";
 
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 
 function Header({actors, setActors} : any) {
 
-  const [plugConnected, setPlugConnected] = useState<Boolean>(actors.isConnected && actors.usePlug);
+  const [plugConnected, setPlugConnected] = useState<Boolean>(actors.method === "plug");
+  const [stoicConnected, setStoicConnected] = useState<Boolean>(actors.method === "stoic");
 
   const connectPlug = async () => {
     if (!plugConnected){
-      let plugActors = await getPlugActors();
-      if (plugActors.isConnected){
-        setActors(plugActors);
-      };
+      let plugActors = await createPlugActors();
+      setActors(plugActors);
+    };
+  };
+
+  const connectStoic = async () => {
+    if (!stoicConnected){
+      let stoicActors = await createStoicActors();
+      setActors(stoicActors);
     };
   };
 
   useEffect(() => {
-    setPlugConnected(actors.isConnected && actors.usePlug);
+    setPlugConnected(actors.method === "plug");
+    setStoicConnected(actors.method === "stoic");
 	}, [actors]);
 
   return (
@@ -51,13 +58,24 @@ function Header({actors, setActors} : any) {
                 <div className="ml-10 self-center">
                   {plugConnected ? (
                     <div className="w-40 flex text-gray-700 dark:text-gray-400">
-                      Logged in with Plug
+                      Logged with Plug
+                    </div>
+                  ) : stoicConnected ? (
+                    <div className="w-40 flex text-gray-700 dark:text-gray-400">
+                      Logged with Stoic
                     </div>
                   ) : (
-                    <div className="w-40 flex justify-center items-center">
-                      <button onClick={connectPlug} className="my-button bg-secondary dark:text-white hover:bg-primary hover:font-bold">
-                        Log in with Plug
-                      </button>
+                    <div className="flex flex-row">
+                      <div className="w-40 flex justify-center items-center">
+                        <button onClick={connectPlug} className="my-button bg-secondary dark:text-white hover:bg-primary hover:font-bold">
+                          Log in with Plug
+                        </button>
+                      </div>
+                      <div className="w-40 flex justify-center items-center">
+                        <button onClick={connectStoic} className="my-button bg-secondary dark:text-white hover:bg-primary hover:font-bold">
+                          Log in with Stoic
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>

@@ -3,14 +3,14 @@ import DashBoard from "./components/Dashboard";
 import Footer from "./components/Footer";
 import Governance from "./components/Governance";
 import Header from "./components/Header";
-import { getAnomymousActors } from "./utils/actors";
+import { createDefaultActors } from "./utils/actors";
 
 import { Route, Routes, HashRouter } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 function App() {
 
-  const [actors, setActors] = useState<any>(getAnomymousActors());
+  const [actors, setActors] = useState<any>(createDefaultActors());
 
   // Call the method distributeCycles every 2 seconds
   useEffect(() => {
