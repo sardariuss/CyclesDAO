@@ -14,6 +14,7 @@ import Time                       "mo:base/Time";
 
 class TokenLocker(token_locker_constructor_args: Types.CreateTokenLockerArgs) = {
 
+  // The standard ledger fee
   let LEDGER_FEE : Nat = 10_000;
 
   private let owner_ : Principal = token_locker_constructor_args.owner;
@@ -288,7 +289,7 @@ class TokenLocker(token_locker_constructor_args: Types.CreateTokenLockerArgs) = 
             switch (await interface.transfer({
               memo = 0;
               amount = { e8s = Nat64.fromNat(token_lock.amount); }; // This will trap on overflow/underflow
-              fee = { e8s = Nat64.fromNat(LEDGER_FEE); }; // The standard ledger fee
+              fee = { e8s = Nat64.fromNat(LEDGER_FEE); };
               from_subaccount = ?Utils.principalToSubaccount(token_lock.user);
               to = payer_account;
               created_at_time = ?{ timestamp_nanos = Nat64.fromNat(Int.abs(Time.now())); };
@@ -372,7 +373,7 @@ class TokenLocker(token_locker_constructor_args: Types.CreateTokenLockerArgs) = 
             switch (await interface.transfer({
               memo = 0;
               amount = { e8s = Nat64.fromNat(token_lock.amount); }; // This will trap on overflow/underflow
-              fee = { e8s = Nat64.fromNat(LEDGER_FEE); }; // The standard ledger fee
+              fee = { e8s = Nat64.fromNat(LEDGER_FEE); };
               from_subaccount = ?Utils.principalToSubaccount(token_lock.user);
               to = owner_account;
               created_at_time = ?{ timestamp_nanos = Nat64.fromNat(Int.abs(Time.now())); };
@@ -424,6 +425,77 @@ class TokenLocker(token_locker_constructor_args: Types.CreateTokenLockerArgs) = 
                         return #ok(null);
                       };
                     };
+                  };
+                };
+              };
+            };
+          };
+        };
+      };
+      case(_){
+        return #err(#NftNotSupported);
+      };
+    };
+  };
+
+  public func getLockTransactionArgs(
+    token: TokenInterfaceTypes.Token,
+    user: Principal,
+    amount: Nat
+  ) : async Result.Result<Types.LockTransactionArgs, Types.GetLockTransactionArgsError> {
+    switch(token.standard){
+      case(#DIP20){
+        let interface : TokenInterfaceTypes.Dip20Interface = actor (Principal.toText(token.canister));
+        let fee = await interface.getTokenFee();
+        return #ok(#DIP20({
+          to = owner_;
+          amount = (amount + fee);
+        }));
+      };
+      case(#LEDGER){
+        switch (Utils.getAccountIdentifier(owner_, user)){
+          case(null){
+            return #err(#ComputeAccountIdFailed);
+          };
+          case(?account_identifier){
+            return #ok(#LEDGER({
+              memo = 0;
+              amount = { e8s = Nat64.fromNat(amount + LEDGER_FEE); };
+              fee = { e8s = Nat64.fromNat(LEDGER_FEE); };
+              from_subaccount = null;
+              to = account_identifier;
+              created_at_time = ?{ timestamp_nanos = Nat64.fromNat(Int.abs(Time.now())); };
+            }));
+          };
+        };
+      };
+      case(#EXT){
+        switch(token.identifier){
+          case(null){
+            // EXT requires a token identifier
+            return #err(#TokenIdMissing);
+          };
+          case(?identifier){
+            switch(identifier){
+              case(#nat(_)){
+                // EXT cannot use nat as token identifier, only text
+                return #err(#TokenIdInvalidType);
+              };
+              case(#text(token_identifier)){
+                switch (Utils.getAccountIdentifier(owner_, user)){
+                  case(null){
+                    return #err(#ComputeAccountIdFailed);
+                  };
+                  case(?account_identifier){
+                    return #ok(#EXT({
+                      amount = amount;
+                      from = #principal(user);
+                      memo = Blob.fromArray([]);
+                      notify = false;
+                      subaccount = null;
+                      to = #address(Utils.accountToText(account_identifier));
+                      token = token_identifier;
+                    }));
                   };
                 };
               };

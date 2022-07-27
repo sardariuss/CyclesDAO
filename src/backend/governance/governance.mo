@@ -249,6 +249,26 @@ shared actor class Governance(create_governance_args : Types.CreateGovernanceArg
     };
   };
 
+  public shared({caller}) func getLockTransactionArgs(
+  ) : async Result.Result<Types.LockTransactionArgs, Types.GetLockTransactionArgsError>{
+    let token_accessor : Types.TokenAccessorInterface = actor (Principal.toText(system_params_.token_accessor));
+    switch(await token_accessor.getToken()){
+      case(null){
+        return #err(#TokenNotSet);
+      };
+      case(?token){
+        switch (await getTokenLocker().getLockTransactionArgs(token, caller, system_params_.proposal_submission_deposit)){
+          case(#err(get_lock_transaction_args_error)){
+            return #err(#TokenLockerError(get_lock_transaction_args_error));
+          };
+          case(#ok(lock_transaction_args)){
+            return (#ok({token = token; args = lock_transaction_args}));
+          };
+        };
+      };
+    };
+  };
+
   /// Execute the given proposal
   private func executeProposal(proposal: Types.Proposal) : async Result.Result<(), Types.ExecuteProposalError> {
     try {

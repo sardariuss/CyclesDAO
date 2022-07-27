@@ -12,6 +12,7 @@ export CYCLES_PROVIDER=$(dfx canister id cyclesProvider)
 
 # Deploy DIP20 canister, put TokenAccessor as minting account
 dfx deploy dip20 --argument="(\"data:image/jpeg;base64,...\", \"DIP20 Dummy\", \"DIPD\", 8, 10000000000000000,  principal \"$TOKEN_ACCESSOR\", 10000)"
+dfx generate dip20
 
 # Configure the Cycles Provider to mint the DIP20 token
 export DIP20_TOKEN=$(dfx canister id dip20)

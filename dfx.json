@@ -52,17 +52,26 @@
     "dip20": {
       "type": "custom",
       "candid": "tests/wasm/DIP20/dip20.did",
-      "wasm": "tests/wasm/DIP20/dip20.wasm"
+      "wasm": "tests/wasm/DIP20/dip20.wasm",
+      "declarations": {
+        "output": "src/frontend/declarations/dip20"
+      }
     },
     "ledger": {
       "type": "custom",
       "candid": "tests/wasm/Ledger/ledger.did",
-      "wasm": "tests/wasm/Ledger/ledger.wasm"
+      "wasm": "tests/wasm/Ledger/ledger.wasm",
+      "declarations": {
+        "output": "src/frontend/declarations/ledger"
+      }
     },
     "extf":{
       "type": "custom",
       "candid": "tests/wasm/ExtFungible/extf.did",
-      "wasm": "tests/wasm/ExtFungible/extf.wasm"
+      "wasm": "tests/wasm/ExtFungible/extf.wasm",
+      "declarations": {
+        "output": "src/frontend/declarations/extf"
+      }
     },
     "extNft":{
       "type": "custom",

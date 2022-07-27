@@ -31,6 +31,7 @@ dfx deploy governance --argument="(record {
     proposal_vote_threshold = 500;
     proposal_submission_deposit = 100;
   }})"
+dfx generate governance
 # dfx canister sign governance updateSystemParams '(record { proposal_vote_threshold = opt (400 : nat) })'
 # dfx canister call governance submitProposal '( record { canister_id = principal "'$GOVERNANCE'"; method = "updateSystemParams"; message = vec {68;73;68;76;3;108;3;131;147;199;185;6;1;216;237;253;217;6;1;141;234;173;203;7;2;110;125;110;104;1;0;1;144;3;0;0}; })'
 

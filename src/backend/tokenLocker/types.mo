@@ -67,4 +67,41 @@ module{
     locks: [TokenLock];
   };
 
+  public type GetLockTransactionArgsError = {
+    #TokenIdMissing;
+    #TokenIdInvalidType;
+    #ComputeAccountIdFailed;
+    #NftNotSupported;
+  };
+
+  public type LockTransactionArgs = {
+    #DIP20: Dip20ApproveArgs;
+    #LEDGER: LedgerTransferArgs;
+    #EXT: ExtTransferArgs;
+  };
+
+  public type Dip20ApproveArgs = {
+    to: Principal;
+    amount: Nat;
+  };
+
+  public type LedgerTransferArgs = {
+    memo: Nat64;
+    amount: { e8s: Nat64; };
+    fee: { e8s: Nat64; };
+    from_subaccount: ?Blob;
+    to: Blob;
+    created_at_time: ?{ timestamp_nanos: Nat64 };
+  };
+  
+  public type ExtTransferArgs = {
+    amount: Nat;
+    from: { #address: Text; #principal: Principal; };
+    memo: Blob;
+    notify: Bool;
+    subaccount: ?[Nat8];
+    to: { #address: Text; #principal: Principal; };
+    token: Text;
+  };
+
 };

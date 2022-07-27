@@ -18,6 +18,7 @@ cp tests/wasm/Ledger/ledger.private.did tests/wasm/Ledger/ledger.did
 dfx deploy ledger --argument '(record {minting_account = "'${TOKEN_ACCESSOR_ACCOUNT_ID}'"; initial_values = vec { record { "'${DEFAULT_WALLET_ACCOUNT_ID}'"; record { e8s=100_000_000_000 } } }; send_whitelist = vec {}})'
 rm tests/wasm/Ledger/ledger.did
 cp tests/wasm/Ledger/ledger.public.did tests/wasm/Ledger/ledger.did
+dfx generate ledger
 
 # Configure the Cycles Provider to mint the ledger token
 export LEDGER_TOKEN=$(dfx canister id ledger)

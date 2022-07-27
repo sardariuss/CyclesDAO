@@ -3,20 +3,53 @@ import { idlFactory as idlTokenAccessor }  from "../../declarations/tokenAccesso
 import { idlFactory as idlGovernance }  from "../../declarations/governance";
 
 import { HttpAgent, Actor, AnonymousIdentity, Identity } from "@dfinity/agent";
+import { Principal } from "@dfinity/principal";
 import { StoicIdentity } from "ic-stoic-identity";
-
-const host = window.location.origin;
+import { InterfaceFactory } from "@dfinity/candid/lib/cjs/idl";
 
 const cyclesProviderId = `${process.env.CYCLESPROVIDER_CANISTER_ID}`;
 const tokenAccessorId = `${process.env.TOKENACCESSOR_CANISTER_ID}`;
 const governanceId = `${process.env.GOVERNANCE_CANISTER_ID}`;
 
-const whitelist = [cyclesProviderId, tokenAccessorId];
+const host = window.location.origin;
 
-const createActors = (identity: Identity) : any => {
+var setWhitelist = new Set<string>([cyclesProviderId, tokenAccessorId, governanceId]);
+
+export type CyclesDAOActors = {
+  walletType: WalletType,
+  agent: HttpAgent | null,
+  cyclesProvider: Actor,
+  tokenAccessor: Actor,
+  governance: Actor
+};
+
+export enum WalletType {
+  None,
+  Plug,
+  Stoic  
+};
+
+// If no agent is given, build the actor through plug
+export const createActor = async (interfaceFactory: InterfaceFactory, canisterId: (Principal | string), agent: HttpAgent | null) : Promise<Actor> => {
+  if (agent !== null){
+    console.log("Create actor for " + canisterId);
+    return Actor.createActor(interfaceFactory, {
+      agent: agent,
+      canisterId: canisterId
+    });
+  } else {
+    console.log("Create actor for " + canisterId + " with plug");
+    return (await window.ic.plug.createActor({
+      canisterId: canisterId,
+      interfaceFactory: interfaceFactory,
+    }));
+  }
+}
+
+export const createDefaultActors = () : CyclesDAOActors => {
   let agent = new HttpAgent({
     host: host,
-    identity: identity
+    identity: new AnonymousIdentity
   });
 
   agent.fetchRootKey().catch((err) => {
@@ -25,6 +58,8 @@ const createActors = (identity: Identity) : any => {
   });
 
   return {
+    walletType: WalletType.None,
+    agent: agent,
     cyclesProvider: Actor.createActor(idlCyclesProvider, {
       agent: agent,
       canisterId: cyclesProviderId
@@ -38,80 +73,57 @@ const createActors = (identity: Identity) : any => {
       canisterId: governanceId
     }),
   }
-};
+}
 
-export const createDefaultActors = () : any => {
-  let actors = createActors(new AnonymousIdentity);
-  return {
-    method: "default",
-    cyclesProvider: actors.cyclesProvider,
-    tokenAccessor: actors.tokenAccessor,
-    governance: actors.governance
-  };
-};
+export const createActors = async (walletType : WalletType) : Promise<CyclesDAOActors> => {
+  
+  var agent : HttpAgent | null = null;
 
-export const createPlugActors = async () => {
-  try {
+  if (walletType === WalletType.None){
+    console.log("Attempt to connect with anonymous identity");
+    agent = new HttpAgent({host: host, identity: new AnonymousIdentity});
+    agent.fetchRootKey().catch((err) => {
+      console.warn("Unable to fetch root key. Check to ensure that your local replica is running");
+      console.error(err)});
+  }
+  else if (walletType == WalletType.Stoic) {
+    console.log("Attempt to connect with stoic wallet");
+    let identity = await StoicIdentity.load();
+    if (identity !== false) {
+      console.log("Stoic wallet is already connected!");
+    } 
+    else {
+      console.log("No existing connection, lets make one!");
+      let identity = await StoicIdentity.connect();
+      agent = new HttpAgent({identity: identity});
+    }
+    console.log("Stoic connected with identity " + identity.getPrincipal().toText());
+  }
+  else if (walletType === WalletType.Plug){
+    console.log("Attempt to connect with plug wallet");
+    let whitelist = [...setWhitelist.values()]
     await window.ic.plug.requestConnect({whitelist, host});
     console.log("Plug connected with identity " + window.ic.plug.principalId);
-    return {
-      method: "plug",
-      cyclesProvider : await window.ic.plug.createActor({
-        canisterId: cyclesProviderId,
-        interfaceFactory: idlCyclesProvider,
-      }),
-      tokenAccessor : await window.ic.plug.createActor({
-        canisterId: tokenAccessorId,
-        interfaceFactory: idlTokenAccessor,
-      }),
-      governance: await window.ic.plug.createActor({
-        canisterId: governanceId,
-        interfaceFactory: idlGovernance,
-      })
-    };
-  } catch (e) {
-    console.error("Failed to establish connection: " + e);
-    return {};
+  } 
+  else {
+    throw new TypeError("Cannot connect wallet: type does not exist!");
   }
-};
-
-export const createStoicActors = async () => {
-  let identity = await StoicIdentity.load();
-  if (identity !== false) {
-    //ID is a already connected wallet!
-    console.log("ID is a already connected wallet!")
-  } else {
-    //No existing connection, lets make one!
-    console.log("No existing connection, lets make one!")
-    identity = await StoicIdentity.connect();
-  }
-  //Lets display the connected principal!
-  console.log("Stoic connected with identity " + identity.getPrincipal().toText());
-  let agent = new HttpAgent({
-    identity: identity
-  });
-
-  agent.fetchRootKey().catch((err) => {
-    console.warn("Unable to fetch root key. Check to ensure that your local replica is running");
-    console.error(err);
-  });
-
-  //Disconnect after
-  //StoicIdentity.disconnect();
 
   return {
-    method: "stoic",
-    cyclesProvider: Actor.createActor(idlCyclesProvider, {
-      agent: agent,
-      canisterId: cyclesProviderId
-    }),
-    tokenAccessor: Actor.createActor(idlTokenAccessor, {
-      agent: agent,
-      canisterId: tokenAccessorId
-    }),
-    governance: Actor.createActor(idlGovernance, {
-      agent: agent,
-      canisterId: governanceId
-    }),
+    walletType: walletType,
+    agent: agent,
+    cyclesProvider: (await createActor(idlCyclesProvider, cyclesProviderId, agent)),
+    tokenAccessor: (await createActor(idlTokenAccessor, tokenAccessorId, agent)),
+    governance: (await createActor(idlGovernance, governanceId, agent)),
   };
 };
+
+export const addToWhiteList = async (walletType: WalletType, canister: string) => {
+  if (!setWhitelist.has(canister)){
+    setWhitelist.add(canister)
+    if (walletType === WalletType.Plug){
+      let whitelist = [...setWhitelist.values()]
+      await window.ic.plug.requestConnect({whitelist, host});
+    }
+  }
+}

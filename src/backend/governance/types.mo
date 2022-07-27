@@ -106,6 +106,16 @@ module {
     proposals: [Proposal];
     system_params: SystemParams;
   };
+
+  public type LockTransactionArgs = {
+    token: TokenInterfaceTypes.Token;
+    args: TokenLockerTypes.LockTransactionArgs;
+  };
+
+  public type GetLockTransactionArgsError = {
+    #TokenNotSet;
+    #TokenLockerError: TokenLockerTypes.GetLockTransactionArgsError;
+  };
   
   public type TokenAccessorInterface = actor {
     getToken: shared () -> async (?TokenInterfaceTypes.Token);

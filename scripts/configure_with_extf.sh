@@ -12,6 +12,7 @@ export CYCLES_PROVIDER=$(dfx canister id cyclesProvider)
 
 # Deploy EXTF canister, put TokenAccessor as "minting" account
 dfx deploy extf --argument="(\"EXT FUNGIBLE EXAMPLE\", \"EXTF\", 8, 100_000_000_000_000_000_000, principal \"$TOKEN_ACCESSOR\")"
+dfx generate extf
 
 # Configure the Cycles Provider to mint the EXTF token
 export EXTF_TOKEN=$(dfx canister id extf)

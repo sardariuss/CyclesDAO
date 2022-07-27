@@ -1,30 +1,28 @@
-import { createPlugActors, createStoicActors } from "../utils/actors";
+import { createActors, WalletType } from "../utils/actors";
 
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 
 function Header({actors, setActors} : any) {
 
-  const [plugConnected, setPlugConnected] = useState<Boolean>(actors.method === "plug");
-  const [stoicConnected, setStoicConnected] = useState<Boolean>(actors.method === "stoic");
+  const [walletType, setWalletType] = useState<WalletType>(actors.walletType);
 
-  const connectPlug = async () => {
-    if (!plugConnected){
-      let plugActors = await createPlugActors();
-      setActors(plugActors);
+  const connectStoicWallet = async () => {
+    if (actors.walletType !== WalletType.Stoic){
+      let actors = await createActors(WalletType.Stoic);
+      setActors(actors);
     };
   };
 
-  const connectStoic = async () => {
-    if (!stoicConnected){
-      let stoicActors = await createStoicActors();
-      setActors(stoicActors);
+  const connectPlugWallet = async () => {
+    if (actors.walletType !== WalletType.Plug){
+      let actors = await createActors(WalletType.Plug);
+      setActors(actors);
     };
   };
 
   useEffect(() => {
-    setPlugConnected(actors.method === "plug");
-    setStoicConnected(actors.method === "stoic");
+    setWalletType(actors.walletType);
 	}, [actors]);
 
   return (
@@ -56,23 +54,23 @@ function Header({actors, setActors} : any) {
               </li>
               <li>
                 <div className="ml-10 self-center">
-                  {plugConnected ? (
+                  {(walletType === WalletType.Plug) ? (
                     <div className="w-40 flex text-gray-700 dark:text-gray-400">
                       Logged with Plug
                     </div>
-                  ) : stoicConnected ? (
+                  ) : (walletType === WalletType.Stoic) ? (
                     <div className="w-40 flex text-gray-700 dark:text-gray-400">
                       Logged with Stoic
                     </div>
                   ) : (
                     <div className="flex flex-row">
                       <div className="w-40 flex justify-center items-center">
-                        <button onClick={connectPlug} className="my-button bg-secondary dark:text-white hover:bg-primary hover:font-bold">
+                        <button onClick={connectPlugWallet} className="my-button bg-secondary dark:text-white hover:bg-primary hover:font-bold">
                           Log in with Plug
                         </button>
                       </div>
                       <div className="w-40 flex justify-center items-center">
-                        <button onClick={connectStoic} className="my-button bg-secondary dark:text-white hover:bg-primary hover:font-bold">
+                        <button onClick={connectStoicWallet} className="my-button bg-secondary dark:text-white hover:bg-primary hover:font-bold">
                           Log in with Stoic
                         </button>
                       </div>
