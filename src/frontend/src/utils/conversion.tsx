@@ -1,8 +1,7 @@
 import { TokenStandard } from "../../declarations/cyclesProvider/cyclesProvider.did.js";
 
 export const toTrillions = (cycles: bigint) => {
-	//return Number(cycles / (10n ** 12n));
-	return Number(cycles) / (10 ** 12);
+	return Number(cycles / (10n ** 12n));
 }
 
 export const fromTrillions = (trillions: number) => {
