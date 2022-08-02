@@ -9,6 +9,12 @@ export const isBigInt = (str: string) => {
   }
 }
 
+export const isBigIntOrNull = (str: string) => {
+  if (str.length > 0 && !bigIntRegExp.test(str)){
+    throw Error("The input shall be a natural number");
+  }
+}
+
 export const isPositiveFloat = (str: string) => {
   if (!floatRegExp.test(str)){
     throw Error("The input shall be a positive floating point number");
@@ -21,4 +27,14 @@ export const isPrincipal = (str: string) => {
   } catch {
     throw Error("The input shall be a principal");
   }
+}
+
+export const isPrincipalOrNull = (str: string) => {
+  if (str.length > 0){
+    try {
+      Principal.fromText(str);
+    } catch {
+      throw Error("The input shall be a principal");
+    }
+  }  
 }
