@@ -1,4 +1,5 @@
 import { TokenStandard } from "../../declarations/cyclesProvider/cyclesProvider.did.js";
+import { ProposalState, Result } from "../../declarations/governance/governance.did.js";
 import { TxReceipt } from "../../declarations/dip20/dip20.did.js";
 import { TransferResult } from "../../declarations/ledger/ledger.did.js";
 import { TransferResponse } from "../../declarations/extf/extf.did.js";
@@ -118,4 +119,55 @@ export const extTransferResponseToString =  (transferResponse: TransferResponse)
 		return "Balance = " + transferResponse['ok'].toString();
 	}
 	throw Error("Cannot convert EXT transfer response to string!");
+}
+
+export const nanoSecondsToDate = (nanoSeconds: bigint) : string => {
+	let date = new Date(toMilliSeconds(nanoSeconds));
+	return date.toLocaleDateString('en-US');
+}
+
+export const proposalStateToString = (proposalState: ProposalState) : string => {
+	if ('Open' in proposalState){
+		return 'Open';
+	}
+	if ('Rejected' in proposalState){
+		return 'Rejected';
+	}
+	if ('Accepted' in proposalState){
+		const subState = proposalState['Accepted'].state;
+		if ('Failed' in subState){
+			return 'Accepted (execution failed)';
+		}
+		if ('Succeeded' in subState){
+			return 'Accepted (execution succeeded)';
+		}
+		if ('Pending' in subState){
+			return 'Accepted (execution pending)';
+		}
+	}
+	throw Error("Cannot convert proposal state to string!");
+};
+
+export const voteResultToString = (voteResult: Result) : string => {
+	if ('ok' in voteResult) {
+		return 'ok';
+	} 
+	if ('err' in voteResult) {
+		if ('AlreadyVoted' in voteResult['err']){
+			return 'AlreadyVoted';
+		}
+		if ('ProposalNotFound' in voteResult['err']){
+			return 'ProposalNotFound';
+		}
+		if ('EmptyBalance' in voteResult['err']){
+			return 'EmptyBalance';
+		}
+		if ('ProposalNotOpen' in voteResult['err']){
+			return 'ProposalNotOpen';
+		}
+		if ('TokenInterfaceError' in voteResult['err']){
+			return 'TokenInterfaceError';
+		}
+	}
+	throw Error("Cannot convert vote result to string!");
 }

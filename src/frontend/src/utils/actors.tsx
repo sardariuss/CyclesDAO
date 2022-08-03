@@ -22,6 +22,7 @@ var setWhitelist = new Set<string>([cyclesProviderId, tokenAccessorId, governanc
 
 export type CyclesDAOActors = {
   walletType: WalletType,
+  connectedUser: Principal|null,
   agent: HttpAgent | null,
   cyclesProvider: Actor,
   tokenAccessor: Actor,
@@ -65,6 +66,7 @@ export const createDefaultActors = () : CyclesDAOActors => {
   return {
     walletType: WalletType.None,
     agent: agent,
+    connectedUser: null,
     cyclesProvider: Actor.createActor(idlCyclesProvider, {
       agent: agent,
       canisterId: cyclesProviderId
@@ -83,13 +85,15 @@ export const createDefaultActors = () : CyclesDAOActors => {
 export const createActors = async (walletType : WalletType) : Promise<CyclesDAOActors> => {
   
   var agent : HttpAgent | null = null;
+  var connectedUser : Principal | null = null;
 
   if (walletType === WalletType.None){
     console.log("Attempt to connect with anonymous identity");
     agent = new HttpAgent({host: host, identity: new AnonymousIdentity});
     agent.fetchRootKey().catch((err) => {
       console.warn("Unable to fetch root key. Check to ensure that your local replica is running");
-      console.error(err)});
+      console.error(err)
+    });
   }
   else if (walletType == WalletType.Stoic) {
     console.log("Attempt to connect with stoic wallet");
@@ -102,12 +106,14 @@ export const createActors = async (walletType : WalletType) : Promise<CyclesDAOA
       let identity = await StoicIdentity.connect();
       agent = new HttpAgent({identity: identity});
     }
+    connectedUser = identity.getPrincipal();
     console.log("Stoic connected with identity " + identity.getPrincipal().toText());
   }
   else if (walletType === WalletType.Plug){
     console.log("Attempt to connect with plug wallet");
     let whitelist = [...setWhitelist.values()]
     await window.ic.plug.requestConnect({whitelist, host});
+    connectedUser = window.ic.plug.principalId;
     console.log("Plug connected with identity " + window.ic.plug.principalId);
   } 
   else {
@@ -117,6 +123,7 @@ export const createActors = async (walletType : WalletType) : Promise<CyclesDAOA
   return {
     walletType: walletType,
     agent: agent,
+    connectedUser: connectedUser,
     cyclesProvider: (await createActor(idlCyclesProvider, cyclesProviderId, agent)),
     tokenAccessor: (await createActor(idlTokenAccessor, tokenAccessorId, agent)),
     governance: (await createActor(idlGovernance, governanceId, agent)),
@@ -168,13 +175,5 @@ export const lockProposalFee = async (actors: CyclesDAOActors) => {
     }
   } else {
     throw new Error("The standard " + standard + " is not supported!");
-  }
-}
-
-export const getConnectedUser = async (actors: CyclesDAOActors) : Promise<Principal> => {
-  if (actors.agent !== null){
-    return actors.agent?.getPrincipal();
-  } else {
-    return window.ic.plug.principalId;
   }
 }
