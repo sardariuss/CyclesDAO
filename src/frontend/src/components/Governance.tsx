@@ -1,4 +1,4 @@
-import ConfigureHistory from './tables/ConfigureHistory'
+import ListProposals from './tables/ListProposals'
 import SubmitProposal from './SubmitProposal'
 import { CyclesDAOActors } from "../utils/actors";
 
@@ -12,7 +12,7 @@ function Governance({actors}: GovernanceParamaters) {
 		<>
       <div className="flex flex-col relative z-0">
         <SubmitProposal actors={actors}/>
-        <ConfigureHistory cyclesProviderActor={actors.cyclesProvider}/>
+        <ListProposals actors={actors}/>
       </div>
     </>
   );

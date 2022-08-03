@@ -1,6 +1,7 @@
 import { CyclesDAOActors } from "../../utils/actors";
 import { proposeAddAllowList } from "../../utils/proposals";
 import { isBigInt, isPrincipal } from "../../utils/regexp";
+import Submit from "./Submit"
 
 import { useState, useEffect } from "react";
 
@@ -57,69 +58,65 @@ function AddToAllowList({actors}: AddToAllowListParameters) {
   };
 
   const submitAddCanister = async() => {
-    if (canisterError !== null){
-      throw canisterError;
-    };
-    if (balanceThresholdError !== null){
-      throw balanceThresholdError;
-    };
-    if (balanceTargetError !== null){
-      throw balanceTargetError;
-    };
-    await proposeAddAllowList(actors, balanceThreshold, balanceTarget, pullAuthorized, canister);
+    try{
+      await proposeAddAllowList(actors, balanceThreshold, balanceTarget, pullAuthorized, canister);
+      return {success: true, message: ""};
+    } catch (error) {
+      return {success: false, message: error.message};
+    }
   };
 
   return (
 		<>
-      <div className="flex flex-row">
-        <div className="flex flex-col items-end gap-y-5">
-          <div className="flex flex-col">
-            <div className="flex flex-row items-center">
-              <label htmlFor="canisterInput" className="block whitespace-nowrap mb-2 text-sm font-medium text-gray-900 dark:text-gray-300">Canister</label>
-              <input 
-                id="canisterInput"
-                type="input" 
-                className="ml-5 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                onChange={(e) => {updateCanister(e.target.value);}}
-                placeholder={"principal"}
-              />
-              </div>
-            <p hidden={canisterError===null} className="mt-2 text-sm text-red-600 dark:text-red-500">{canisterError?.message}</p>
-          </div>
-          <div className="flex flex-col">
-            <div className="flex flex-row items-center">
-              <label htmlFor="balanceThreshold" className="block whitespace-nowrap mb-2 text-sm font-medium text-gray-900 dark:text-gray-300">Balance threshold</label>
-              <input 
-                id="balanceThreshold"
-                type="input" 
-                className="ml-5 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                onChange={(e) => {updateBalanceThreshold(e.target.value);}}
-                placeholder={"nat"}
-              />
-              </div>
-            <p hidden={balanceThresholdError===null} className="mt-2 text-sm text-red-600 dark:text-red-500">{balanceThresholdError?.message}</p>
-          </div>
-          <div className="flex flex-col">
-            <div className="flex flex-row items-center">
-              <label htmlFor="balanceTarget" className="block whitespace-nowrap mb-2 text-sm font-medium text-gray-900 dark:text-gray-300">Balance target</label>
-              <input 
-                id="balanceTarget"
-                type="input" 
-                className="ml-5 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                onChange={(e) => {updateBalanceTarget(e.target.value);}}
-                placeholder={"nat"}
-              />
-              </div>
-            <p hidden={balanceTargetError===null} className="mt-2 text-sm text-red-600 dark:text-red-500">{balanceTargetError?.message}</p>
-          </div>
-          <div className="flex flex-row self-center gap-x-2">
-            <label htmlFor="pullAuthorized" className="block whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-300">Authorize pull</label>
-            <input id="pullAuthorized" type="checkbox" onChange={(e) => {setPullAuthorized(e.target.checked);}} className="w-4 h-4 text-blue-600 bg-gray-100 rounded border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"/>
+      <div className="flex flex-col space-y-5">
+        <div className="flex flex-row">
+          <div className="flex flex-col items-end gap-y-5">
+            <div className="flex flex-col">
+              <div className="flex flex-row items-center">
+                <label htmlFor="canisterInput" className="block whitespace-nowrap mb-2 text-sm font-medium text-gray-900 dark:text-gray-300">Canister</label>
+                <input 
+                  id="canisterInput"
+                  type="input" 
+                  className="ml-5 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  onChange={(e) => {updateCanister(e.target.value);}}
+                  placeholder={"principal"}
+                />
+                </div>
+              <p hidden={canisterError===null} className="mt-2 text-sm text-red-600 dark:text-red-500">{canisterError?.message}</p>
+            </div>
+            <div className="flex flex-col">
+              <div className="flex flex-row items-center">
+                <label htmlFor="balanceThreshold" className="block whitespace-nowrap mb-2 text-sm font-medium text-gray-900 dark:text-gray-300">Balance threshold</label>
+                <input 
+                  id="balanceThreshold"
+                  type="input" 
+                  className="ml-5 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  onChange={(e) => {updateBalanceThreshold(e.target.value);}}
+                  placeholder={"nat"}
+                />
+                </div>
+              <p hidden={balanceThresholdError===null} className="mt-2 text-sm text-red-600 dark:text-red-500">{balanceThresholdError?.message}</p>
+            </div>
+            <div className="flex flex-col">
+              <div className="flex flex-row items-center">
+                <label htmlFor="balanceTarget" className="block whitespace-nowrap mb-2 text-sm font-medium text-gray-900 dark:text-gray-300">Balance target</label>
+                <input 
+                  id="balanceTarget"
+                  type="input" 
+                  className="ml-5 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  onChange={(e) => {updateBalanceTarget(e.target.value);}}
+                  placeholder={"nat"}
+                />
+                </div>
+              <p hidden={balanceTargetError===null} className="mt-2 text-sm text-red-600 dark:text-red-500">{balanceTargetError?.message}</p>
+            </div>
+            <div className="flex flex-row self-center gap-x-2">
+              <label htmlFor="pullAuthorized" className="block whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-300">Authorize pull</label>
+              <input id="pullAuthorized" type="checkbox" onChange={(e) => {setPullAuthorized(e.target.checked);}} className="w-4 h-4 text-blue-600 bg-gray-100 rounded border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"/>
+            </div>
           </div>
         </div>
-        <button disabled={balanceThresholdError!==null || balanceTargetError !== null || canisterError !== null} onClick={submitAddCanister} className="self-end ml-5 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-lg w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-          Submit proposal
-        </button>
+        <Submit submitDisabled={() => (balanceThresholdError!==null || balanceTargetError !== null || canisterError !== null)} submitFunction={submitAddCanister}/>
       </div>
     </>
   );

@@ -23,7 +23,7 @@ function Header({actors, setActors} : any) {
 
   useEffect(() => {
     setWalletType(actors.walletType);
-	}, [actors]);
+  }, [actors]);
 
   return (
 		<>

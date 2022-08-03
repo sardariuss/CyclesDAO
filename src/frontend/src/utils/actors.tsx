@@ -5,6 +5,7 @@ import { idlFactory as idlDip20 } from "../../declarations/dip20";
 import { idlFactory as idlLedger }  from "../../declarations/ledger";
 import { idlFactory as idlExtf }  from "../../declarations/extf";
 import { LockTransactionArgs, ExtTransferArgs, LedgerTransferArgs, Dip20ApproveArgs } from "../../declarations/governance/governance.did.js";
+import { dip20TxReceiptToString, ledgerTransferResultToString, extTransferResponseToString } from "./conversion"
 
 import { HttpAgent, Actor, AnonymousIdentity, Identity } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
@@ -133,39 +134,47 @@ const addToWhiteList = async (walletType: WalletType, canister: string) => {
 }
 
 export const lockProposalFee = async (actors: CyclesDAOActors) => {
+  if (actors.walletType === WalletType.None){
+    throw new Error("User not logged in")
+  }
   const getLockTransactionArgs = await actors.governance.getLockTransactionArgs();
   if (getLockTransactionArgs?.err !== undefined){
-    throw new Error("Fail to get lock transcation arguments: " + getLockTransactionArgs.err);
-  };
-  
+    throw new Error("Fail to get lock transcation arguments");
+  }
   let transactionArgs : LockTransactionArgs = getLockTransactionArgs.ok;
   let canister = transactionArgs.token.canister.toString();
   let standard = transactionArgs.token.standard;
-
   await addToWhiteList(actors.walletType, canister);
-
   if (standard?.DIP20 !== undefined){
     let dip20_actor = await createActor(idlDip20, canister, actors.agent);
     let args : Dip20ApproveArgs = transactionArgs.args['DIP20'];
     let approve_result = await dip20_actor.approve(args.to, args.amount);
     if (approve_result?.Err !== undefined){
-      throw new Error("Fail to approve DIP20 tokens: " + approve_result.Err.toString());
+      throw new Error("Fail to approve DIP20 tokens: " + dip20TxReceiptToString(approve_result));
     }
   } else if (standard?.LEDGER !== undefined){
     let ledger_actor = await createActor(idlLedger, canister, actors.agent);
     let args : LedgerTransferArgs = transactionArgs.args['LEDGER'];
     let transfer_result = await ledger_actor.transfer(args);
     if (transfer_result?.Err !== undefined){
-      throw new Error("Fail to transfer LEDGER tokens: " + transfer_result.Err.toString());
+      throw new Error("Fail to transfer LEDGER tokens: " + ledgerTransferResultToString(transfer_result));
     }
   } else if (standard?.EXT !== undefined){
     let extf_actor = await createActor(idlExtf, canister, actors.agent);
     let args : ExtTransferArgs = transactionArgs.args['EXT'];
     let transfer_result = await extf_actor.transfer(args);
     if (transfer_result?.err !== undefined){
-      throw new Error("Fail to transfer EXT tokens: " + transfer_result.err.toString());
+      throw new Error("Fail to transfer EXT tokens: " + extTransferResponseToString(transfer_result));
     }
   } else {
     throw new Error("The standard " + standard + " is not supported!");
+  }
+}
+
+export const getConnectedUser = async (actors: CyclesDAOActors) : Promise<Principal> => {
+  if (actors.agent !== null){
+    return actors.agent?.getPrincipal();
+  } else {
+    return window.ic.plug.principalId;
   }
 }
