@@ -2,19 +2,17 @@ import SimpleProposalInput from './inputs/SimpleProposalInput';
 import RemoveFromAllowList from './inputs/RemoveFromAllowList';
 import AddToAllowList from './inputs/AddToAllowList';
 import SetCycleExchangeConfig from './inputs/SetCycleExchangeConfig';
-import UpdateSystemParams from './inputs/UpdateSystemParams';
-import DistributeBalance from './inputs/DistributeBalance';
-import Mint from './inputs/Mint';
 import { CyclesDAOActors } from "../utils/actors";
 import { proposeMinimumBalance, proposeAdmin } from "../utils/proposals";
 import { isBigInt, isPrincipal } from "../utils/regexp";
 import { useState } from "react";
 
 type GovernanceParamaters = {
-  actors : CyclesDAOActors
+  actors : CyclesDAOActors,
+  setListUpdated : (boolean) => (void)
 };
 
-function SubmitProposal({actors}: GovernanceParamaters) {
+function CyclesProviderCommands({actors, setListUpdated}: GovernanceParamaters) {
 
   const [showDropDown, setShowDropDown] = useState<boolean>(false);
   const [selectedCommand, setSelectedCommand] = useState<string>("SetCycleExchangeConfig");
@@ -24,11 +22,6 @@ function SubmitProposal({actors}: GovernanceParamaters) {
     "RemoveAllowList",
     "SetAdmin",
     "SetMinimumBalance"
-  ]);
-  const [governanceCommands] = useState<string[]>([
-    "updateSystemParams",
-    "distributeBalance",
-    "mint"
   ]);
 
   const toggleDropDown = () => {
@@ -43,9 +36,9 @@ function SubmitProposal({actors}: GovernanceParamaters) {
 
   return (
 		<>
-      <div className="flex flex-col bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 w-1/2 m-5" onClick={hideDropDown}>
+      <div className="flex flex-col bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 w-1/2" onClick={hideDropDown}>
         <div className="flex flex-row items-center">
-          <p className="font-semibold text-xl text-gray-900 dark:text-white text-start m-5">Command</p>
+          <p className="font-semibold text-xl text-gray-900 dark:text-white text-start m-5">Cycles provider command</p>
           <div className="flex flex-col">
             <button id="dropdown" onClick={toggleDropDown} className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg font-semibold text-lg px-4 py-2.5 text-center inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" type="button">
               { selectedCommand }
@@ -67,46 +60,24 @@ function SubmitProposal({actors}: GovernanceParamaters) {
                 })
               }
               </ul>
-              {
-                governanceCommands.map((value: string, index: number) => {
-                  let selectThisCommand : () => (void) = function() {
-                    setSelectedCommand(value);
-                    toggleDropDown();
-                  };
-                  return (
-                    <div onClick={selectThisCommand} key={index + configureCommands.length} className="block text-sm text-gray-700 dark:text-gray-200 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-                      {value}
-                    </div>
-                  );
-                })
-              }
             </div>
           </div>
         </div>
         <div className="flex flex-col items-center m-5 justify-around">
           <div hidden={selectedCommand !== "SetCycleExchangeConfig"}>
-            <SetCycleExchangeConfig actors={actors}/>
+            <SetCycleExchangeConfig actors={actors} setListUpdated={setListUpdated}/>
           </div>
           <div hidden={selectedCommand !== "AddAllowList"}>
-            <AddToAllowList actors={actors}/>
+            <AddToAllowList actors={actors} setListUpdated={setListUpdated}/>
           </div>
           <div hidden={selectedCommand !== "RemoveAllowList"}>
-            <RemoveFromAllowList actors={actors}/>
+            <RemoveFromAllowList actors={actors} setListUpdated={setListUpdated}/>
           </div>
-          <div hidden={selectedCommand !== "SetAdmin"}>
-            <SimpleProposalInput actors={actors} proposalName="New admin: " submitProposal={proposeAdmin} verification={isPrincipal} placeholder={"principal"}/>
+          <div hidden={selectedCommand !== "SetAdmin" }>
+            <SimpleProposalInput actors={actors} proposalName="New admin: " submitProposal={proposeAdmin} verification={isPrincipal} placeholder={"principal"} setListUpdated={setListUpdated}/>
           </div>
-          <div hidden={selectedCommand !== "SetMinimumBalance"}>
-            <SimpleProposalInput actors={actors} proposalName="New minimum balance: " submitProposal={proposeMinimumBalance} verification={isBigInt} placeholder={"nat"}/>
-          </div>
-          <div hidden={selectedCommand !== "updateSystemParams"}>
-            <UpdateSystemParams actors={actors}/>
-          </div>
-          <div hidden={selectedCommand !== "distributeBalance"}>
-            <DistributeBalance actors={actors}/>
-          </div>
-          <div hidden={selectedCommand !== "mint"}>
-            <Mint actors={actors}/>
+          <div hidden={selectedCommand !== "SetMinimumBalance" }>
+            <SimpleProposalInput actors={actors} proposalName="New minimum balance: " submitProposal={proposeMinimumBalance} verification={isBigInt} placeholder={"nat"} setListUpdated={setListUpdated}/>
           </div>
         </div>
       </div>
@@ -114,4 +85,4 @@ function SubmitProposal({actors}: GovernanceParamaters) {
   );
 }
 
-export default SubmitProposal;
+export default CyclesProviderCommands;

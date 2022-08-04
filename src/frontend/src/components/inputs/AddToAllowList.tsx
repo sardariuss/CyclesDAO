@@ -7,9 +7,10 @@ import { useState, useEffect } from "react";
 
 interface AddToAllowListParameters {
   actors: CyclesDAOActors;
+  setListUpdated : (boolean) => (void);
 }
 
-function AddToAllowList({actors}: AddToAllowListParameters) {
+function AddToAllowList({actors, setListUpdated}: AddToAllowListParameters) {
 
   const [canister, setCanister] = useState<string>("");
   const [balanceThreshold, setBalanceThreshold] = useState<string>("");
@@ -60,6 +61,7 @@ function AddToAllowList({actors}: AddToAllowListParameters) {
   const submitAddCanister = async() => {
     try{
       await proposeAddAllowList(actors, balanceThreshold, balanceTarget, pullAuthorized, canister);
+      setListUpdated(false);
       return {success: true, message: ""};
     } catch (error) {
       return {success: false, message: error.message};

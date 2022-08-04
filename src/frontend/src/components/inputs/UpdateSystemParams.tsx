@@ -7,9 +7,10 @@ import { useState, useEffect } from "react";
 
 interface UpdateSystemParamsParameters {
   actors: CyclesDAOActors;
+  setListUpdated : (boolean) => (void);
 }
 
-function UpdateSystemParams({actors}: UpdateSystemParamsParameters) {
+function UpdateSystemParams({actors, setListUpdated}: UpdateSystemParamsParameters) {
 
   const [tokenAccessor, setTokenAccessor] = useState<string>("");
   const [proposalVoteThreshold, setProposalVoteThreshold] = useState<string>("");
@@ -59,6 +60,7 @@ function UpdateSystemParams({actors}: UpdateSystemParamsParameters) {
   const submitAddTokenAccessor = async() => {
     try {
       await proposeUpdateSystemParams(actors, proposalVoteThreshold, proposalSubmissionDeposit, tokenAccessor);
+      setListUpdated(false);
       return {success: true, message: ""};
     } catch (error) {
       return {success: false, message: error.message};

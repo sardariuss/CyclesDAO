@@ -7,9 +7,10 @@ import { useState, useEffect } from "react";
 
 interface DistributeBalanceParameters {
   actors: CyclesDAOActors;
+  setListUpdated : (boolean) => (void);
 }
 
-function DistributeBalance({actors}: DistributeBalanceParameters) {
+function DistributeBalance({actors, setListUpdated}: DistributeBalanceParameters) {
 
   const [showStandardDropDown, setShowStandardDropDown] = useState<boolean>(false);
   const [selectedStandard, setSelectedStandard] = useState<string>('LEDGER');
@@ -86,6 +87,7 @@ function DistributeBalance({actors}: DistributeBalanceParameters) {
   const submitDistributeBalance = async() => {
     try {
       await proposeDistributeBalance(actors, selectedStandard, tokenIdentifier, tokenCanister, tokenRecipient, amount);
+      setListUpdated(false);
       return {success: true, message: ""};
     } catch (error) {
       return {success: false, message: error.message};

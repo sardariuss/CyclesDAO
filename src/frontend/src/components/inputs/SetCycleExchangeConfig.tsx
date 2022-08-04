@@ -7,9 +7,10 @@ import { useState, useEffect } from "react";
 
 interface SetCycleExchangeConfigParameters {
   actors: CyclesDAOActors;
+  setListUpdated : (boolean) => (void);
 }
 
-function SetCycleExchangeConfig({actors}: SetCycleExchangeConfigParameters) {
+function SetCycleExchangeConfig({actors, setListUpdated}: SetCycleExchangeConfigParameters) {
 
   const indexCharCode = 10102;
 
@@ -96,6 +97,7 @@ function SetCycleExchangeConfig({actors}: SetCycleExchangeConfigParameters) {
   const submitExchangeConfig = async () => {
     try{
       await setCycleExchangeConfig(actors, exchangeLevels);
+      setListUpdated(false);
       return {success: true, message: ""};
     } catch (error) {
       return {success: false, message: error.message};

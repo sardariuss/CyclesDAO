@@ -8,9 +8,10 @@ import { Principal } from "@dfinity/principal";
 
 interface RemoveFromAllowListParameters {
   actors: CyclesDAOActors;
+  setListUpdated : (boolean) => (void);
 }
 
-function RemoveFromAllowList({actors}: RemoveFromAllowListParameters) {
+function RemoveFromAllowList({actors, setListUpdated}: RemoveFromAllowListParameters) {
 
   const [showDropDown, setShowDropDown] = useState<boolean>(false);
   const [selectedCanister, setSelectedCanister] = useState<string>("");
@@ -34,6 +35,7 @@ function RemoveFromAllowList({actors}: RemoveFromAllowListParameters) {
   const submitRemoveCanister = async() => {
     try {
       await proposeRemoveAllowList(actors, selectedCanister);
+      setListUpdated(false);
       return {success: true, message: ""};
     } catch (error) {
       return {success: false, message: error.message};

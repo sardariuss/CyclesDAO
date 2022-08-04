@@ -7,11 +7,12 @@ interface SimpleProposalInputParameters {
   actors: CyclesDAOActors;
   proposalName: string;
   submitProposal: (cyclesDAOActors: CyclesDAOActors, input: string) => Promise<void>;
+  setListUpdated : (boolean) => (void);
   verification: (str: string) => (void);
   placeholder: string;
 }
 
-function SimpleProposalInput({actors, proposalName, submitProposal, verification, placeholder}: SimpleProposalInputParameters) {
+function SimpleProposalInput({actors, proposalName, submitProposal, setListUpdated, verification, placeholder}: SimpleProposalInputParameters) {
 
   const [input, setInput] = useState<string>("");
   const [inputError, setInputError] = useState<Error | null>();
@@ -33,6 +34,7 @@ function SimpleProposalInput({actors, proposalName, submitProposal, verification
   const submitSimpleProposal = async() => {
     try {
       await submitProposal(actors, input);
+      setListUpdated(false);
       return {success: true, message: ""};
     } catch (error) {
       return {success: false, message: error.message};

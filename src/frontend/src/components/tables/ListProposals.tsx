@@ -5,18 +5,21 @@ import ProposalRow from "./ProposalRow";
 import { useEffect, useState } from "react";
 
 type ListProposalsParamaters = {
-  actors : CyclesDAOActors
+  actors : CyclesDAOActors,
+  listUpdated : boolean,
+  setListUpdated : (boolean) => (void)
 };
 
-function ListProposals({actors}: ListProposalsParamaters) {
+function ListProposals({actors, listUpdated, setListUpdated}: ListProposalsParamaters) {
 
   const [listProposals, setListProposals] = useState<Array<Proposal>>([]);
   
   const fetch_data = async () => {
     try {
       // Get the list of proposals
+      let proposals = await actors.governance.getProposals();
       proposals.sort((a: Proposal, b: Proposal) : number =>  {
-        return Number(b.id) - Number(a.id);
+        return Number(a.id) - Number(b.id);
       })
       setListProposals(proposals);
     } catch (err) {
@@ -26,8 +29,10 @@ function ListProposals({actors}: ListProposalsParamaters) {
   }
 
   useEffect(() => {
+    console.log("Enters here");
 		fetch_data();
-	}, [actors]);
+    setListUpdated(true);
+	}, [actors, listUpdated]);
 
   return (
 		<>

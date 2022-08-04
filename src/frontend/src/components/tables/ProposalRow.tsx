@@ -56,7 +56,7 @@ function ProposalRow({actors, inputProposal}: ProposalRowParamaters) {
 
   useEffect(() => {
 		fetchRow();
-	}, [actors]); // @todo: does not work after connect
+	}, [actors]);
 
   const submitVote = async () => {
     if (voteStatus !== VoteStatus.CanVote){

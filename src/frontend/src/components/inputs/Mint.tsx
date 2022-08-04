@@ -7,9 +7,10 @@ import { useState, useEffect } from "react";
 
 interface MintParameters {
   actors: CyclesDAOActors;
+  setListUpdated : (boolean) => (void);
 }
 
-function Mint({actors}: MintParameters) {
+function Mint({actors, setListUpdated}: MintParameters) {
 
   const [recipient, setRecipient] = useState<string>("");
   const [amount, setAmount] = useState<string>("");
@@ -46,6 +47,7 @@ function Mint({actors}: MintParameters) {
   const submitMint = async() => {
     try {
       await proposeMint(actors, recipient, amount);
+      setListUpdated(false);
       return {success: true, message: ""};
     } catch (error) {
       return {success: false, message: error.message};

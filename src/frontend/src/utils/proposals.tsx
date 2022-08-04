@@ -184,15 +184,12 @@ export const decodeProposalPayload = (actors: CyclesDAOActors, proposalPayload: 
     switch(proposalPayload.method){
       case("updateSystemParams") : {
         IDL.decode([IDLUpdateSystemParamsPayload], messageBuffer)[0] as any;
-        return "@todo";
       }
       case("distributeBalance") : {
         IDL.decode([IDLDistributeBalancePayload], messageBuffer)[0] as any;
-        return "@todo";
       }
       case("mint") : {
         IDL.decode([IDLMintPayload], messageBuffer)[0] as any;
-        return "@todo";
       }
     }
   }
@@ -203,7 +200,6 @@ export const decodeProposalPayload = (actors: CyclesDAOActors, proposalPayload: 
     switch(proposalPayload.method){
       case("configure") : {
         IDL.decode([IDLCyclesProviderCommand], messageBuffer)[0] as any;
-        return "@todo";
       }
     }
   }

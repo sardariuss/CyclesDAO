@@ -4,6 +4,7 @@ import { TxReceipt } from "../../declarations/dip20/dip20.did.js";
 import { TransferResult } from "../../declarations/ledger/ledger.did.js";
 import { TransferResponse } from "../../declarations/extf/extf.did.js";
 
+// @todo: see https://stackoverflow.com/questions/54409854/how-to-divide-two-native-javascript-bigints-and-get-a-decimal-result
 export const toTrillions = (cycles: bigint) => {
 	return Number(cycles / (10n ** 12n));
 }
