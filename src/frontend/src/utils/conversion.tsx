@@ -4,13 +4,16 @@ import { TxReceipt } from "../../declarations/dip20/dip20.did.js";
 import { TransferResult } from "../../declarations/ledger/ledger.did.js";
 import { TransferResponse } from "../../declarations/extf/extf.did.js";
 
+const numberDecimals : number = 3;
+const decimalFactor = 10 ** numberDecimals;
+
 // @todo: see https://stackoverflow.com/questions/54409854/how-to-divide-two-native-javascript-bigints-and-get-a-decimal-result
 export const toTrillions = (cycles: bigint) => {
-	return Number(cycles / (10n ** 12n));
+	return Number(cycles * BigInt(decimalFactor) / (10n ** 12n)) / decimalFactor;
 }
 
 export const fromTrillions = (trillions: number) => {
-	return BigInt(trillions)* 10n ** 12n;
+	return BigInt(trillions * decimalFactor) * 10n ** 12n / BigInt(decimalFactor);
 }
 
 export const toMilliSeconds = (timeNanoSeconds: bigint) => {
