@@ -7,7 +7,6 @@ import { TransferResponse } from "../../declarations/extf/extf.did.js";
 const numberDecimals : number = 3;
 const decimalFactor = 10 ** numberDecimals;
 
-// @todo: see https://stackoverflow.com/questions/54409854/how-to-divide-two-native-javascript-bigints-and-get-a-decimal-result
 export const toTrillions = (cycles: bigint) => {
 	return Number(cycles * BigInt(decimalFactor) / (10n ** 12n)) / decimalFactor;
 }

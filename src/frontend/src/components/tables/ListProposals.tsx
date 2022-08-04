@@ -33,6 +33,17 @@ function ListProposals({actors, listUpdated, setListUpdated}: ListProposalsParam
     setListUpdated(true);
 	}, [actors, listUpdated]);
 
+  // Call the method executeAcceptedProposals every 10 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      actors.governance.executeAcceptedProposals();
+      fetch_data();
+    }, 10000);
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
+
   return (
 		<>
       <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
@@ -52,9 +63,6 @@ function ListProposals({actors, listUpdated, setListUpdated}: ListProposalsParam
                   Method
                 </th>
                 <th scope="col" className="px-6 py-3">
-                  State
-                </th>
-                <th scope="col" className="px-6 py-3">
                   Yes
                 </th>
                 <th scope="col" className="px-6 py-3">
@@ -62,6 +70,12 @@ function ListProposals({actors, listUpdated, setListUpdated}: ListProposalsParam
                 </th>
                 <th scope="col" className="px-6 py-3">
                   Vote
+                </th>
+                <th scope="col" className="px-6 py-3">
+                  State
+                </th>
+                <th scope="col" className="px-6 py-3">
+                  Execution
                 </th>
               </tr>
           </thead>

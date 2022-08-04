@@ -100,23 +100,6 @@ function ProposalRow({actors, inputProposal}: ProposalRowParamaters) {
         { proposal.payload.method }
       </td>
       <td className="px-6 py-4">
-        {
-          ('Open' in proposal.state) ? (
-            <div className="px-6 py-4 text-blue-600 dark:text-blue-600 whitespace-nowrap">
-              Open
-            </div>
-          ) : ('Rejected' in proposal.state) ? (
-            <div className="px-6 py-4 text-red-600 dark:text-red-600 whitespace-nowrap">
-              Rejected
-            </div>
-          ) : (
-            <div className="px-6 py-4 text-green-600 dark:text-green-600 whitespace-nowrap">
-              Accepted
-            </div>
-          )
-        }
-      </td>
-      <td className="px-6 py-4">
         { proposal.votes_yes.toString() }
       </td>
       <td className="px-6 py-4">
@@ -165,6 +148,43 @@ function ProposalRow({actors, inputProposal}: ProposalRowParamaters) {
           "N/A"
         )
       }
+      </td>
+      <td className="px-6 py-4">
+        {
+          ('Open' in proposal.state) ? (
+            <div className="px-6 py-4 text-blue-600 dark:text-blue-600 whitespace-nowrap">
+              Open
+            </div>
+          ) : ('Rejected' in proposal.state) ? (
+            <div className="px-6 py-4 text-red-600 dark:text-red-600 whitespace-nowrap">
+              Rejected
+            </div>
+          ) : (
+            <div className="px-6 py-4 text-green-600 dark:text-green-600 whitespace-nowrap">
+              Accepted
+            </div>
+          )
+        }
+      </td>
+      <td className="px-6 py-4">
+        {
+          !('Accepted' in proposal.state) ? (
+            <div>
+            </div>
+          ) : 'Failed' in proposal.state['Accepted'].state ? (
+            <div className="px-6 py-4 text-red-600 dark:text-red-600 whitespace-nowrap">
+              Fail
+            </div>
+          ) : 'Succeeded' in proposal.state['Accepted'].state ? (
+            <div className="px-6 py-4 text-green-600 dark:text-green-600 whitespace-nowrap">
+              Success
+            </div>
+          ) : (
+            <div className="px-6 py-4 text-blue-600 dark:text-blue-600 whitespace-nowrap">
+              Pending
+            </div>
+          )
+        }
       </td>
     </tr>
   </>
