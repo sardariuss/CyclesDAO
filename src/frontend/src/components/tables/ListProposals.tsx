@@ -29,7 +29,6 @@ function ListProposals({actors, listUpdated, setListUpdated}: ListProposalsParam
   }
 
   useEffect(() => {
-    console.log("Enters here");
 		fetch_data();
     setListUpdated(true);
 	}, [actors, listUpdated]);

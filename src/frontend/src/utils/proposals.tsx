@@ -108,7 +108,6 @@ const submitCyclesProviderCommand = async (actors: CyclesDAOActors, command: Cyc
   };
   await lockProposalFee(actors);
   let proposalResult = await actors.governance.submitProposal(proposalPayload);
-  console.log(proposalResult);
 }
 
 export const proposeUpdateSystemParams = async (actors: CyclesDAOActors, proposalVoteThreshold: string, proposalSubmissionDeposit: string, tokenAccessor: string) => {
@@ -125,7 +124,6 @@ export const proposeUpdateSystemParams = async (actors: CyclesDAOActors, proposa
   };
   await lockProposalFee(actors);
   let proposalResult = await actors.governance.submitProposal(proposalPayload);
-  console.log(proposalResult);
 }
 
 export const proposeDistributeBalance = async (actors: CyclesDAOActors, selectedStandard: string, tokenIdentifier: string, tokenCanister: string, tokenRecipient: string, amount: string) => {
@@ -156,7 +154,6 @@ export const proposeDistributeBalance = async (actors: CyclesDAOActors, selected
   };
   await lockProposalFee(actors);
   let proposalResult = await actors.governance.submitProposal(proposalPayload);
-  console.log(proposalResult);
 }
 
 export const proposeMint = async (actors: CyclesDAOActors, tokenRecipient: string, amount: string) => {
@@ -172,14 +169,12 @@ export const proposeMint = async (actors: CyclesDAOActors, tokenRecipient: strin
   };
   await lockProposalFee(actors);
   let proposalResult = await actors.governance.submitProposal(proposalPayload);
-  console.log(proposalResult);
 }
 
 // @todo: find out how to decode payload to string, see https://github.com/dfinity/candid/blob/master/tools/ui/src/candid.ts
 export const decodeProposalPayload = (actors: CyclesDAOActors, proposalPayload: ProposalPayload) : string => {
   let messageBuffer = new Uint8Array(proposalPayload.message);
   // Governance command
-  console.log(proposalPayload.canister_id.toString());
   if (proposalPayload.canister_id.toString() === Actor.canisterIdOf(actors.governance).toString()) {
     switch(proposalPayload.method){
       case("updateSystemParams") : {
@@ -194,9 +189,7 @@ export const decodeProposalPayload = (actors: CyclesDAOActors, proposalPayload: 
     }
   }
   // Cycles provider command
-  console.log("Cycles provider: " + Actor.canisterIdOf(actors.cyclesProvider).toString())
   if (proposalPayload.canister_id.toString() === Actor.canisterIdOf(actors.cyclesProvider).toString()) {
-    console.log("Here")
     switch(proposalPayload.method){
       case("configure") : {
         IDL.decode([IDLCyclesProviderCommand], messageBuffer)[0] as any;

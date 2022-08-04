@@ -7,7 +7,7 @@ import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
 
-function CyclesSent({cyclesProviderActor}: any) {
+function CyclesReceived({cyclesProviderActor}: any) {
 
   const [chartData, setChartData] = useState({})
   const [haveData, setHaveData] = useState(false);
@@ -68,4 +68,4 @@ function CyclesSent({cyclesProviderActor}: any) {
   };
 }
 
-export default CyclesSent;
+export default CyclesReceived;

@@ -2,6 +2,7 @@ import TradeHistory from './tables/TradeHistory'
 import { toTrillions, fromTrillions } from '../utils/conversion';
 import { ExchangeLevel } from "../../declarations/cyclesProvider/cyclesProvider.did.js";
 import { Token, TokenStandard } from "../../declarations/tokenAccessor/tokenAccessor.did.js";
+import { isBigInt } from "../utils/regexp";
 
 import { useEffect, useState } from "react";
 import { Bar }            from 'react-chartjs-2'
@@ -12,16 +13,6 @@ import autocolors from 'chartjs-plugin-autocolors';
 Chart.register(autocolors);
 Chart.register(annotationPlugin);
 Chart.register(...registerables);
-
-const getLine = (balance: number) : AnnotationOptions<keyof AnnotationTypeRegistry> => {
-  return{
-    type: 'line',
-    yMin: balance,
-    yMax: balance,
-    borderColor: 'rgba(255, 255, 255, 1)',
-    borderWidth: 2,
-  };
-};
 
 const getBox = (balance: number, preview: number) : AnnotationOptions<keyof AnnotationTypeRegistry> => {
   return{
@@ -48,7 +39,7 @@ const getLabel = (y: number, rate_per_t: number ) : AnnotationOptions<keyof Anno
       style: 'normal',
       weight: 'bold',
       size: 16,
-      lineHeight: 2
+      lineHeight: 0
     }
   };
 }
@@ -62,6 +53,7 @@ const BarChart = ({ chartData, annotation }: any) => {
           y: {
             stacked: true,
             type: 'logarithmic',
+            suggestedMin: 0 // @todo: there seem to be a bug with logarithmic scale because the minimum is not taken into account
           },
           x: {
             stacked: true,
@@ -91,6 +83,8 @@ function Contribute({cyclesProviderActor, tokenAccessorActor}: any) {
   const [chartData, setChartData] = useState({})
   const [haveData, setHaveData] = useState(false);
   const [annotation, setAnnotation] = useState<AnnotationPluginOptions>({annotations: []});
+  const [cyclesToTrade, setCyclesToTrade] = useState<string>("");
+  const [cyclesToTradeError, setCyclesToTradeError] = useState<Error | null>(null);
 
   const fetch_data = async () => {
 		try {
@@ -111,6 +105,7 @@ function Contribute({cyclesProviderActor, tokenAccessorActor}: any) {
 
   useEffect(() => {
 		fetch_data();
+    updateCyclesToTrade(cyclesToTrade);
 	}, []);
 
   useEffect(() => {
@@ -166,6 +161,21 @@ function Contribute({cyclesProviderActor, tokenAccessorActor}: any) {
     refreshGraph();
   }, [exchangeConfig, cyclesBalance, cyclesPreview]);
 
+  const updateCyclesToTrade = (amountInput: string) => {
+    setCyclesToTrade(amountInput);
+    try {
+      isBigInt(amountInput);
+      setCyclesPreview(BigInt(amountInput));
+      setCyclesToTradeError(null);
+    } catch (error) {
+      setCyclesToTradeError(error);
+    }
+  }
+
+  const exchangeCycles = () => {
+    // @todo: find a way to call cyclesProvider walletReceive method with user provided cycles
+  }
+
   const chartExchangeConfig = () => {
     if (!haveData) {
       return (
@@ -190,7 +200,7 @@ function Contribute({cyclesProviderActor, tokenAccessorActor}: any) {
           </div>
           <div className="flex flex-col w-2/3 space-y-10">
             <div className="flex flex-col bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700">
-              <p className="font-semibold text-xl text-gray-900 dark:text-white text-start m-5">Preview tokens to exchange</p>
+              <p className="font-semibold text-xl text-gray-900 dark:text-white text-start m-5">Exchange cycles</p>
               <div className="flex flex-row justify-center mt-10 mb-5">
                 <label className="font-semibold text-xl text-gray-900 dark:text-gray-300 pr-1">
                   {toTrillions(cyclesPreview).toFixed(3)} T
@@ -210,6 +220,18 @@ function Contribute({cyclesProviderActor, tokenAccessorActor}: any) {
               </div>
               <div className='justify-center mb-10'>
                 <input type="range" min={toTrillions(cyclesBalance)} max={toTrillions(maxCyclesBalance)} value={toTrillions(cyclesBalance + cyclesPreview)} onChange={(e) => refreshCyclesPreview(e)} className="w-5/6 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"/>
+              </div>
+              <div className="flex flex-row items-center self-center mb-5">
+                <div className="flex flex-col">
+                  <div className="flex flex-row items-center space-x-5">
+                    <label htmlFor="input" className="block whitespace-nowrap text-lg font-medium text-gray-900 dark:text-gray-300">Cycles to send: </label>
+                    <input type="text" onChange={(e) => {updateCyclesToTrade(e.target.value);}} id="input" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="nat"/>
+                    <button onClick={exchangeCycles} disabled={cyclesToTradeError!==null} className="whitespace-nowrap text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-lg sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                      Convert cycles
+                    </button>
+                  </div>
+                  <p hidden={cyclesToTradeError===null} className="mt-2 text-sm text-red-600 dark:text-red-500">{cyclesToTradeError?.message}</p>
+                </div>
               </div>
             </div>
             <div className="flex">
