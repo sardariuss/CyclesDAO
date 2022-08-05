@@ -7,7 +7,7 @@ import { idlFactory as idlExtf }  from "../../declarations/extf";
 import { LockTransactionArgs, ExtTransferArgs, LedgerTransferArgs, Dip20ApproveArgs } from "../../declarations/governance/governance.did.js";
 import { dip20TxReceiptToString, ledgerTransferResultToString, extTransferResponseToString } from "./conversion"
 
-import { HttpAgent, Actor, AnonymousIdentity, Identity } from "@dfinity/agent";
+import { HttpAgent, Actor, AnonymousIdentity } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
 import { StoicIdentity } from "ic-stoic-identity";
 import { InterfaceFactory } from "@dfinity/candid/lib/cjs/idl";
@@ -16,7 +16,7 @@ const cyclesProviderId = `${process.env.CYCLESPROVIDER_CANISTER_ID}`;
 const tokenAccessorId = `${process.env.TOKENACCESSOR_CANISTER_ID}`;
 const governanceId = `${process.env.GOVERNANCE_CANISTER_ID}`;
 
-const host = window.location.origin;
+const host = process.env.NODE_ENV === "development" ? "http://localhost:8000" : "https://ic0.app";
 
 var setWhitelist = new Set<string>([cyclesProviderId, tokenAccessorId, governanceId]);
 

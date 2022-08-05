@@ -60,9 +60,9 @@ export default defineConfig({
 
 		proxy: {
 			"/api": {
-				target: `http://localhost:${DFX_PORT}`,
+				target: isDev ? `http://localhost:${DFX_PORT}` : `https://ic0.app`,
 				changeOrigin: true,
-				secure: false,
+				secure: isDev ? false : true,
 				//rewrite: (path) => path.replace(/^\/api/, "/api"),
 			},
 		},
