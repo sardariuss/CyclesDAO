@@ -1,10 +1,7 @@
 #!/bin/bash
 
+# This script shall be called from the root directory
 # Assume dfx is already running and the cyclesProvider and tokenAccessor canisters are governed by the default user
-
-# Change directory to dfx directory
-# @todo: this script shall be callable from anywhere!
-cd ..
 
 dfx identity use default
 export DEFAULT_WALLET_ID=$(dfx identity get-wallet)
@@ -44,6 +41,3 @@ export TOKEN_ACCESSOR_ACCOUNT_ID=$(dfx canister call utilities getDefaultAccount
 echo "Finally run this command to burn tokens"
 echo "Command: dfx canister --wallet ${DEFAULT_WALLET_ID} call ledger transfer '(record { memo = 0; amount = record { e8s = 1_000_000_000 }; fee = record { e8s = 0 }; to = ACCOUNT })'"
 echo "Account: ${TOKEN_ACCESSOR_ACCOUNT_ID}"
-
-# Go back to initial directory
-cd scripts

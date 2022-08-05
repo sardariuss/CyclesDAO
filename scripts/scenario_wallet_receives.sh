@@ -1,9 +1,7 @@
 #!/bin/bash
 
+# This script shall be called from the root directory
 # Assume dfx is already running and the cyclesProvider canister is deployed
-
-# Change directory to dfx directory
-cd ..
 
 # Carlos give 5 trillion cycles in total
 dfx identity new Carlos
@@ -20,6 +18,3 @@ dfx canister --wallet ${DAVID_WALLET} call cyclesProvider walletReceive --with-c
 
 # Switch back to default identity
 dfx identity use default
-
-# Go back to initial directory
-cd scripts

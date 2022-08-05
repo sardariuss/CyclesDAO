@@ -1,4 +1,4 @@
-import TradeHistory from './tables/TradeHistory'
+import CyclesReceivedTable from './tables/CyclesReceivedTable'
 import { toTrillions, fromTrillions } from '../utils/conversion';
 import { ExchangeLevel } from "../../declarations/cyclesProvider/cyclesProvider.did.js";
 import { Token, TokenStandard } from "../../declarations/tokenAccessor/tokenAccessor.did.js";
@@ -53,7 +53,12 @@ const BarChart = ({ chartData, annotation }: any) => {
           y: {
             stacked: true,
             type: 'logarithmic',
-            suggestedMin: 0 // @todo: there seem to be a bug with logarithmic scale because the minimum is not taken into account
+            // Use hack describe here to solve issue of logarithmic scale not starting at 0 :
+            // https://github.com/chartjs/Chart.js/issues/9629
+            beginAtZero: true,
+            ticks: {
+              callback: (value, index) => index === 0 ? '0' : value
+            }
           },
           x: {
             stacked: true,
@@ -200,7 +205,7 @@ function Contribute({cyclesProviderActor, tokenAccessorActor}: any) {
           </div>
           <div className="flex flex-col w-2/3 space-y-10">
             <div className="flex flex-col bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700">
-              <p className="font-semibold text-xl text-gray-900 dark:text-white text-start m-5">Exchange cycles</p>
+              <p className="font-semibold text-xl text-gray-900 dark:text-white text-start m-5">Preview cycles to exchange</p>
               <div className="flex flex-row justify-center mt-10 mb-5">
                 <label className="font-semibold text-xl text-gray-900 dark:text-gray-300 pr-1">
                   {toTrillions(cyclesPreview).toFixed(3)} T
@@ -221,6 +226,8 @@ function Contribute({cyclesProviderActor, tokenAccessorActor}: any) {
               <div className='justify-center mb-10'>
                 <input type="range" min={toTrillions(cyclesBalance)} max={toTrillions(maxCyclesBalance)} value={toTrillions(cyclesBalance + cyclesPreview)} onChange={(e) => refreshCyclesPreview(e)} className="w-5/6 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"/>
               </div>
+              {/*
+              // @todo: uncomment once the transfer of cycles is resolved
               <div className="flex flex-row items-center self-center mb-5">
                 <div className="flex flex-col">
                   <div className="flex flex-row items-center space-x-5">
@@ -233,9 +240,10 @@ function Contribute({cyclesProviderActor, tokenAccessorActor}: any) {
                   <p hidden={cyclesToTradeError===null} className="mt-2 text-sm text-red-600 dark:text-red-500">{cyclesToTradeError?.message}</p>
                 </div>
               </div>
+              */}
             </div>
             <div className="flex">
-              <TradeHistory cyclesProviderActor={cyclesProviderActor}/>
+              <CyclesReceivedTable cyclesProviderActor={cyclesProviderActor} tokenAccessorActor={tokenAccessorActor}/>
             </div>
           </div>
         </div>

@@ -23,19 +23,21 @@ dfx deploy cyclesProvider --with-cycles 1000000000000 --argument="(record {
     record { threshold = 150_000_000_000_000; rate_per_t = 0.2; }}})"
 dfx generate cyclesProvider
 
-# Deploy the governance @todo
-dfx deploy governance --argument="(record {
-  proposals = vec{};
-  system_params = record {
-    token_accessor = principal \"$TOKEN_ACCESSOR\";
-    proposal_vote_threshold = 500;
-    proposal_submission_deposit = 100;
-  }})"
-dfx generate governance
-# dfx canister sign governance updateSystemParams '(record { proposal_vote_threshold = opt (400 : nat) })'
-# dfx canister call governance submitProposal '( record { canister_id = principal "'$GOVERNANCE'"; method = "updateSystemParams"; message = vec {68;73;68;76;3;108;3;131;147;199;185;6;1;216;237;253;217;6;1;141;234;173;203;7;2;110;125;110;104;1;0;1;144;3;0;0}; })'
+# Configure the token accessor with a token to mint, add the cyclesProvider as an authorized minter
+# See the specific script to change token initial arguments
+# Use DIP20 here
+source scripts/configure_with_dip20.sh
+#source scripts/configure_with_extf.sh
+#source scripts/configure_with_ledger.sh
+
+# NOT FOR PROD: to add dummy canister to power up
+#source scripts/add_canisters_to_power_up.sh
+
+# NOT FOR PROD: to have a dummy scenario with walletReceive
+#source scripts/scenario_wallet_receives.sh
+
+# Deploy the governance and put it as admin of the tokenAccessor and cyclesProvider
+source scripts/set_governance.sh
 
 # Deploy the frontend
 dfx deploy frontend
-
-# See scripts directory to configure the cyclesProvider

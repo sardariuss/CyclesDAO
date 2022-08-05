@@ -1,10 +1,7 @@
 #!/bin/bash
 
+# This script shall be called from the root directory
 # Assume dfx is already running and the cyclesProvider and tokenAccessor canisters are governed by the default user
-
-# Change directory to dfx directory
-# @todo: this script shall be callable from anywhere!
-cd ..
 
 dfx identity use default
 export TOKEN_ACCESSOR=$(dfx canister id tokenAccessor)
@@ -33,6 +30,3 @@ dfx canister call tokenAccessor addMinter '(principal "'${CYCLES_PROVIDER}'")'
 #dfx canister call cyclesProvider cyclesBalance
 #echo "Default wallet EXTF balance after wallet receive:"
 #dfx canister call extf balance '(record { token = "'${EXTF_TOKEN}'"; user = variant { "principal" = principal "'${DEFAULT_WALLET_ID}'" }})'
-
-# Go back to initial directory
-cd scripts
