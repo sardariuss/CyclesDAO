@@ -100,11 +100,12 @@ export const createActors = async (walletType : WalletType) : Promise<CyclesDAOA
     let identity = await StoicIdentity.load();
     if (identity !== false) {
       console.log("Stoic wallet is already connected!");
+      agent = new HttpAgent({identity: identity});
     } 
     else {
       console.log("No existing connection, lets make one!");
-      let identity = await StoicIdentity.connect();
-      agent = new HttpAgent({identity: identity});
+      let newIdentity = await StoicIdentity.connect();
+      agent = new HttpAgent({identity: newIdentity});
     }
     connectedUser = identity.getPrincipal();
     console.log("Stoic connected with identity " + identity.getPrincipal().toText());

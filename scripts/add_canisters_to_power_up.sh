@@ -29,4 +29,4 @@ export TO_POWER_UP_5_ID=$(dfx canister call toPowerUpFactory createCanister)
 export TO_POWER_UP_5_PRINCIPAL=${TO_POWER_UP_5_ID:1:29}
 dfx canister call cyclesProvider configure '(variant {AddAllowList = record { balance_threshold = 1_000_000_000_000; balance_target = 2_000_000_000_000; canister = principal '${TO_POWER_UP_5_PRINCIPAL}'; pull_authorized = false; }})'
 
-echo 'Added 5 canisters to power up that require 16.5 trillion cycles in total'
+echo 'Added 5 canisters to power up that require 37 trillion cycles in total'
