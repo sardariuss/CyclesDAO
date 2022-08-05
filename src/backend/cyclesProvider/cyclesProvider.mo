@@ -207,7 +207,6 @@ shared actor class CyclesProvider(create_cycles_provider_args: Types.CreateCycle
       });
     };
     // Iterate over the canisters
-    // @todo: investigate if modifying the Trie while iterating on it does work!
     for ((principal, powering_parameters) in Trie.iter(allow_list_)){
       // Call fillWithCycles only if the canister is in pending state
       if (powering_parameters.last_execution.state == #Pending){

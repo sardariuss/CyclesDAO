@@ -25,7 +25,6 @@ dfx generate cyclesProvider
 
 # Configure the token accessor with a token to mint, add the cyclesProvider as an authorized minter
 # See the specific script to change token initial arguments
-# Use DIP20 here
 source scripts/configure_with_dip20.sh
 #source scripts/configure_with_extf.sh
 #source scripts/configure_with_ledger.sh

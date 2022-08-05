@@ -3,7 +3,7 @@
 load "../common/install.sh";
 load "../common/wallet.sh";
 
-identity default;
+identity default "~/.config/dfx/identity/default/identity.pem";
 import default_wallet = "rwlgt-iiaaa-aaaaa-aaaaa-cai" as "../common/wallet.did";
 
 // Create the token accessor

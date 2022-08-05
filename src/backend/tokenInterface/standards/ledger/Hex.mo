@@ -1,4 +1,4 @@
-// @todo: this file comes from the EXT standard, it is useful to encode the account as text
+// This file comes from the EXT standard, it is useful to encode the account as text
 
 import Array "mo:base/Array";
 import HashMap "mo:base/HashMap";

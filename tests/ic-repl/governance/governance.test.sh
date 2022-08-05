@@ -32,13 +32,13 @@ identity eve;
 // Mint tokens to distribute between governance users
 identity default;
 call token_accessor.mint(alice, 100);
-assert _ == (0 : nat);
+assert _.index == (0 : nat);
 call token_accessor.mint(bob, 200);
-assert _ == (1 : nat);
+assert _.index == (1 : nat);
 call token_accessor.mint(cathy, 300);
-assert _ == (2 : nat);
+assert _.index == (2 : nat);
 call token_accessor.mint(dory, 400);
-assert _ == (3 : nat);
+assert _.index == (3 : nat);
 
 // Set the governance as admin of the token accessor (required to mint later)
 call token_accessor.setAdmin(governance);
@@ -62,7 +62,7 @@ call governance.submitProposal(
     message = encode governance.updateSystemParams(update_proposal_vote_threshold);
   }
 );
-assert _ == variant { err = variant { TokenInterfaceError = variant { InsufficientBalance } } };
+assert _ == variant { err = variant { TokenLockerError = variant { InsufficientBalance } } };
 // Alice transfers the proposal_submission_deposit to the governance subaccount
 let governance_alice_sub = call utilities.getAccountIdentifierAsText(governance, alice);
 call extf.transfer(record {
@@ -114,7 +114,7 @@ call governance.vote(record { proposal_id = alice_proposal_id; vote = variant { 
 assert _.ok == variant { Open };
 identity cathy;
 call governance.vote(record { proposal_id = alice_proposal_id; vote = variant { Yes } });
-assert _.ok == variant { Accepted = record { state = variant { Pending }; refund = variant { ok = null : opt variant{} };} };
+assert _.ok == variant { Accepted = record { state = variant { Pending }; } };
 identity default;
 call governance.vote(record { proposal_id = alice_proposal_id; vote = variant { No } });
 assert _ == variant { err = variant { ProposalNotOpen } };
@@ -184,7 +184,7 @@ call governance.submitProposal(
     message = encode governance.mint(record { to = alice; amount = 100 });
   }
 );
-assert _ == variant { err = variant { TokenInterfaceError = variant { InsufficientBalance } } };
+assert _ == variant { err = variant { TokenLockerError = variant { InsufficientBalance } } };
 
 // Reject bob_proposal_1, accept bob_proposal_2
 identity cathy;
@@ -192,9 +192,9 @@ call governance.vote(record { proposal_id = bob_proposal_1; vote = variant { No 
 call governance.vote(record { proposal_id = bob_proposal_2; vote = variant { Yes } });
 identity dory;
 call governance.vote(record { proposal_id = bob_proposal_1; vote = variant { No } });
-assert _.ok == variant { Rejected = record { charge = variant { ok = null : opt variant {} };} };
+assert _.ok == variant { Rejected };
 call governance.vote(record { proposal_id = bob_proposal_2; vote = variant { Yes } });
-assert _.ok == variant { Accepted = record { state = variant { Pending }; refund = variant { ok = null : opt variant{} };} };
+assert _.ok == variant { Accepted = record { state = variant { Pending }; } };
 
 call governance.executeAcceptedProposals();
 
@@ -212,7 +212,7 @@ let dip721 = installDip721(default);
 let nft_identifier = (0 : nat);
 let nft_data = vec { record { "Nft for Bob!"; variant { TextContent = "You deserve it!" } } };
 call dip721.mint(governance, nft_identifier, nft_data);
-//assert _ == variant { ok }; // @todo
+//assert _ == variant { ok }; // @todo: uncomment this once warning "cannot get type for dip721" is fixed
 let nft_token = record {standard = variant{DIP721}; canister = dip721; identifier = opt variant { nat = nft_identifier }; };
 
 // 4. Cathy propose to transfer the NFT to Bob
@@ -247,7 +247,7 @@ identity alice;
 call governance.vote(record { proposal_id = cathy_proposal; vote = variant { Yes } });
 identity dory;
 call governance.vote(record { proposal_id = cathy_proposal; vote = variant { Yes } });
-assert _.ok == variant { Accepted = record { state = variant { Pending }; refund = variant { ok = null : opt variant{} };} };
+assert _.ok == variant { Accepted = record { state = variant { Pending }; } };
 
 call governance.executeAcceptedProposals();
 
@@ -261,7 +261,8 @@ call dip721.tokenMetadata(nft_identifier);
 
 call governance.getProposals();
 
-assert _[0].state == variant { Accepted = record { state = variant { Succeeded }; refund = variant { ok = null : opt variant{} };} };
-assert _[1].state == variant { Rejected = record { charge = variant { ok = null : opt variant {} };} };
-assert _[2].state == variant { Accepted = record { state = variant { Succeeded }; refund = variant { ok = null : opt variant{} };} };
-assert _[3].state == variant { Accepted = record { state = variant { Succeeded }; refund = variant { ok = null : opt variant{} };} };
+assert _[0].state == variant { Accepted = record { state = variant { Succeeded }; } };
+assert _[1].state == variant { Rejected };
+// @todo: find the reason this test fails (Accepted but Failed while the mint succeeded)
+assert _[2].state == variant { Accepted = record { state = variant { Succeeded }; } };
+assert _[3].state == variant { Accepted = record { state = variant { Succeeded }; } };

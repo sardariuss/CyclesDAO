@@ -21,11 +21,6 @@ function CyclesReceived({cyclesProviderActor}: any) {
         accumulatedCyclesDataset.push({x: toMilliSeconds(record.date), y: toTrillions(accumulatedCyclesAmount + record.cycle_amount)});
         accumulatedCyclesAmount += record.cycle_amount;
       });
-      // If there is only one point, add a dummy point on the bottom to be able to see something
-      // (required because we removed the visualization of point but use areas instead)
-      if (accumulatedCyclesDataset.length === 1) {
-        accumulatedCyclesDataset.push({x: accumulatedCyclesDataset[0].x, y: 0});
-      }
       // Add a point for now to be able to better see the current total
       const now : number = Date.now();
       accumulatedCyclesDataset.push({x: now, y: toTrillions(accumulatedCyclesAmount)});

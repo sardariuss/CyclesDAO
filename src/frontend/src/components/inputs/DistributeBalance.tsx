@@ -14,7 +14,7 @@ function DistributeBalance({actors, setListUpdated}: DistributeBalanceParameters
 
   const [showStandardDropDown, setShowStandardDropDown] = useState<boolean>(false);
   const [selectedStandard, setSelectedStandard] = useState<string>('LEDGER');
-  const [tokenStandards] = useState<string[]>(['LEDGER', 'EXT', 'DIP20', 'DIP721', 'NFT_ORIGYN']);
+  const [tokenStandards] = useState<string[]>(['LEDGER', 'EXT', 'DIP20', 'DIP721']);
 
   const [tokenIdentifier, setTokenIdentifier] = useState<string>("");
   const [tokenCanister, setTokenCanister] = useState<string>("");
@@ -45,7 +45,7 @@ function DistributeBalance({actors, setListUpdated}: DistributeBalanceParameters
   const updateTokenIdentifier = async (newTokenIdentifier: string) => {
     setTokenIdentifier(newTokenIdentifier);
     try {
-      if (selectedStandard === 'EXT'){
+      if (selectedStandard === 'DIP721'){
         isBigInt(newTokenIdentifier);
       }
       setTokenIdentifierError(null);
@@ -137,7 +137,7 @@ function DistributeBalance({actors, setListUpdated}: DistributeBalanceParameters
                 type="input"
                 className="ml-5 disabled:opacity-25 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                 onChange={(e) => {updateTokenIdentifier(e.target.value);}}
-                placeholder={selectedStandard === 'EXT' ? "nat" : "text"}
+                placeholder={selectedStandard === 'EXT' ? "text" : "nat"}
                 disabled={selectedStandard !== 'EXT' && selectedStandard !== 'DIP721'}
               />
               </div>
@@ -145,7 +145,7 @@ function DistributeBalance({actors, setListUpdated}: DistributeBalanceParameters
           </div>
           <div className="flex flex-col">
             <div className="flex flex-row items-center">
-              <label htmlFor="canisterInput" className="block whitespace-nowrap mb-2 text-sm font-medium text-gray-900 dark:text-gray-300">Canister (from)</label>
+              <label htmlFor="canisterInput" className="block whitespace-nowrap mb-2 text-sm font-medium text-gray-900 dark:text-gray-300">Canister</label>
               <input 
                 id="canisterInput"
                 type="input" 

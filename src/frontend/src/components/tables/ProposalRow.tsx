@@ -140,7 +140,7 @@ function ProposalRow({actors, inputProposal}: ProposalRowParamaters) {
           </div>
         ) : voteStatus === VoteStatus.Success ? (
           <div className="flex p-2 items-center justify-center text-sm text-green-700 bg-green-100 rounded-lg dark:bg-green-200 dark:text-green-800" role="alert">
-            Success
+            Voted!
           </div>
         ) : voteStatus === VoteStatus.AlreadyVoted ? (
           "Already voted"

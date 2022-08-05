@@ -48,13 +48,16 @@ The fees used in the transfer methods depend on the token standard in use:
 | TokenLocker | lock, charge, refund | tokenLocker_dip20.test.sh, tokenLocker_extf.test.sh, tokenLocker_ledger.test.sh | test more complexe scenarios | 80% |
 | Governance | *all functions* | governance.test.sh | missing: claimCharges and claimRefund functions, complexe scenario with change of token, token accessor configured with LEDGER/DIP20, upgrade; need to fix DIP721 cannot get types for distributeBalance | 50% |
 
-## Known bugs
-
-- *npm run build* currently fails (though *npm run dev* works!) with the error "ERROR: Big integer literals are not available in the configured target environment ("chrome87", "edge88", "es2019", "firefox78", "safari13.1")" even if ES2020 is specified. Tested on wsl2 run in a windows 10 environment. Maybe it is linked to the bug reported here: https://github.com/vercel/next.js/issues/37271.
+## Current limitations
+- It is not currently possible to trade cycles against tokens in the front-end
+- The arguments of the submitted proposals are not displayed in the front-end
+- Refreshing the page logs out the user from the plug/stoic wallets
+- When logged in using the Stoic wallet, the canister queries slow down the UI
+- Subaccounts are not supported
 
 ## Ressources
 
-- Initial bounty: https://icdevs.org/bounties/2022/02/25/A-DAO-for-Cycles.html
+- ICDev bounty: https://icdevs.org/bounties/2022/02/25/A-DAO-for-Cycles.html
 - Forum discussion: https://forum.dfinity.org/t/icdevs-org-bounty-17-a-dao-for-cycles-10-000-ht-cycle-dao/11427
 
 ## License

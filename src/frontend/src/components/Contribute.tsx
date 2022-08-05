@@ -198,12 +198,12 @@ function Contribute({cyclesProviderActor, tokenAccessorActor}: any) {
   return (
 		<>
       <div className="flex flex-col space-y-10">
-        <div className="flex flex-row justify-evenly">
+        <div className="flex flex-row justify-evenly space-x-10">
           <div className="flex flex-col w-1/6 h-160">
             <p className="font-semibold text-xl text-gray-900 dark:text-white text-start m-5">Exchange configuration</p>
             {chartExchangeConfig()}
           </div>
-          <div className="flex flex-col w-2/3 space-y-10">
+          <div className="flex flex-col grow space-y-10">
             <div className="flex flex-col bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700">
               <p className="font-semibold text-xl text-gray-900 dark:text-white text-start m-5">Preview cycles to exchange</p>
               <div className="flex flex-row justify-center mt-10 mb-5">

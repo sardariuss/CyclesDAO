@@ -116,7 +116,7 @@ shared actor class TokenAccessor(admin: Principal) = this {
     };
   };
 
-  // @todo: add to doc: it's the responsability of the caller to check that it is 
+  // It is the responsability of the caller to check that it is 
   // authorized to mint and that the token is set before calling mint
   public shared(msg) func mint(to: Principal, amount: Nat) : async Types.MintRecord {
     if (not (await isAuthorizedMinter(msg.caller))){

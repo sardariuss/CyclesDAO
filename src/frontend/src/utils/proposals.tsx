@@ -130,10 +130,10 @@ export const proposeDistributeBalance = async (actors: CyclesDAOActors, selected
   var standard : TokenStandard;
   var identifier : [] | [{ 'nat' : bigint } | { 'text' : string }] = [];
   switch (selectedStandard){
-    case('EXT'): {standard = {'EXT' : null}; identifier = [{ 'nat' : BigInt(tokenIdentifier)}]; break;}
+    case('EXT'): {standard = {'EXT' : null}; identifier = [{ 'text' : tokenIdentifier}]; break;}
     case('LEDGER'): {standard = {'LEDGER' : null}; break;}
     case('DIP20'): {standard = {'DIP20' : null}; break;}
-    case('DIP721'): {standard = {'DIP721' : null}; identifier = [{ 'text' : tokenIdentifier}]; break;}
+    case('DIP721'): {standard = {'DIP721' : null}; identifier = [{ 'nat' : BigInt(tokenIdentifier)}]; break;}
     case('NFT_ORIGYN'): {standard = {'NFT_ORIGYN' : null}; break;}
     default: throw Error("Standard " + selectedStandard +  " is not supported");
   };

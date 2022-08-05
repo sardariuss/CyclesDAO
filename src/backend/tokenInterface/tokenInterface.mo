@@ -221,7 +221,7 @@ module TokenInterface {
           case(?identifier){
             switch(identifier){
               case(#text(_)){
-                // EXT cannot use text as token identifier, only nat
+                // DIP721 cannot use text as token identifier, only nat
                 return #err(#TokenIdInvalidType);
               };
               case(#nat(token_identifier)){

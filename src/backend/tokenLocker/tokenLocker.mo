@@ -369,7 +369,6 @@ class TokenLocker(token_locker_constructor_args: Types.CreateTokenLockerArgs) = 
           };
           case(?owner_account){
             let interface : TokenInterfaceTypes.LedgerInterface = actor (Principal.toText(token_lock.token.canister));
-            // @todo: somehow the transfer fails with the error InsufficientFunds. To investigate!
             switch (await interface.transfer({
               memo = 0;
               amount = { e8s = Nat64.fromNat(token_lock.amount); }; // This will trap on overflow/underflow

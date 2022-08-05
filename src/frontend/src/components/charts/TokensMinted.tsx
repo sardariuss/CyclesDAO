@@ -21,11 +21,6 @@ function TokensMinted({tokenAccessorActor}: any) {
         accumulatedTokensDataset.push({x: toMilliSeconds(record.date), y: toTrillions(accumulatedTokensAmount + record.amount)});
         accumulatedTokensAmount += record.amount;
       });
-      // If there is only one point, add a dummy point on the bottom to be able to see something
-      // (required because we removed the visualization of point but use areas instead)
-      if (accumulatedTokensDataset.length === 1) {
-        accumulatedTokensDataset.push({x: accumulatedTokensDataset[0].x, y: 0});
-      }
       // Add a point for now to be able to better see the current total
       const now : number = Date.now();
       accumulatedTokensDataset.push({x: now, y: toTrillions(accumulatedTokensAmount)});
