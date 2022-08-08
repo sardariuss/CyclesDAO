@@ -8,15 +8,15 @@ const numberDecimals : number = 3;
 const decimalFactor = 10 ** numberDecimals;
 
 export const toTrillions = (cycles: bigint) => {
-	return Number(cycles * BigInt(decimalFactor) / (10n ** 12n)) / decimalFactor;
+	return Number(cycles * BigInt(decimalFactor / 10 ** 12)) / decimalFactor;
 }
 
 export const fromTrillions = (trillions: number) => {
-	return BigInt(trillions * decimalFactor) * 10n ** 12n / BigInt(decimalFactor);
+	return BigInt(trillions * decimalFactor * 10 ** 12) / BigInt(decimalFactor);
 }
 
 export const toMilliSeconds = (timeNanoSeconds: bigint) => {
-	return Number(timeNanoSeconds / ( 10n ** 6n));
+	return Number(timeNanoSeconds / BigInt(10 ** 6));
 }
 
 export const standardToString = (standard: TokenStandard) => {

@@ -80,11 +80,11 @@ const BarChart = ({ chartData, annotation }: any) => {
 function Contribute({cyclesProviderActor, tokenAccessorActor}: any) {
 
   const [tokenStandard, setTokenStandard] = useState<string>("");
-  const [cyclesBalance, setCyclesBalance] = useState<bigint>(0n);
+  const [cyclesBalance, setCyclesBalance] = useState<bigint>(BigInt(0));
   const [exchangeConfig, setExchangeConfig] = useState<Array<ExchangeLevel>>([]);
-  const [maxCyclesBalance, setMaxCyclesBalance] = useState<bigint>(0n);
-  const [cyclesPreview, setCyclesPreview] = useState<bigint>(10n ** 12n);
-  const [tokensPreview, setTokensPreview] = useState<bigint>(0n);
+  const [maxCyclesBalance, setMaxCyclesBalance] = useState<bigint>(BigInt(0));
+  const [cyclesPreview, setCyclesPreview] = useState<bigint>(BigInt(10 ** 12));
+  const [tokensPreview, setTokensPreview] = useState<bigint>(BigInt(0));
   const [chartData, setChartData] = useState({})
   const [haveData, setHaveData] = useState(false);
   const [annotation, setAnnotation] = useState<AnnotationPluginOptions>({annotations: []});
@@ -133,7 +133,7 @@ function Contribute({cyclesProviderActor, tokenAccessorActor}: any) {
   useEffect(() => {
     const refreshGraph = async () => {
       try {
-        var currentThreshold : bigint = 0n;
+        var currentThreshold : bigint = BigInt(0);
         let listDatasets : any = [];
         let listAnnotations: any = [];
   
@@ -144,7 +144,7 @@ function Contribute({cyclesProviderActor, tokenAccessorActor}: any) {
             label: exchangeLevel.rate_per_t.toString(),
             data: [toTrillions(currentThreshold - previousThreshold)]
           });
-          listAnnotations.push(getLabel(toTrillions(previousThreshold + (exchangeLevel.threshold - previousThreshold) / 2n ), exchangeLevel.rate_per_t));
+          listAnnotations.push(getLabel(toTrillions(previousThreshold + (exchangeLevel.threshold - previousThreshold) / BigInt(2) ), exchangeLevel.rate_per_t));
         })
   
         listAnnotations.push(getBox(toTrillions(cyclesBalance), toTrillions(cyclesPreview)));

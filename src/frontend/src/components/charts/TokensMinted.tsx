@@ -15,7 +15,7 @@ function TokensMinted({tokenAccessorActor}: any) {
   const fetch_data = async () => {
 		try {
       const tokensMinted = await tokenAccessorActor.getMintRegister() as Array<MintRecord>;
-      var accumulatedTokensAmount : bigint = 0n;
+      var accumulatedTokensAmount : bigint = BigInt(0);
       let accumulatedTokensDataset : ScatterData[] = [];
       tokensMinted.map((record) => {
         accumulatedTokensDataset.push({x: toMilliSeconds(record.date), y: toTrillions(accumulatedTokensAmount + record.amount)});

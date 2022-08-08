@@ -14,9 +14,9 @@ function Dashboard({cyclesProviderActor, tokenAccessorActor}: any) {
 
   const [allowList, setAllowList] = useState<Array<[Principal, PoweringParameters]>>([]);
   const [cyclesBalance, setCyclesBalance] = useState<bigint>(BigInt(0));
-  const [totalReceivedCycles, setTotalReceivedCycles] = useState<bigint>(0n);
-  const [totalSentCycles, setTotalSentCycles] = useState<bigint>(0n);
-  const [totalMintedTokens, setTotalMintedTokens] = useState<bigint>(0n);
+  const [totalReceivedCycles, setTotalReceivedCycles] = useState<bigint>(BigInt(0));
+  const [totalSentCycles, setTotalSentCycles] = useState<bigint>(BigInt(0));
+  const [totalMintedTokens, setTotalMintedTokens] = useState<bigint>(BigInt(0));
 
   const fetch_data = async () => {
 		try {
@@ -24,19 +24,19 @@ function Dashboard({cyclesProviderActor, tokenAccessorActor}: any) {
       setCyclesBalance(await cyclesProviderActor.cyclesBalance() as bigint);
       
       let cyclesSentRegister = await cyclesProviderActor.getCyclesSentRegister() as Array<CyclesSentRecord>;
-      var cyclesSentAmount : bigint = 0n;
+      var cyclesSentAmount : bigint = BigInt(0);
       cyclesSentRegister.map(record => cyclesSentAmount += record.amount);
       setTotalSentCycles(cyclesSentAmount);
       
       let cyclesReceivedRegister = await cyclesProviderActor.getCyclesReceivedRegister() as Array<CyclesReceivedRecord>;
-      var cyclesReceivedAmount : bigint = 0n;
+      var cyclesReceivedAmount : bigint = BigInt(0);
       cyclesReceivedRegister.map(record => {
         cyclesReceivedAmount += record.cycle_amount;
       });
       setTotalReceivedCycles(cyclesReceivedAmount);
 
       let mintTokensRegister = await tokenAccessorActor.getMintRegister() as Array<MintRecord>;
-      var tokenMintedAmount : bigint = 0n;
+      var tokenMintedAmount : bigint = BigInt(0);
       mintTokensRegister.map(record => {
         tokenMintedAmount += record.amount;
       });

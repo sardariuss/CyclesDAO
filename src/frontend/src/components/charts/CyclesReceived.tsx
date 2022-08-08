@@ -15,7 +15,7 @@ function CyclesReceived({cyclesProviderActor}: any) {
   const fetch_data = async () => {
 		try {
       const cyclesReceived = await cyclesProviderActor.getCyclesReceivedRegister() as Array<CyclesReceivedRecord>;
-      var accumulatedCyclesAmount : bigint = 0n;
+      var accumulatedCyclesAmount : bigint = BigInt(0);
       var accumulatedCyclesDataset : ScatterData[] = [];
       cyclesReceived.map((record) => {
         accumulatedCyclesDataset.push({x: toMilliSeconds(record.date), y: toTrillions(accumulatedCyclesAmount + record.cycle_amount)});
