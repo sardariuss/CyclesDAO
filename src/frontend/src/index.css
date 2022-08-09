@@ -9,3 +9,7 @@
 		@apply font-inter;
 	}
 }
+
+.filter-gray-700{
+	filter: invert(23%) sepia(10%) saturate(1544%) hue-rotate(176deg) brightness(97%) contrast(92%);
+}

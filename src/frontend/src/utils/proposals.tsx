@@ -1,6 +1,7 @@
 import { ProposalPayload, UpdateSystemParamsPayload, DistributeBalancePayload, MintPayload, TokenStandard } from "../../declarations/governance/governance.did.js";
 import { CyclesProviderCommand, ExchangeLevel } from "../../declarations/cyclesProvider/cyclesProvider.did.js";
 import { CyclesDAOActors, lockProposalFee } from "./actors";
+import { standardToString, identifierToString } from "./conversion"
 
 import { IDL } from "@dfinity/candid";
 import { Actor } from "@dfinity/agent";
@@ -171,20 +172,36 @@ export const proposeMint = async (actors: CyclesDAOActors, tokenRecipient: strin
   let proposalResult = await actors.governance.submitProposal(proposalPayload);
 }
 
-// @todo: find out how to decode payload to string, see https://github.com/dfinity/candid/blob/master/tools/ui/src/candid.ts
 export const decodeProposalPayload = (actors: CyclesDAOActors, proposalPayload: ProposalPayload) : string => {
   let messageBuffer = new Uint8Array(proposalPayload.message);
+  var toPrint : string = "N/A";
   // Governance command
   if (proposalPayload.canister_id.toString() === Actor.canisterIdOf(actors.governance).toString()) {
     switch(proposalPayload.method){
       case("updateSystemParams") : {
-        IDL.decode([IDLUpdateSystemParamsPayload], messageBuffer)[0] as any;
+        const updateSystemParamsPayload = IDL.decode([IDLUpdateSystemParamsPayload], messageBuffer)[0] as UpdateSystemParamsPayload;
+        toPrint = 
+          "proposal_vote_threshold: " + (updateSystemParamsPayload.proposal_vote_threshold.length === 0 ? "null" : updateSystemParamsPayload.proposal_vote_threshold) +
+          "\nproposal_submission_deposit: " + (updateSystemParamsPayload.proposal_submission_deposit.length === 0 ? "null" : updateSystemParamsPayload.proposal_submission_deposit) +
+          "\ntoken_accessor: " + (updateSystemParamsPayload.token_accessor.length === 0 ? "null" : updateSystemParamsPayload.token_accessor);
+        break;
       }
       case("distributeBalance") : {
-        IDL.decode([IDLDistributeBalancePayload], messageBuffer)[0] as any;
+        const distributeBalancePayload = IDL.decode([IDLDistributeBalancePayload], messageBuffer)[0] as DistributeBalancePayload;
+        toPrint = 
+          "to: " + distributeBalancePayload.to +
+          "\ntoken standard: " + standardToString(distributeBalancePayload.token.standard) +
+          "\ntoken canister: " + distributeBalancePayload.token.canister +
+          "\ntoken identifier: " + identifierToString(distributeBalancePayload.token.identifier) +
+          "\namount: " + distributeBalancePayload.amount;
+        break;
       }
       case("mint") : {
-        IDL.decode([IDLMintPayload], messageBuffer)[0] as any;
+        const mintPayload = IDL.decode([IDLMintPayload], messageBuffer)[0] as MintPayload;
+        toPrint = 
+          "to: " + mintPayload.to +
+          "\namount: " + mintPayload.amount;
+        break;
       }
     }
   }
@@ -192,9 +209,42 @@ export const decodeProposalPayload = (actors: CyclesDAOActors, proposalPayload: 
   if (proposalPayload.canister_id.toString() === Actor.canisterIdOf(actors.cyclesProvider).toString()) {
     switch(proposalPayload.method){
       case("configure") : {
-        IDL.decode([IDLCyclesProviderCommand], messageBuffer)[0] as any;
+        const cyclesProviderCommand = IDL.decode([IDLCyclesProviderCommand], messageBuffer)[0] as CyclesProviderCommand;
+        if (cyclesProviderCommand['SetAdmin'] !== undefined) {
+          toPrint = 
+            "#SetAdmin: " +
+            "\ncanister: " + cyclesProviderCommand['SetAdmin'].canister;
+        } 
+        else if (cyclesProviderCommand['RemoveAllowList'] !== undefined) {
+          toPrint = 
+            "#RemoveAllowList: " +
+            "\ncanister: " + cyclesProviderCommand['RemoveAllowList'].canister;
+        } 
+        else if (cyclesProviderCommand['SetMinimumBalance'] !== undefined) {
+          toPrint = 
+            "#SetMinimumBalance: " +
+            "\nminimum_balance: " + cyclesProviderCommand['SetMinimumBalance'].minimum_balance;
+        } 
+        else if (cyclesProviderCommand['SetCycleExchangeConfig'] !== undefined) {
+          toPrint = "#SetCycleExchangeConfig: ";
+          let exchangeLevels : Array<ExchangeLevel> = cyclesProviderCommand['SetCycleExchangeConfig'];
+          exchangeLevels.forEach((level, index) => {
+            toPrint += "\nthreshold(" + index + "):" + level.threshold;
+            toPrint += "\nrate_per_t(" + index + "):" + level.rate_per_t;
+          })
+        }
+        else if (cyclesProviderCommand['AddAllowList'] !== undefined) {
+          toPrint =
+            "#AddAllowList: " +
+            "\nbalance_threshold: " + cyclesProviderCommand['AddAllowList'].balance_threshold +
+            "\nbalance_target: " + cyclesProviderCommand['AddAllowList'].balance_target +
+            "\npull_authorized: " + cyclesProviderCommand['AddAllowList'].pull_authorized +
+            "\ncanister: " + cyclesProviderCommand['AddAllowList'].canister;
+        } 
+        break;
       }
     }
   }
-  return "N/A";
+  console.log(toPrint);
+  return toPrint;
 };

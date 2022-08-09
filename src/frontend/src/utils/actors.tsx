@@ -4,6 +4,8 @@ import { idlFactory as idlGovernance }  from "../../declarations/governance";
 import { idlFactory as idlDip20 } from "../../declarations/dip20";
 import { idlFactory as idlLedger }  from "../../declarations/ledger";
 import { idlFactory as idlExtf }  from "../../declarations/extf";
+import { idlFactory as ildXtc }  from "../../declarations/xtc";
+
 import { LockTransactionArgs, ExtTransferArgs, LedgerTransferArgs, Dip20ApproveArgs } from "../../declarations/governance/governance.did.js";
 import { dip20TxReceiptToString, ledgerTransferResultToString, extTransferResponseToString } from "./conversion"
 
@@ -177,4 +179,23 @@ export const lockProposalFee = async (actors: CyclesDAOActors) => {
   } else {
     throw new Error("The standard " + standard + " is not supported!");
   }
+}
+
+export const sendCycles = async (actors: CyclesDAOActors, cycles: bigint) => {
+  if (actors.walletType === WalletType.None || actors.walletType === WalletType.Stoic){
+    throw new Error("Only plug wallet can currently send cycles!");
+  }
+  const xtcTransfer = {
+    idl: ildXtc,
+    canisterId: 'aanaa-xaaaa-aaaah-aaeiq-cai',
+    methodName: 'wallet_call',
+    args: [{ canister: Principal.fromText(cyclesProviderId), method_name: "walletReceive", args: [], cycles: cycles }],
+    onSuccess: async (res) => {
+      console.log('Transferred xtc successfully');
+    },
+    onFail: (res) => {
+      console.log('Transfer xtc error: ' + res);
+    },
+  };
+  await window.ic.plug.batchTransactions([xtcTransfer]);
 }

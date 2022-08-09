@@ -1,6 +1,7 @@
 import { Proposal, Vote, List, VoteArgs, ProposalState } from "../../../declarations/governance/governance.did.js";
 import { CyclesDAOActors} from "../../utils/actors";
 import { nanoSecondsToDate, proposalStateToString, voteResultToString } from "../../utils/conversion";
+import { decodeProposalPayload } from "../../utils/proposals"
 
 import { Principal } from "@dfinity/principal";
 import { useEffect, useState } from "react";
@@ -22,6 +23,8 @@ enum VoteStatus {
 function ProposalRow({actors, inputProposal}: ProposalRowParamaters) {
 
   const [proposal, setProposal] = useState<Proposal>(inputProposal);
+  const [proposalArguments, setProposalArguments] = useState<string>("");
+  const [showDropDownArguments, setShowDropDownArguments] = useState<boolean>(false);
   const [voteStatus, setVoteStatus] = useState<VoteStatus>(VoteStatus.NotApplicable);
   const [vote, setVote] = useState<Vote|null>(null);
   const [voteError, setVoteError] = useState<string>("");
@@ -29,13 +32,15 @@ function ProposalRow({actors, inputProposal}: ProposalRowParamaters) {
   const fetchRow = async () => {
     try {
       // Update the proposal
-      let updatedProposal = (await actors.governance.getProposal(inputProposal.id))[0] as Proposal;
+      const updatedProposal = (await actors.governance.getProposal(inputProposal.id))[0] as Proposal;
       setProposal(updatedProposal);
+      const args = await decodeProposalPayload(actors, updatedProposal.payload);
+      setProposalArguments(args);
       // Update the vote
       if (actors.connectedUser === null){
         setVoteStatus(VoteStatus.NotApplicable);
       } else {
-        let voteFound : [Principal, List] | undefined = updatedProposal.voters.find((value: [Principal, List]) => {
+        const voteFound : [Principal, List] | undefined = updatedProposal.voters.find((value: [Principal, List]) => {
           if (actors.connectedUser?.toString() === value[0].toString()){
             return value;
           }
@@ -84,6 +89,10 @@ function ProposalRow({actors, inputProposal}: ProposalRowParamaters) {
     setTimeout(() => { fetchRow() }, 5000);
   }
 
+  const toggleDropDownArguments = () => {
+    setShowDropDownArguments(!showDropDownArguments);
+  };
+
   return (
 		<>
     <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600" key={"row_" + proposal.id.toString()}>
@@ -99,6 +108,14 @@ function ProposalRow({actors, inputProposal}: ProposalRowParamaters) {
       <td className="px-6 py-4 font-semibold">
         { proposal.payload.method }
       </td>
+      <td className="px-6 py-4 font-semibold whitespace-pre">
+        <button id="dropdown" onClick={toggleDropDownArguments}>
+          <img src="eye.svg" className="w-10 h-10 filter-gray-700" alt="Logo"/>
+        </button>
+        <div id="dropdownId" hidden={!showDropDownArguments} className="absolute z-10 p-1 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 divide-gray-100 dark:divide-gray-600">
+          { proposalArguments }
+        </div>
+      </td>
       <td className="px-6 py-4">
         { proposal.votes_yes.toString() }
       </td>
@@ -108,7 +125,7 @@ function ProposalRow({actors, inputProposal}: ProposalRowParamaters) {
       <td className="px-6 py-4">
       {
         (voteStatus === VoteStatus.CanVote) ? (
-        <ul className="flex flex-row items-center justify-evenly">
+        <ul className="flex flex-row items-center justify-evenly space-x-1">
           <li>
             <input type="radio" onChange={(e) => setVote({'Yes' : null})} id={"yes-vote_" + proposal.id} name={"vote_" + proposal.id} value="yes-vote" className="hidden peer" required/>
             <label htmlFor={"yes-vote_" + proposal.id} className="inline-flex cursor-pointer justify-center items-center px-4 py-2 text-gray-500 bg-white rounded-lg border border-gray-200 dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-green-500 peer-checked:border-green-500 peer-checked:text-green-500 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700">                           
@@ -122,7 +139,7 @@ function ProposalRow({actors, inputProposal}: ProposalRowParamaters) {
             </label>
           </li>
           <li>  
-            <button disabled={vote===null} onClick={(e) => submitVote()} className="ml-5 text-white whitespace-nowrap bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+            <button disabled={vote===null} onClick={(e) => submitVote()} className="ml-3 text-white whitespace-nowrap bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
               Vote
             </button>
           </li>

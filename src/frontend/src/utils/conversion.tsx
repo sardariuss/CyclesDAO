@@ -8,7 +8,7 @@ const numberDecimals : number = 3;
 const decimalFactor = 10 ** numberDecimals;
 
 export const toTrillions = (cycles: bigint) => {
-	return Number(cycles * BigInt(decimalFactor / 10 ** 12)) / decimalFactor;
+	return Number(cycles * BigInt(decimalFactor) / BigInt(10 ** 12)) / decimalFactor;
 }
 
 export const fromTrillions = (trillions: number) => {
@@ -34,6 +34,16 @@ export const standardToString = (standard: TokenStandard) => {
 	}
 	if ('NFT_ORIGYN' in standard){
 		return 'NFT_ORIGYN';
+	}
+}
+
+export const identifierToString = (tokenIdentifier : [] | [{ 'nat' : bigint } | { 'text' : string }]) : (string | null) => {
+	if (tokenIdentifier[0] === undefined){
+		return null;
+	} else if (tokenIdentifier[0]['nat'] !== undefined) {
+		return tokenIdentifier[0]['nat'].toString();
+	} else {
+		return tokenIdentifier[0]['text'];
 	}
 }
 

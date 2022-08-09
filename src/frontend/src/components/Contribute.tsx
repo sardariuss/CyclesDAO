@@ -3,6 +3,7 @@ import { toTrillions, fromTrillions } from '../utils/conversion';
 import { ExchangeLevel } from "../../declarations/cyclesProvider/cyclesProvider.did.js";
 import { Token, TokenStandard } from "../../declarations/tokenAccessor/tokenAccessor.did.js";
 import { isBigInt } from "../utils/regexp";
+import { CyclesDAOActors, sendCycles } from "../utils/actors";
 
 import { useEffect, useState } from "react";
 import { Bar }            from 'react-chartjs-2'
@@ -77,7 +78,11 @@ const BarChart = ({ chartData, annotation }: any) => {
   );
 };
 
-function Contribute({cyclesProviderActor, tokenAccessorActor}: any) {
+type ContributeParameters = {
+  actors: CyclesDAOActors
+}
+
+function Contribute({actors}: ContributeParameters) {
 
   const [tokenStandard, setTokenStandard] = useState<string>("");
   const [cyclesBalance, setCyclesBalance] = useState<bigint>(BigInt(0));
@@ -94,14 +99,14 @@ function Contribute({cyclesProviderActor, tokenAccessorActor}: any) {
   const fetch_data = async () => {
 		try {
       // Token info
-      let token = await tokenAccessorActor.getToken() as Array<Token>;
+      let token = await actors.tokenAccessor.getToken() as Array<Token>;
       if (token.length != 0){
         setTokenStandard(Object.entries(token[0].standard as TokenStandard)[0][0]);
       }
       // Current cycles balance
-      setCyclesBalance(await cyclesProviderActor.cyclesBalance());
+      setCyclesBalance(await actors.cyclesProvider.cyclesBalance());
       // Max cycles balance
-      setExchangeConfig(await cyclesProviderActor.getCycleExchangeConfig() as Array<ExchangeLevel>);
+      setExchangeConfig(await actors.cyclesProvider.getCycleExchangeConfig() as Array<ExchangeLevel>);
     } catch (err) {
 			// handle error (or empty response)
 			console.error(err);
@@ -125,7 +130,7 @@ function Contribute({cyclesProviderActor, tokenAccessorActor}: any) {
 
   useEffect(() => {
     const computeTokensExchange = async () => {
-      setTokensPreview(await cyclesProviderActor.computeTokensInExchange(cyclesPreview));
+      setTokensPreview(await actors.cyclesProvider.computeTokensInExchange(cyclesPreview));
     };
     computeTokensExchange();
   }, [cyclesPreview]);
@@ -177,8 +182,13 @@ function Contribute({cyclesProviderActor, tokenAccessorActor}: any) {
     }
   }
 
-  const exchangeCycles = () => {
-    // @todo: find a way to call cyclesProvider walletReceive method with user provided cycles
+  const exchangeCycles = async () => {
+    try {
+      await sendCycles(actors, BigInt(cyclesToTrade));
+    }
+    catch (error) {
+      setCyclesToTradeError(error);
+    }
   }
 
   const chartExchangeConfig = () => {
@@ -226,8 +236,7 @@ function Contribute({cyclesProviderActor, tokenAccessorActor}: any) {
               <div className='justify-center mb-10'>
                 <input type="range" min={toTrillions(cyclesBalance)} max={toTrillions(maxCyclesBalance)} value={toTrillions(cyclesBalance + cyclesPreview)} onChange={(e) => refreshCyclesPreview(e)} className="w-5/6 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"/>
               </div>
-              {/*
-              // @todo: uncomment once the transfer of cycles is resolved
+              {
               <div className="flex flex-row items-center self-center mb-5">
                 <div className="flex flex-col">
                   <div className="flex flex-row items-center space-x-5">
@@ -240,10 +249,10 @@ function Contribute({cyclesProviderActor, tokenAccessorActor}: any) {
                   <p hidden={cyclesToTradeError===null} className="mt-2 text-sm text-red-600 dark:text-red-500">{cyclesToTradeError?.message}</p>
                 </div>
               </div>
-              */}
+              }
             </div>
-            <div className="flex">
-              <CyclesReceivedTable cyclesProviderActor={cyclesProviderActor} tokenAccessorActor={tokenAccessorActor}/>
+            <div className="flex grow">
+              <CyclesReceivedTable cyclesProviderActor={actors.cyclesProvider} tokenAccessorActor={actors.tokenAccessor}/>
             </div>
           </div>
         </div>

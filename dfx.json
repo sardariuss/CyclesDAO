@@ -77,6 +77,14 @@
       "type": "custom",
       "candid": "tests/wasm/ExtNft/extNft.did",
       "wasm": "tests/wasm/ExtNft/extNft.wasm"
+    },
+    "xtc": {
+      "candid": "tests/wasm/XTC/xtc.did",
+      "wasm": "",
+      "type": "custom",
+      "declarations": {
+        "output": "src/frontend/declarations/xtc"
+      }
     }
   },
   "defaults": {

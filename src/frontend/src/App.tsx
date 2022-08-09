@@ -45,7 +45,7 @@ function App() {
                 <Route
                   path="/contribute"
                   element={
-                    <Contribute cyclesProviderActor={actors.cyclesProvider} tokenAccessorActor={actors.tokenAccessor}/>
+                    <Contribute actors={actors}/>
                   }
                 />
               </Routes>

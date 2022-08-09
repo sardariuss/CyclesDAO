@@ -63,6 +63,9 @@ function ListProposals({actors, listUpdated, setListUpdated}: ListProposalsParam
                   Method
                 </th>
                 <th scope="col" className="px-6 py-3">
+                  Arguments
+                </th>
+                <th scope="col" className="px-6 py-3">
                   Yes
                 </th>
                 <th scope="col" className="px-6 py-3">
