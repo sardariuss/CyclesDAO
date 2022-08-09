@@ -49,11 +49,10 @@ The fees used in the transfer methods depend on the token standard in use:
 | Governance | *all functions* | governance.test.sh | missing: claimCharges and claimRefund functions, complexe scenario with change of token, token accessor configured with LEDGER/DIP20, upgrade; need to fix DIP721 cannot get types for distributeBalance | 50% |
 
 ## Current limitations
-- It is not currently possible to trade cycles against tokens in the front-end
-- The arguments of the submitted proposals are not displayed in the front-end
+- In the frontend, the only way to feed cycles to the cyclesProvider is via a transfer of XTC tokens via the Plug wallet
+- In the frontend, only functions from the governance and cyclesProvider can be used to submit proposals
 - Refreshing the page logs out the user from the plug/stoic wallets
 - When logged in using the Stoic wallet, the canister queries slow down the UI
-- Subaccounts are not supported
 
 ## Ressources
 
