@@ -11,7 +11,8 @@ dfx deploy governance --argument='(record {
  system_params = record {
     token_accessor = principal "'${TOKEN_ACCESSOR}'";
     proposal_vote_threshold = 10_000_000;
-    proposal_submission_deposit = 10_000;
+    proposal_vote_reward = 10_000;
+    proposal_submission_deposit = 50_000;
  };
 })'
 dfx generate governance

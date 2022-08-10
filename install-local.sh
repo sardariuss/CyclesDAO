@@ -35,6 +35,9 @@ source scripts/configure_with_dip20.sh
 # NOT FOR PROD: to have a dummy scenario with walletReceive
 #source scripts/scenario_wallet_receives.sh
 
+# Before deploying the governance, make sure to mint some tokens to some users first, otherwise nobody can participate!
+dfx canister call tokenAccessor mint '(principal "sixzy-7pdha-xesaj-edo76-wuzat-gdfeh-eihfz-5b6on-eqcu2-4p23j-qqe", 1000000000000)'
+
 # Deploy the governance and put it as admin of the tokenAccessor and cyclesProvider
 source scripts/set_governance.sh
 

@@ -27,6 +27,7 @@ const IDLUpdateSystemParamsPayload = IDL.Record({
   'proposal_vote_threshold' : IDL.Opt(IDL.Nat),
   'proposal_submission_deposit' : IDL.Opt(IDL.Nat),
   'token_accessor' : IDL.Opt(IDL.Principal),
+  'proposal_vote_reward' : IDL.Opt(IDL.Nat),
 });
 const IDLTokenStandard = IDL.Variant({
   'EXT' : IDL.Null,
@@ -65,7 +66,13 @@ export const proposeRemoveAllowList = async(actors: CyclesDAOActors, canister: s
   await submitCyclesProviderCommand(actors, command);
 }
 
-export const proposeAddAllowList = async (actors: CyclesDAOActors, balanceThreshold: string, balanceTarget: string, pullAuthorized: boolean, canister: string) => {
+export const proposeAddAllowList = async (
+  actors: CyclesDAOActors,
+  balanceThreshold: string,
+  balanceTarget: string,
+  pullAuthorized: boolean,
+  canister: string
+) => {
   let command : CyclesProviderCommand = {
     AddAllowList: {
       balance_threshold: BigInt(balanceThreshold),
@@ -108,14 +115,21 @@ const submitCyclesProviderCommand = async (actors: CyclesDAOActors, command: Cyc
     message: [...message]
   };
   await lockProposalFee(actors);
-  let proposalResult = await actors.governance.submitProposal(proposalPayload);
+  await actors.governance.submitProposal(proposalPayload);
 }
 
-export const proposeUpdateSystemParams = async (actors: CyclesDAOActors, proposalVoteThreshold: string, proposalSubmissionDeposit: string, tokenAccessor: string) => {
+export const proposeUpdateSystemParams = async (
+  actors: CyclesDAOActors,
+  proposalVoteReward: string,
+  proposalVoteThreshold: string,
+  proposalSubmissionDeposit: string,
+  tokenAccessor: string
+) => {
   let command : UpdateSystemParamsPayload = {
     proposal_vote_threshold: proposalVoteThreshold.length === 0 ? [] : [BigInt(proposalVoteThreshold)],
     proposal_submission_deposit: proposalSubmissionDeposit.length === 0 ? [] : [BigInt(proposalSubmissionDeposit)],
     token_accessor:  tokenAccessor.length === 0 ? [] : [Principal.fromText(tokenAccessor)],
+    proposal_vote_reward: proposalVoteReward.length === 0 ? [] : [BigInt(proposalVoteReward)],
   };
   let message = new Uint8Array(IDL.encode([IDLUpdateSystemParamsPayload], [command]));
   let proposalPayload : ProposalPayload = {
@@ -124,10 +138,17 @@ export const proposeUpdateSystemParams = async (actors: CyclesDAOActors, proposa
     message: [...message]
   };
   await lockProposalFee(actors);
-  let proposalResult = await actors.governance.submitProposal(proposalPayload);
+  await actors.governance.submitProposal(proposalPayload);
 }
 
-export const proposeDistributeBalance = async (actors: CyclesDAOActors, selectedStandard: string, tokenIdentifier: string, tokenCanister: string, tokenRecipient: string, amount: string) => {
+export const proposeDistributeBalance = async (
+  actors: CyclesDAOActors,
+  selectedStandard: string,
+  tokenIdentifier: string,
+  tokenCanister: string,
+  tokenRecipient: string,
+  amount: string
+) => {
   var standard : TokenStandard;
   var identifier : [] | [{ 'nat' : bigint } | { 'text' : string }] = [];
   switch (selectedStandard){
@@ -154,7 +175,7 @@ export const proposeDistributeBalance = async (actors: CyclesDAOActors, selected
     message: [...message]
   };
   await lockProposalFee(actors);
-  let proposalResult = await actors.governance.submitProposal(proposalPayload);
+  await actors.governance.submitProposal(proposalPayload);
 }
 
 export const proposeMint = async (actors: CyclesDAOActors, tokenRecipient: string, amount: string) => {
@@ -169,7 +190,7 @@ export const proposeMint = async (actors: CyclesDAOActors, tokenRecipient: strin
     message: [...message]
   };
   await lockProposalFee(actors);
-  let proposalResult = await actors.governance.submitProposal(proposalPayload);
+  await actors.governance.submitProposal(proposalPayload);
 }
 
 export const decodeProposalPayload = (actors: CyclesDAOActors, proposalPayload: ProposalPayload) : string => {
@@ -182,6 +203,7 @@ export const decodeProposalPayload = (actors: CyclesDAOActors, proposalPayload: 
         const updateSystemParamsPayload = IDL.decode([IDLUpdateSystemParamsPayload], messageBuffer)[0] as UpdateSystemParamsPayload;
         toPrint = 
           "proposal_vote_threshold: " + (updateSystemParamsPayload.proposal_vote_threshold.length === 0 ? "null" : updateSystemParamsPayload.proposal_vote_threshold) +
+          "\nproposal_vote_reward: " + (updateSystemParamsPayload.proposal_vote_reward.length === 0 ? "null" : updateSystemParamsPayload.proposal_vote_reward) +
           "\nproposal_submission_deposit: " + (updateSystemParamsPayload.proposal_submission_deposit.length === 0 ? "null" : updateSystemParamsPayload.proposal_submission_deposit) +
           "\ntoken_accessor: " + (updateSystemParamsPayload.token_accessor.length === 0 ? "null" : updateSystemParamsPayload.token_accessor);
         break;

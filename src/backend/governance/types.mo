@@ -2,6 +2,7 @@ import TokenInterfaceTypes   "../tokenInterface/types";
 import TokenLockerTypes      "../tokenLocker/types";
 
 import List                  "mo:base/List";
+import Result                "mo:base/Result";
 
 module {
 
@@ -41,6 +42,7 @@ module {
   public type UpdateSystemParamsPayload = {
     token_accessor: ?Principal;
     proposal_vote_threshold: ?Nat;
+    proposal_vote_reward: ?Nat;
     proposal_submission_deposit: ?Nat;
   };
 
@@ -70,6 +72,8 @@ module {
     token_accessor: Principal;
     // The amount of tokens needed to vote "yes" to accept, or "no" to reject, a proposal
     proposal_vote_threshold: Nat;
+    // The amount of tokens that a user receives when voting on a proposal
+    proposal_vote_reward: Nat;
     // The amount of tokens that will be temporarily deducted from the account of
     // a user that submits a proposal. If the proposal is Accepted, this deposit is returned,
     // otherwise it is lost. This prevents users from submitting superfluous proposals.
@@ -119,7 +123,16 @@ module {
   
   public type TokenAccessorInterface = actor {
     getToken: shared () -> async (?TokenInterfaceTypes.Token);
-    mint: shared(Principal, Nat) -> async (Nat);
+    mint: shared(Principal, Nat) -> async (MintRecord);
+  };
+
+  public type MintRecord = {
+    index: Nat;
+    date: Int;
+    amount: Nat;
+    to: Principal;
+    token: TokenInterfaceTypes.Token;
+    result: Result.Result<?Nat, TokenInterfaceTypes.MintError>;
   };
 
 };

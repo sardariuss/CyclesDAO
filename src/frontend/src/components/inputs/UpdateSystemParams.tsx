@@ -13,16 +13,19 @@ interface UpdateSystemParamsParameters {
 function UpdateSystemParams({actors, setListUpdated}: UpdateSystemParamsParameters) {
 
   const [tokenAccessor, setTokenAccessor] = useState<string>("");
+  const [proposalVoteReward, setProposalVoteReward] = useState<string>("");
   const [proposalVoteThreshold, setProposalVoteThreshold] = useState<string>("");
   const [proposalSubmissionDeposit, setProposalSubmissionDeposit] = useState<string>("");
 
   const [tokenAccessorError, setTokenAccessorError] = useState<Error | null>(null);
+  const [proposalVoteRewardError, setProposalVoteRewardError] = useState<Error | null>(null);
   const [proposalVoteThresholdError, setProposalVoteThresholdError] = useState<Error | null>(null);
   const [proposalSubmissionDepositError, setProposalSubmissionDepositError] = useState<Error | null>(null);
 
   useEffect(() => {
     // To init the errors
     updateTokenAccessor(tokenAccessor);
+    updateProposalVoteReward(proposalVoteReward);
     updateProposalVoteThreshold(proposalVoteThreshold);
     updateProposalSubmissionDeposit(proposalSubmissionDeposit);
   }, []);
@@ -34,6 +37,16 @@ function UpdateSystemParams({actors, setListUpdated}: UpdateSystemParamsParamete
       setTokenAccessorError(null);
     } catch(error) {
       setTokenAccessorError(error);
+    };
+  };
+
+  const updateProposalVoteReward = async (newProposalVoteReward: string) => {
+    setProposalVoteReward(newProposalVoteReward);
+    try {
+      isBigIntOrNull(newProposalVoteReward);
+      setProposalVoteRewardError(null);
+    } catch(error) {
+      setProposalVoteRewardError(error);
     };
   };
 
@@ -59,7 +72,7 @@ function UpdateSystemParams({actors, setListUpdated}: UpdateSystemParamsParamete
 
   const submitAddTokenAccessor = async() => {
     try {
-      await proposeUpdateSystemParams(actors, proposalVoteThreshold, proposalSubmissionDeposit, tokenAccessor);
+      await proposeUpdateSystemParams(actors, proposalVoteReward, proposalVoteThreshold, proposalSubmissionDeposit, tokenAccessor);
       setListUpdated(false);
       return {success: true, message: ""};
     } catch (error) {
@@ -84,6 +97,19 @@ function UpdateSystemParams({actors, setListUpdated}: UpdateSystemParamsParamete
                 />
                 </div>
               <p hidden={tokenAccessorError===null} className="mt-2 text-sm text-red-600 dark:text-red-500">{tokenAccessorError?.message}</p>
+            </div>
+            <div className="flex flex-col">
+              <div className="flex flex-row items-center">
+                <label htmlFor="proposalVoteReward" className="block whitespace-nowrap mb-2 text-sm font-medium text-gray-900 dark:text-gray-300">Proposal vote reward</label>
+                <input 
+                  id="proposalVoteReward"
+                  type="input" 
+                  className="ml-5 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  onChange={(e) => {updateProposalVoteReward(e.target.value);}}
+                  placeholder={"opt nat"}
+                />
+                </div>
+              <p hidden={proposalVoteRewardError===null} className="mt-2 text-sm text-red-600 dark:text-red-500">{proposalVoteRewardError?.message}</p>
             </div>
             <div className="flex flex-col">
               <div className="flex flex-row items-center">

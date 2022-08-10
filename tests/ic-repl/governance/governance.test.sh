@@ -18,6 +18,7 @@ assert _ == variant { ok };
 let system_params = record {
   token_accessor = token_accessor;
   proposal_vote_threshold = 500;
+  proposal_vote_reward = 20;
   proposal_submission_deposit = 100;
 };
 let governance = installGovernance(record {proposals = vec{}; system_params = system_params;});
@@ -104,6 +105,8 @@ assert _? ~= record {
   };
 };
 
+// Verify that the votes properly update the proposal state to Accepted here once enough votes
+// have been given
 identity bob;
 call governance.vote(record { proposal_id = alice_proposal_id; vote = variant { Yes } });
 assert _.ok == variant { Open };
@@ -118,6 +121,14 @@ assert _.ok == variant { Accepted = record { state = variant { Pending }; } };
 identity default;
 call governance.vote(record { proposal_id = alice_proposal_id; vote = variant { No } });
 assert _ == variant { err = variant { ProposalNotOpen } };
+
+// Verify that the users have been rewarded for voting
+call extf.balance(record { token = token_identifier; user = variant { "principal" = bob } });
+assert _ == variant { ok = 220 : nat };
+call extf.balance(record { token = token_identifier; user = variant { "principal" = cathy } });
+assert _ == variant { ok = 320 : nat };
+call extf.balance(record { token = token_identifier; user = variant { "principal" = dory } });
+assert _ == variant { ok = 420 : nat };
 
 call governance.executeAcceptedProposals();
 
@@ -204,7 +215,7 @@ assert _ == variant { ok = 200 : nat };
 
 // Check that bob only got one refund
 call extf.balance(record { token = token_identifier; user = variant { "principal" = bob } });
-assert _ == variant { ok = 100 : nat };
+assert _ == variant { ok = 120 : nat };
 
 // Mint a NFT and give it to the governance
 identity default;
@@ -253,16 +264,15 @@ call governance.executeAcceptedProposals();
 
 // Check that Cathy got refunded
 call extf.balance(record { token = token_identifier; user = variant { "principal" = cathy } });
-assert _ == variant { ok = 300 : nat };
+assert _ == variant { ok = 360 : nat }; // 300 + 20 * 3 (Cathy voted 3 times)
 
 // Check that Bobs got the NFT
-call dip721.tokenMetadata(nft_identifier);
-//assert _.ok.owner == bob;
+call dip721.tokenMetadata(nft_identifier); 
+//assert _.ok.owner == bob; // @todo: uncomment this once warning "cannot get type for dip721" is fixed
 
 call governance.getProposals();
 
 assert _[0].state == variant { Accepted = record { state = variant { Succeeded }; } };
 assert _[1].state == variant { Rejected };
-// @todo: find the reason this test fails (Accepted but Failed while the mint succeeded)
 assert _[2].state == variant { Accepted = record { state = variant { Succeeded }; } };
 assert _[3].state == variant { Accepted = record { state = variant { Succeeded }; } };

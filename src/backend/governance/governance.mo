@@ -145,12 +145,17 @@ shared actor class Governance(create_governance_args : Types.CreateGovernanceArg
             if (balance == 0){
               return #err(#EmptyBalance);
             };
+            // Add the vote to the total of votes
             var votes_yes = proposal.votes_yes;
             var votes_no = proposal.votes_no;
             switch (args.vote){
               case (#Yes){ votes_yes += balance; };
               case (#No){ votes_no += balance; };
             };
+            // Mint the reward for the voter
+            let token_accessor : Types.TokenAccessorInterface = actor (Principal.toText(system_params_.token_accessor));
+            ignore await token_accessor.mint(caller, system_params_.proposal_vote_reward);
+            // Update the state if threshold is reached
             var state = proposal.state;
             if (votes_yes >= system_params_.proposal_vote_threshold){
               // Refund the proposal deposit when the proposal is accepted
@@ -191,6 +196,7 @@ shared actor class Governance(create_governance_args : Types.CreateGovernanceArg
     system_params_ := {
       token_accessor = Option.get(payload.token_accessor, system_params_.token_accessor);
       proposal_vote_threshold = Option.get(payload.proposal_vote_threshold, system_params_.proposal_vote_threshold);
+      proposal_vote_reward = Option.get(payload.proposal_vote_reward, system_params_.proposal_vote_reward);
       proposal_submission_deposit = Option.get(payload.proposal_submission_deposit, system_params_.proposal_submission_deposit);
     };
     return #ok();
