@@ -15,6 +15,10 @@ function TokensMinted({tokenAccessorActor}: any) {
   const fetch_data = async () => {
 		try {
       const tokensMinted = await tokenAccessorActor.getMintRegister() as Array<MintRecord>;
+      // The mint register is a trie, it needs to be sorted to perform the accumulation in the right order
+      tokensMinted.sort((a: MintRecord, b: MintRecord) : number =>  {
+        return Number(a.index) - Number(b.index);
+      })
       var accumulatedTokensAmount : bigint = BigInt(0);
       let accumulatedTokensDataset : ScatterData[] = [];
       tokensMinted.map((record) => {

@@ -4,6 +4,7 @@ import { ScatterChart } from "./raw/ScatterChart";
 
 import { useEffect, useState } from "react";
 import { Chart, registerables } from 'chart.js';
+import { AnnotationOptions, AnnotationPluginOptions, AnnotationTypeRegistry } from 'chartjs-plugin-annotation';
 
 Chart.register(...registerables);
 
@@ -11,6 +12,7 @@ function CyclesBalance({cyclesProviderActor}: any) {
 
   const [chartData, setChartData] = useState({})
   const [haveData, setHaveData] = useState(false);
+  const [annotation, setAnnotation] = useState<AnnotationPluginOptions>({annotations: []});
 
   const fetch_data = async () => {
 		try {
@@ -36,6 +38,19 @@ function CyclesBalance({cyclesProviderActor}: any) {
         ]
       });
 
+      let minimumBalance = toTrillions(await cyclesProviderActor.getMinimumBalance());
+      let annotations: AnnotationOptions<keyof AnnotationTypeRegistry>[] = [];
+      annotations.push({
+        type: 'box',
+        xMin: toMilliSeconds(cyclesBalance[0].date),
+        xMax: now,
+        yMin: minimumBalance,
+        yMax: minimumBalance,
+        borderColor: 'rgba(220, 220, 220, 1)',
+        borderWidth: 2
+      });
+      setAnnotation({ annotations : annotations });
+
       setHaveData(true);
 
     } catch (err) {
@@ -55,7 +70,7 @@ function CyclesBalance({cyclesProviderActor}: any) {
   } else {
     return (
       <>
-        <ScatterChart chartData={chartData} />
+        <ScatterChart chartData={chartData} annotation={annotation} />
       </>
     )
   };

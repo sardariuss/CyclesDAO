@@ -1,6 +1,6 @@
 import { Scatter }            from 'react-chartjs-2'
 
-export const ScatterChart = ({ chartData }: any) => {
+export const ScatterChart = ({ chartData, annotation }: any) => {
   return (
     <div>
       <Scatter
@@ -30,7 +30,8 @@ export const ScatterChart = ({ chartData }: any) => {
           plugins:{
             legend:{
               display: false
-            }
+            },
+            annotation: annotation,
           }
         }}
       />

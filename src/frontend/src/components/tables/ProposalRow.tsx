@@ -110,7 +110,7 @@ function ProposalRow({actors, inputProposal}: ProposalRowParamaters) {
       </td>
       <td className="px-6 py-4 font-semibold whitespace-pre">
         <button id="dropdown" onClick={toggleDropDownArguments}>
-          <img src="eye.svg" className="w-10 h-10 filter-gray-700" alt="Logo"/>
+          <img src="eye.svg" className="w-10 h-10 filter-gray-700" alt="args"/>
         </button>
         <div id="dropdownId" hidden={!showDropDownArguments} className="absolute z-10 p-1 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 divide-gray-100 dark:divide-gray-600">
           { proposalArguments }

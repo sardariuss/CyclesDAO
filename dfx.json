@@ -26,7 +26,10 @@
       "frontend": {
         "entrypoint": "index.html"
       },
-      "source": ["src/frontend/dist/"],
+      "source": [
+        "src/frontend/dist/",
+        "src/frontend/assets/"
+      ],
       "type": "assets"
     },
     "utilities": {
