@@ -267,6 +267,5 @@ export const decodeProposalPayload = (actors: CyclesDAOActors, proposalPayload: 
       }
     }
   }
-  console.log(toPrint);
   return toPrint;
 };
