@@ -2,9 +2,18 @@ import { idlFactory as idlCyclesProvider } from "../../declarations/cyclesProvid
 import { idlFactory as idlTokenAccessor }  from "../../declarations/tokenAccessor";
 import { idlFactory as idlGovernance }  from "../../declarations/governance";
 import { idlFactory as idlDip20 } from "../../declarations/dip20";
-import { idlFactory as idlLedger }  from "../../declarations/ledger";
-import { idlFactory as idlExtf }  from "../../declarations/extf";
-import { idlFactory as ildXtc }  from "../../declarations/xtc";
+
+// If local
+// Delete:
+// import { idlFactory as idlLedger }  from "../../declarations/ledger";
+// import { idlFactory as idlExtf }  from "../../declarations/extf";
+// import { idlFactory as ildXtc }  from "../../declarations/xtc";
+
+// If network ic
+// Uncomment:
+// import { idlFactory as idlLedger }  from "../../declarations/ledger";
+// import { idlFactory as idlExtf }  from "../../declarations/extf";
+// import { idlFactory as ildXtc }  from "../../declarations/xtc";
 
 import { LockTransactionArgs, ExtTransferArgs, LedgerTransferArgs, Dip20ApproveArgs } from "../../declarations/governance/governance.did.js";
 import { dip20TxReceiptToString, ledgerTransferResultToString, extTransferResponseToString } from "./conversion"

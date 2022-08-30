@@ -83,8 +83,8 @@ function ListProposals({actors, listUpdated, setListUpdated}: ListProposalsParam
               </tr>
           </thead>
           <tbody>
-          {listProposals.map((proposal: Proposal) => {
-            return (<ProposalRow actors={actors} inputProposal={proposal}/>)
+          {listProposals.slice(0).reverse().map((proposal: Proposal) => {
+            return (<ProposalRow actors={actors} inputProposal={proposal} key={proposal.id.toString()}/>)
           })}
           </tbody>
       </table>
