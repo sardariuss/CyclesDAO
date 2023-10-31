@@ -5,7 +5,7 @@ The [Cycles DAO](https://icdevs.org/bounties/2022/02/25/A-DAO-for-Cycles.html) c
 ## Disclaimer
 This app is no longer actively developed. It is not advised to use it in production. Since 2023, the IC community and Dfinity came up with more secure and actively supported tools:
  - Use a [SNS](https://internetcomputer.org/docs/current/developer-docs/security/rust-canister-development-security-best-practices#use-a-decentralized-governance-system-like-sns-to-make-a-canister-have-a-decentralized-controller) to make a canister have a decentralized controller
- - Use [cycleops](cycleops.dev) to feed and monitor your canisters' cycles
+ - Use [cycleops](https://cycleops.dev/) to feed and monitor your canisters' cycles
 
 ## Prerequisites
 
