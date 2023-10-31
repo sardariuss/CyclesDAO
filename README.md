@@ -1,6 +1,11 @@
 # CyclesDAO
 
-The Cycles DAO collects cycles for a configured set of canisters and rewards users that supply those cycles with DAO tokens that can be used to manage the DAO.
+The [Cycles DAO](https://icdevs.org/bounties/2022/02/25/A-DAO-for-Cycles.html) collects cycles for a configured set of canisters and rewards users that supply those cycles with DAO tokens that can be used to manage the DAO. You can check the demo [here](https://youtu.be/7xMyQT3ddak?si=SEAuxqpv8SsP5OUu).
+
+## Disclaimer
+This app is no longer actively developed. It is not advised to use it in production. Since 2023, the IC community and Dfinity came up with more secure and actively supported tools:
+ - Use a [SNS](https://internetcomputer.org/docs/current/developer-docs/security/rust-canister-development-security-best-practices#use-a-decentralized-governance-system-like-sns-to-make-a-canister-have-a-decentralized-controller) to make a canister have a decentralized controller
+ - Use [cycleops](cycleops.dev) to feed and monitor your canisters' cycles
 
 ## Prerequisites
 
